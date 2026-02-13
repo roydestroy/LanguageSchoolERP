@@ -12,6 +12,7 @@ public partial class ProgramEnrollmentRowVm : ObservableObject
     public string BooksText { get; set; } = "";
     public string DownPaymentText { get; set; } = "";
     public string InstallmentsText { get; set; } = "";
+    public string InstallmentAmountText { get; set; } = "";
     public string StatusText { get; set; } = "";
     public string CommentsText { get; set; } = "";
 }

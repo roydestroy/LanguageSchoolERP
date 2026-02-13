@@ -57,6 +57,34 @@ public static class InstallmentPlanHelper
         return expected;
     }
 
+
+    public static decimal GetRegularInstallmentAmount(decimal agreementTotal, int installmentCount)
+    {
+        if (installmentCount <= 0 || agreementTotal <= 0)
+            return 0m;
+
+        return Math.Round(agreementTotal / installmentCount, 2, MidpointRounding.AwayFromZero);
+    }
+
+    public static decimal GetNextInstallmentAmount(Enrollment e)
+    {
+        var paid = e.DownPayment + SumPayments(e);
+        var remaining = e.AgreementTotal - paid;
+        if (remaining < 0) remaining = 0;
+
+        if (remaining == 0)
+            return 0m;
+
+        if (e.InstallmentCount <= 0)
+            return remaining;
+
+        var regular = GetRegularInstallmentAmount(e.AgreementTotal, e.InstallmentCount);
+        if (regular <= 0)
+            return remaining;
+
+        return remaining < regular ? remaining : regular;
+    }
+
     private static decimal SumPayments(Enrollment e)
     {
         decimal sum = 0;

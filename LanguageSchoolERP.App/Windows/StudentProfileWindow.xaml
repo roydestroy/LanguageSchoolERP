@@ -229,6 +229,7 @@
                                 <DataGridTextColumn Header="Books" Binding="{Binding BooksText}" Width="100"/>
                                 <DataGridTextColumn Header="Downpayment" Binding="{Binding DownPaymentText}" Width="120"/>
                                 <DataGridTextColumn Header="Installments" Binding="{Binding InstallmentsText}" Width="130"/>
+                                <DataGridTextColumn Header="Installment Amount" Binding="{Binding InstallmentAmountText}" Width="130"/>
                                 <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="90"/>
                                 <DataGridTextColumn Header="Comments" Binding="{Binding CommentsText}" Width="*"/>
                                 <DataGridTemplateColumn Header="Actions" Width="90">
