@@ -232,15 +232,22 @@
                                 <DataGridTextColumn Header="Installment Amount" Binding="{Binding InstallmentAmountText}" Width="130"/>
                                 <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="90"/>
                                 <DataGridTextColumn Header="Comments" Binding="{Binding CommentsText}" Width="*"/>
-                                <DataGridTemplateColumn Header="Actions" Width="90">
+                                <DataGridTemplateColumn Header="Actions" Width="160">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Content="Remove"
-                                                    Background="#B00020"
-                                                    Foreground="White"
-                                                    Padding="8,2"
-                                                    Command="{Binding DataContext.RemoveProgramCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit"
+                                                        Margin="0,0,6,0"
+                                                        Padding="8,2"
+                                                        Command="{Binding DataContext.EditProgramCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="Remove"
+                                                        Background="#B00020"
+                                                        Foreground="White"
+                                                        Padding="8,2"
+                                                        Command="{Binding DataContext.RemoveProgramCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>

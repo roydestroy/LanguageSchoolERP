@@ -84,6 +84,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand CancelEditCommand { get; }
     public IAsyncRelayCommand DeleteStudentCommand { get; }
     public IRelayCommand AddProgramCommand { get; }
+    public IRelayCommand<ProgramEnrollmentRowVm> EditProgramCommand { get; }
     public IAsyncRelayCommand<ProgramEnrollmentRowVm> RemoveProgramCommand { get; }
 
     public event Action? RequestClose;
@@ -103,6 +104,7 @@ public partial class StudentProfileViewModel : ObservableObject
         CancelEditCommand = new RelayCommand(CancelEdit);
         DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync);
         AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
+        EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
         RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
 
     }
@@ -209,6 +211,20 @@ public partial class StudentProfileViewModel : ObservableObject
         var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
         win.Owner = System.Windows.Application.Current.MainWindow;
         win.Initialize(new AddProgramEnrollmentInit(_studentId, LocalAcademicYear));
+
+        var result = win.ShowDialog();
+        if (result == true)
+            _ = LoadAsync();
+    }
+
+
+    private void OpenEditProgramDialog(ProgramEnrollmentRowVm? row)
+    {
+        if (row is null) return;
+
+        var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddProgramEnrollmentInit(_studentId, LocalAcademicYear, row.EnrollmentId));
 
         var result = win.ShowDialog();
         if (result == true)

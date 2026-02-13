@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
-public record AddProgramEnrollmentInit(Guid StudentId, string AcademicYear);
+public record AddProgramEnrollmentInit(Guid StudentId, string AcademicYear, Guid? EnrollmentId = null);
 
 public partial class AddProgramEnrollmentViewModel : ObservableObject
 {
@@ -18,6 +18,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     private Guid _studentId;
     private string _academicYear = "";
+    private Guid? _editingEnrollmentId;
 
     public event EventHandler<bool>? RequestClose;
 
@@ -33,6 +34,8 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private string installmentCountText = "0";
     [ObservableProperty] private DateTime? installmentStartMonth;
     [ObservableProperty] private string errorMessage = "";
+    [ObservableProperty] private string dialogTitle = "Add Program Enrollment";
+    [ObservableProperty] private string saveButtonText = "Add Program";
 
     public IAsyncRelayCommand SaveCommand { get; }
 
@@ -42,10 +45,11 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         SaveCommand = new AsyncRelayCommand(SaveAsync);
     }
 
-    public void Initialize(AddProgramEnrollmentInit init)
+    public async void Initialize(AddProgramEnrollmentInit init)
     {
         _studentId = init.StudentId;
         _academicYear = init.AcademicYear;
+        _editingEnrollmentId = init.EnrollmentId;
 
         SelectedProgramType = ProgramType.LanguageSchool;
         LevelOrClass = "";
@@ -56,6 +60,46 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         InstallmentCountText = "0";
         InstallmentStartMonth = null;
         ErrorMessage = "";
+
+        if (_editingEnrollmentId.HasValue)
+        {
+            DialogTitle = "Edit Program Enrollment";
+            SaveButtonText = "Save Changes";
+
+            try
+            {
+                using var db = _dbFactory.Create();
+                DbSeeder.EnsureSeeded(db);
+
+                var enrollment = await db.Enrollments
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(e => e.EnrollmentId == _editingEnrollmentId.Value && e.StudentId == _studentId);
+
+                if (enrollment is null)
+                {
+                    ErrorMessage = "Enrollment not found.";
+                    return;
+                }
+
+                SelectedProgramType = enrollment.ProgramType;
+                LevelOrClass = enrollment.LevelOrClass ?? "";
+                AgreementTotalText = enrollment.AgreementTotal.ToString("0.00", CultureInfo.InvariantCulture);
+                BooksAmountText = enrollment.BooksAmount.ToString("0.00", CultureInfo.InvariantCulture);
+                DownPaymentText = enrollment.DownPayment.ToString("0.00", CultureInfo.InvariantCulture);
+                EnrollmentComments = enrollment.Comments ?? "";
+                InstallmentCountText = enrollment.InstallmentCount.ToString(CultureInfo.InvariantCulture);
+                InstallmentStartMonth = enrollment.InstallmentStartMonth;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+            }
+        }
+        else
+        {
+            DialogTitle = "Add Program Enrollment";
+            SaveButtonText = "Add Program";
+        }
     }
 
     private async Task SaveAsync()
@@ -117,24 +161,47 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                 return;
             }
 
-            var enrollment = new Enrollment
+            if (_editingEnrollmentId.HasValue)
             {
-                StudentId = _studentId,
-                AcademicPeriodId = period.AcademicPeriodId,
-                ProgramType = SelectedProgramType,
-                LevelOrClass = LevelOrClass.Trim(),
-                AgreementTotal = agreementTotal,
-                BooksAmount = books,
-                DownPayment = down,
-                Comments = EnrollmentComments.Trim(),
-                Status = "Active",
-                InstallmentCount = installmentCount,
-                InstallmentStartMonth = startMonth
-            };
+                var enrollment = await db.Enrollments
+                    .FirstOrDefaultAsync(e => e.EnrollmentId == _editingEnrollmentId.Value && e.StudentId == _studentId);
 
-            db.Enrollments.Add(enrollment);
+                if (enrollment is null)
+                {
+                    ErrorMessage = "Enrollment not found.";
+                    return;
+                }
+
+                enrollment.ProgramType = SelectedProgramType;
+                enrollment.LevelOrClass = LevelOrClass.Trim();
+                enrollment.AgreementTotal = agreementTotal;
+                enrollment.BooksAmount = books;
+                enrollment.DownPayment = down;
+                enrollment.Comments = EnrollmentComments.Trim();
+                enrollment.InstallmentCount = installmentCount;
+                enrollment.InstallmentStartMonth = startMonth;
+            }
+            else
+            {
+                var enrollment = new Enrollment
+                {
+                    StudentId = _studentId,
+                    AcademicPeriodId = period.AcademicPeriodId,
+                    ProgramType = SelectedProgramType,
+                    LevelOrClass = LevelOrClass.Trim(),
+                    AgreementTotal = agreementTotal,
+                    BooksAmount = books,
+                    DownPayment = down,
+                    Comments = EnrollmentComments.Trim(),
+                    Status = "Active",
+                    InstallmentCount = installmentCount,
+                    InstallmentStartMonth = startMonth
+                };
+
+                db.Enrollments.Add(enrollment);
+            }
+
             await db.SaveChangesAsync();
-
             RequestClose?.Invoke(this, true);
         }
         catch (Exception ex)
