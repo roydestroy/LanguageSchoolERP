@@ -20,6 +20,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private readonly DbContextFactory _dbFactory;
 
     private Guid _studentId;
+    private bool _isLoading;
 
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
@@ -126,6 +127,9 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
+        if (_isLoading) return;
+        _isLoading = true;
+
         try
         {
             using var db = _dbFactory.Create();
@@ -306,6 +310,10 @@ public partial class StudentProfileViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show(ex.ToString(), "LoadAsync failed");
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }
