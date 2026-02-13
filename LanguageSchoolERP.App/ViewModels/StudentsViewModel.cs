@@ -121,8 +121,12 @@ public partial class StudentsViewModel : ObservableObject
 
             baseQuery = SelectedStudentStatusFilter switch
             {
-                ActiveStudentsFilter => baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId)),
-                InactiveStudentsFilter => baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId)),
+                ActiveStudentsFilter => selectedPeriodId == null
+                    ? baseQuery.Where(_ => false)
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                InactiveStudentsFilter => selectedPeriodId == null
+                    ? baseQuery
+                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
                 _ => baseQuery
             };
 
@@ -140,17 +144,6 @@ public partial class StudentsViewModel : ObservableObject
                     .ThenInclude(en => en.Payments)
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
-
-            var activeStudentIds = (await db.Enrollments
-                .AsNoTracking()
-                .Select(e => e.StudentId)
-                .Distinct()
-                .ToListAsync())
-                .ToHashSet();
-
-            var now = DateTime.Now;
-            var currentMonthStart = new DateTime(now.Year, now.Month, 1);
-            var nextMonthStart = currentMonthStart.AddMonths(1);
 
             foreach (var s in students)
             {
@@ -178,7 +171,7 @@ public partial class StudentsViewModel : ObservableObject
                     YearLabel = $"Year: {year}",
                     Balance = balance,
                     IsOverdue = overdue,
-                    IsActive = activeStudentIds.Contains(s.StudentId),
+                    IsActive = yearEnrollments.Count > 0,
                     IsExpanded = false
                 };
 
