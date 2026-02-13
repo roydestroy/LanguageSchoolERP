@@ -1,7 +1,11 @@
+using System;
+
 ﻿namespace LanguageSchoolERP.App.ViewModels;
 
 public class ReceiptRowVm
 {
+    public bool IsDownpayment { get; set; }
+    public Guid EnrollmentId { get; set; }
     public string NumberText { get; set; } = "";
     public string DateText { get; set; } = "";
     public string AmountText { get; set; } = "";
