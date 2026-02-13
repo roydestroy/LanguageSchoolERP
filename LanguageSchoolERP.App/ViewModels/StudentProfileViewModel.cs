@@ -41,6 +41,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
     public ObservableCollection<ReceiptRowVm> Receipts { get; } = new();
+    public ObservableCollection<ProgramEnrollmentRowVm> Programs { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
@@ -82,6 +83,8 @@ public partial class StudentProfileViewModel : ObservableObject
     public IAsyncRelayCommand SaveProfileCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
     public IAsyncRelayCommand DeleteStudentCommand { get; }
+    public IRelayCommand AddProgramCommand { get; }
+    public IAsyncRelayCommand<ProgramEnrollmentRowVm> RemoveProgramCommand { get; }
 
     public event Action? RequestClose;
     public StudentProfileViewModel(
@@ -99,6 +102,8 @@ public partial class StudentProfileViewModel : ObservableObject
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
         CancelEditCommand = new RelayCommand(CancelEdit);
         DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync);
+        AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
+        RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
 
     }
 
@@ -196,6 +201,54 @@ public partial class StudentProfileViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show(ex.ToString(), "Delete student failed");
+        }
+    }
+
+    private void OpenAddProgramDialog()
+    {
+        var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddProgramEnrollmentInit(_studentId, LocalAcademicYear));
+
+        var result = win.ShowDialog();
+        if (result == true)
+            _ = LoadAsync();
+    }
+
+    private async Task RemoveProgramAsync(ProgramEnrollmentRowVm? row)
+    {
+        if (row is null) return;
+
+        var result = System.Windows.MessageBox.Show(
+            "Remove this program enrollment from the student?",
+            "Confirm Remove Program",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var enrollment = await db.Enrollments
+                .FirstOrDefaultAsync(e => e.EnrollmentId == row.EnrollmentId && e.StudentId == _studentId);
+
+            if (enrollment is null)
+            {
+                System.Windows.MessageBox.Show("Enrollment not found.");
+                return;
+            }
+
+            db.Enrollments.Remove(enrollment);
+            await db.SaveChangesAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Remove program failed");
         }
     }
 
@@ -346,6 +399,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             Payments.Clear();
             Receipts.Clear();
+            Programs.Clear();
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
@@ -424,6 +478,24 @@ public partial class StudentProfileViewModel : ObservableObject
                 ProgramType.EuroLab => "EUROLAB",
                 _ => p.ToString()
             };
+
+            foreach (var e in enrollments.OrderBy(e => e.ProgramType).ThenBy(e => e.LevelOrClass))
+            {
+                Programs.Add(new ProgramEnrollmentRowVm
+                {
+                    EnrollmentId = e.EnrollmentId,
+                    ProgramText = ProgramLabel(e.ProgramType),
+                    LevelOrClassText = string.IsNullOrWhiteSpace(e.LevelOrClass) ? "—" : e.LevelOrClass,
+                    AgreementTotalText = $"{e.AgreementTotal:0.00} €",
+                    BooksText = $"{e.BooksAmount:0.00} €",
+                    DownPaymentText = $"{e.DownPayment:0.00} €",
+                    InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
+                        ? $"{e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}"
+                        : "—",
+                    StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Active" : e.Status,
+                    CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
+                });
+            }
 
             // Summary across enrollments (grouped by caret in list; here we aggregate)
             decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
