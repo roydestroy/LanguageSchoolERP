@@ -23,14 +23,19 @@ public partial class StudentProfileViewModel : ObservableObject
     private Guid _studentId;
     private bool _isLoading;
 
-    private string _originalFullName = "";
+    private string _originalStudentName = "";
+    private string _originalStudentSurname = "";
     private DateTime? _originalDateOfBirth;
     private string _originalPhone = "";
     private string _originalEmail = "";
     private string _originalFatherName = "";
-    private string _originalFatherContact = "";
+    private string _originalFatherSurname = "";
+    private string _originalFatherPhone = "";
+    private string _originalFatherEmail = "";
     private string _originalMotherName = "";
-    private string _originalMotherContact = "";
+    private string _originalMotherSurname = "";
+    private string _originalMotherPhone = "";
+    private string _originalMotherEmail = "";
     private string _originalNotes = "";
 
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
@@ -43,14 +48,19 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string notes = "";
     [ObservableProperty] private bool isEditing;
 
-    [ObservableProperty] private string editableFullName = "";
+    [ObservableProperty] private string editableStudentName = "";
+    [ObservableProperty] private string editableStudentSurname = "";
     [ObservableProperty] private DateTime? editableDateOfBirth;
     [ObservableProperty] private string editablePhone = "";
     [ObservableProperty] private string editableEmail = "";
     [ObservableProperty] private string editableFatherName = "";
-    [ObservableProperty] private string editableFatherContact = "";
+    [ObservableProperty] private string editableFatherSurname = "";
+    [ObservableProperty] private string editableFatherPhone = "";
+    [ObservableProperty] private string editableFatherEmail = "";
     [ObservableProperty] private string editableMotherName = "";
-    [ObservableProperty] private string editableMotherContact = "";
+    [ObservableProperty] private string editableMotherSurname = "";
+    [ObservableProperty] private string editableMotherPhone = "";
+    [ObservableProperty] private string editableMotherEmail = "";
     [ObservableProperty] private string editableNotes = "";
 
     [ObservableProperty] private string dobLine = "";
@@ -94,14 +104,19 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private void CancelEdit()
     {
-        EditableFullName = _originalFullName;
+        EditableStudentName = _originalStudentName;
+        EditableStudentSurname = _originalStudentSurname;
         EditableDateOfBirth = _originalDateOfBirth;
         EditablePhone = _originalPhone;
         EditableEmail = _originalEmail;
         EditableFatherName = _originalFatherName;
-        EditableFatherContact = _originalFatherContact;
+        EditableFatherSurname = _originalFatherSurname;
+        EditableFatherPhone = _originalFatherPhone;
+        EditableFatherEmail = _originalFatherEmail;
         EditableMotherName = _originalMotherName;
-        EditableMotherContact = _originalMotherContact;
+        EditableMotherSurname = _originalMotherSurname;
+        EditableMotherPhone = _originalMotherPhone;
+        EditableMotherEmail = _originalMotherEmail;
         EditableNotes = _originalNotes;
         IsEditing = false;
     }
@@ -122,14 +137,14 @@ public partial class StudentProfileViewModel : ObservableObject
                 return;
             }
 
-            student.FullName = EditableFullName.Trim();
+            student.FullName = JoinName(EditableStudentName, EditableStudentSurname);
             student.DateOfBirth = EditableDateOfBirth;
             student.Phone = EditablePhone.Trim();
             student.Email = EditableEmail.Trim();
-            student.FatherName = EditableFatherName.Trim();
-            student.FatherContact = EditableFatherContact.Trim();
-            student.MotherName = EditableMotherName.Trim();
-            student.MotherContact = EditableMotherContact.Trim();
+            student.FatherName = JoinName(EditableFatherName, EditableFatherSurname);
+            student.FatherContact = JoinPhoneEmail(EditableFatherPhone, EditableFatherEmail);
+            student.MotherName = JoinName(EditableMotherName, EditableMotherSurname);
+            student.MotherContact = JoinPhoneEmail(EditableMotherPhone, EditableMotherEmail);
             student.Notes = EditableNotes.Trim();
 
             await db.SaveChangesAsync();
@@ -312,31 +327,47 @@ public partial class StudentProfileViewModel : ObservableObject
             ContactLine = $"{student.Phone}  |  {student.Email}".Trim(' ', '|');
             Notes = student.Notes ?? "";
 
-            _originalFullName = student.FullName ?? "";
+            var (studentName, studentSurname) = SplitName(student.FullName);
+            var (fatherName, fatherSurname) = SplitName(student.FatherName);
+            var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
+            var (motherName, motherSurname) = SplitName(student.MotherName);
+            var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
+
+            _originalStudentName = studentName;
+            _originalStudentSurname = studentSurname;
             _originalDateOfBirth = student.DateOfBirth;
             _originalPhone = student.Phone ?? "";
             _originalEmail = student.Email ?? "";
-            _originalFatherName = student.FatherName ?? "";
-            _originalFatherContact = student.FatherContact ?? "";
-            _originalMotherName = student.MotherName ?? "";
-            _originalMotherContact = student.MotherContact ?? "";
+            _originalFatherName = fatherName;
+            _originalFatherSurname = fatherSurname;
+            _originalFatherPhone = fatherPhone;
+            _originalFatherEmail = fatherEmail;
+            _originalMotherName = motherName;
+            _originalMotherSurname = motherSurname;
+            _originalMotherPhone = motherPhone;
+            _originalMotherEmail = motherEmail;
             _originalNotes = student.Notes ?? "";
 
-            EditableFullName = _originalFullName;
+            EditableStudentName = _originalStudentName;
+            EditableStudentSurname = _originalStudentSurname;
             EditableDateOfBirth = _originalDateOfBirth;
             EditablePhone = _originalPhone;
             EditableEmail = _originalEmail;
             EditableFatherName = _originalFatherName;
-            EditableFatherContact = _originalFatherContact;
+            EditableFatherSurname = _originalFatherSurname;
+            EditableFatherPhone = _originalFatherPhone;
+            EditableFatherEmail = _originalFatherEmail;
             EditableMotherName = _originalMotherName;
-            EditableMotherContact = _originalMotherContact;
+            EditableMotherSurname = _originalMotherSurname;
+            EditableMotherPhone = _originalMotherPhone;
+            EditableMotherEmail = _originalMotherEmail;
             EditableNotes = _originalNotes;
 
             DobLine = student.DateOfBirth.HasValue ? $"DOB: {student.DateOfBirth:dd/MM/yyyy}" : "DOB: —";
             PhoneLine = string.IsNullOrWhiteSpace(student.Phone) ? "Phone: —" : $"Phone: {student.Phone}";
             EmailLine = string.IsNullOrWhiteSpace(student.Email) ? "Email: —" : $"Email: {student.Email}";
-            FatherLine = $"Father: {student.FatherName}  ({student.FatherContact})".Trim();
-            MotherLine = $"Mother: {student.MotherName}  ({student.MotherContact})".Trim();
+            FatherLine = $"Father: {student.FatherName}".Trim();
+            MotherLine = $"Mother: {student.MotherName}".Trim();
 
             var enrollments = student.Enrollments.ToList();
             static string ProgramLabel(ProgramType p) => p switch
@@ -466,4 +497,40 @@ public partial class StudentProfileViewModel : ObservableObject
             _isLoading = false;
         }
     }
+    private static (string Name, string Surname) SplitName(string? fullName)
+    {
+        var value = (fullName ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(value)) return ("", "");
+
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return (parts[0], "");
+
+        return (parts[0], string.Join(" ", parts.Skip(1)));
+    }
+
+    private static string JoinName(string? name, string? surname)
+    {
+        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+    }
+
+    private static (string Phone, string Email) SplitPhoneEmail(string? value)
+    {
+        var raw = (value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw)) return ("", "");
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts.Length == 2 ? (parts[0], parts[1]) : (raw, "");
+    }
+
+    private static string JoinPhoneEmail(string? phone, string? email)
+    {
+        var p = phone?.Trim() ?? "";
+        var e = email?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(p)) return e;
+        if (string.IsNullOrWhiteSpace(e)) return p;
+        return $"{p} | {e}";
+    }
+
 }

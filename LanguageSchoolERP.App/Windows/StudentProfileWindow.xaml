@@ -146,8 +146,11 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Student" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="Full Name" Foreground="#666666" FontSize="12"/>
-                                <TextBox Text="{Binding EditableFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+                                <TextBlock Text="Student Name" Foreground="#666666" FontSize="12"/>
+                                <TextBox Text="{Binding EditableStudentName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Student Surname" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableStudentSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
                                 <TextBlock Text="Date of Birth" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
                                 <DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
@@ -168,14 +171,26 @@
                                 <TextBlock Text="Father Name" Foreground="#666666" FontSize="12"/>
                                 <TextBox Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Father Contact" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableFatherContact, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+                                <TextBlock Text="Father Surname" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Father Phone" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableFatherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Father Email" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
                                 <TextBlock Text="Mother Name" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
                                 <TextBox Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Mother Contact" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableMotherContact, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+                                <TextBlock Text="Mother Surname" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Mother Phone" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableMotherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Mother Email" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
                             </StackPanel>
                         </Grid>
                     </Grid>
