@@ -23,14 +23,47 @@ public partial class StudentProfileViewModel : ObservableObject
     private Guid _studentId;
     private bool _isLoading;
 
+    private string _originalStudentName = "";
+    private string _originalStudentSurname = "";
+    private DateTime? _originalDateOfBirth;
+    private string _originalPhone = "";
+    private string _originalEmail = "";
+    private string _originalFatherName = "";
+    private string _originalFatherSurname = "";
+    private string _originalFatherPhone = "";
+    private string _originalFatherEmail = "";
+    private string _originalMotherName = "";
+    private string _originalMotherSurname = "";
+    private string _originalMotherPhone = "";
+    private string _originalMotherEmail = "";
+    private string _originalNotes = "";
+
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
     public ObservableCollection<ReceiptRowVm> Receipts { get; } = new();
+    public ObservableCollection<ProgramEnrollmentRowVm> Programs { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
+    [ObservableProperty] private string activeStatusText = "Inactive";
     [ObservableProperty] private string notes = "";
+    [ObservableProperty] private bool isEditing;
+
+    [ObservableProperty] private string editableStudentName = "";
+    [ObservableProperty] private string editableStudentSurname = "";
+    [ObservableProperty] private DateTime? editableDateOfBirth;
+    [ObservableProperty] private string editablePhone = "";
+    [ObservableProperty] private string editableEmail = "";
+    [ObservableProperty] private string editableFatherName = "";
+    [ObservableProperty] private string editableFatherSurname = "";
+    [ObservableProperty] private string editableFatherPhone = "";
+    [ObservableProperty] private string editableFatherEmail = "";
+    [ObservableProperty] private string editableMotherName = "";
+    [ObservableProperty] private string editableMotherSurname = "";
+    [ObservableProperty] private string editableMotherPhone = "";
+    [ObservableProperty] private string editableMotherEmail = "";
+    [ObservableProperty] private string editableNotes = "";
 
     [ObservableProperty] private string dobLine = "";
     [ObservableProperty] private string phoneLine = "";
@@ -46,6 +79,15 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private double progressPercent = 0;
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
+    public IRelayCommand EditProfileCommand { get; }
+    public IAsyncRelayCommand SaveProfileCommand { get; }
+    public IRelayCommand CancelEditCommand { get; }
+    public IAsyncRelayCommand DeleteStudentCommand { get; }
+    public IRelayCommand AddProgramCommand { get; }
+    public IRelayCommand<ProgramEnrollmentRowVm> EditProgramCommand { get; }
+    public IAsyncRelayCommand<ProgramEnrollmentRowVm> RemoveProgramCommand { get; }
+
+    public event Action? RequestClose;
     public StudentProfileViewModel(
         AppState state,
         DbContextFactory dbFactory,
@@ -57,7 +99,173 @@ public partial class StudentProfileViewModel : ObservableObject
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
+        EditProfileCommand = new RelayCommand(StartEdit);
+        SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
+        CancelEditCommand = new RelayCommand(CancelEdit);
+        DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync);
+        AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
+        EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
+        RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
 
+    }
+
+    private void StartEdit()
+    {
+        IsEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        EditableStudentName = _originalStudentName;
+        EditableStudentSurname = _originalStudentSurname;
+        EditableDateOfBirth = _originalDateOfBirth;
+        EditablePhone = _originalPhone;
+        EditableEmail = _originalEmail;
+        EditableFatherName = _originalFatherName;
+        EditableFatherSurname = _originalFatherSurname;
+        EditableFatherPhone = _originalFatherPhone;
+        EditableFatherEmail = _originalFatherEmail;
+        EditableMotherName = _originalMotherName;
+        EditableMotherSurname = _originalMotherSurname;
+        EditableMotherPhone = _originalMotherPhone;
+        EditableMotherEmail = _originalMotherEmail;
+        EditableNotes = _originalNotes;
+        IsEditing = false;
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var student = await db.Students
+                .FirstOrDefaultAsync(s => s.StudentId == _studentId);
+
+            if (student is null)
+            {
+                System.Windows.MessageBox.Show("Student not found.");
+                return;
+            }
+
+            student.FullName = JoinName(EditableStudentName, EditableStudentSurname);
+            student.DateOfBirth = EditableDateOfBirth;
+            student.Phone = EditablePhone.Trim();
+            student.Email = EditableEmail.Trim();
+            student.FatherName = JoinName(EditableFatherName, EditableFatherSurname);
+            student.FatherContact = JoinPhoneEmail(EditableFatherPhone, EditableFatherEmail);
+            student.MotherName = JoinName(EditableMotherName, EditableMotherSurname);
+            student.MotherContact = JoinPhoneEmail(EditableMotherPhone, EditableMotherEmail);
+            student.Notes = EditableNotes.Trim();
+
+            await db.SaveChangesAsync();
+            IsEditing = false;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Save profile failed");
+        }
+    }
+
+    private async Task DeleteStudentAsync()
+    {
+        var result = System.Windows.MessageBox.Show(
+            "Are you sure you want to delete this student? This action cannot be undone.",
+            "Confirm Delete",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var student = await db.Students
+                .FirstOrDefaultAsync(s => s.StudentId == _studentId);
+
+            if (student is null)
+            {
+                System.Windows.MessageBox.Show("Student not found.");
+                return;
+            }
+
+            db.Students.Remove(student);
+            await db.SaveChangesAsync();
+
+            System.Windows.MessageBox.Show("Student deleted successfully.");
+            RequestClose?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Delete student failed");
+        }
+    }
+
+    private void OpenAddProgramDialog()
+    {
+        var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddProgramEnrollmentInit(_studentId, LocalAcademicYear));
+
+        var result = win.ShowDialog();
+        if (result == true)
+            _ = LoadAsync();
+    }
+
+
+    private void OpenEditProgramDialog(ProgramEnrollmentRowVm? row)
+    {
+        if (row is null) return;
+
+        var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddProgramEnrollmentInit(_studentId, LocalAcademicYear, row.EnrollmentId));
+
+        var result = win.ShowDialog();
+        if (result == true)
+            _ = LoadAsync();
+    }
+
+    private async Task RemoveProgramAsync(ProgramEnrollmentRowVm? row)
+    {
+        if (row is null) return;
+
+        var result = System.Windows.MessageBox.Show(
+            "Remove this program enrollment from the student?",
+            "Confirm Remove Program",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var enrollment = await db.Enrollments
+                .FirstOrDefaultAsync(e => e.EnrollmentId == row.EnrollmentId && e.StudentId == _studentId);
+
+            if (enrollment is null)
+            {
+                System.Windows.MessageBox.Show("Enrollment not found.");
+                return;
+            }
+
+            db.Enrollments.Remove(enrollment);
+            await db.SaveChangesAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Remove program failed");
+        }
     }
 
     public void Initialize(Guid studentId)
@@ -207,6 +415,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             Payments.Clear();
             Receipts.Clear();
+            Programs.Clear();
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
@@ -230,11 +439,52 @@ public partial class StudentProfileViewModel : ObservableObject
             ContactLine = $"{student.Phone}  |  {student.Email}".Trim(' ', '|');
             Notes = student.Notes ?? "";
 
+            var (studentName, studentSurname) = SplitName(student.FullName);
+            var (fatherName, fatherSurname) = SplitName(student.FatherName);
+            var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
+            var (motherName, motherSurname) = SplitName(student.MotherName);
+            var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
+
+            _originalStudentName = studentName;
+            _originalStudentSurname = studentSurname;
+            _originalDateOfBirth = student.DateOfBirth;
+            _originalPhone = student.Phone ?? "";
+            _originalEmail = student.Email ?? "";
+            _originalFatherName = fatherName;
+            _originalFatherSurname = fatherSurname;
+            _originalFatherPhone = fatherPhone;
+            _originalFatherEmail = fatherEmail;
+            _originalMotherName = motherName;
+            _originalMotherSurname = motherSurname;
+            _originalMotherPhone = motherPhone;
+            _originalMotherEmail = motherEmail;
+            _originalNotes = student.Notes ?? "";
+
+            EditableStudentName = _originalStudentName;
+            EditableStudentSurname = _originalStudentSurname;
+            EditableDateOfBirth = _originalDateOfBirth;
+            EditablePhone = _originalPhone;
+            EditableEmail = _originalEmail;
+            EditableFatherName = _originalFatherName;
+            EditableFatherSurname = _originalFatherSurname;
+            EditableFatherPhone = _originalFatherPhone;
+            EditableFatherEmail = _originalFatherEmail;
+            EditableMotherName = _originalMotherName;
+            EditableMotherSurname = _originalMotherSurname;
+            EditableMotherPhone = _originalMotherPhone;
+            EditableMotherEmail = _originalMotherEmail;
+            EditableNotes = _originalNotes;
+
             DobLine = student.DateOfBirth.HasValue ? $"DOB: {student.DateOfBirth:dd/MM/yyyy}" : "DOB: —";
             PhoneLine = string.IsNullOrWhiteSpace(student.Phone) ? "Phone: —" : $"Phone: {student.Phone}";
             EmailLine = string.IsNullOrWhiteSpace(student.Email) ? "Email: —" : $"Email: {student.Email}";
-            FatherLine = $"Father: {student.FatherName}  ({student.FatherContact})".Trim();
-            MotherLine = $"Mother: {student.MotherName}  ({student.MotherContact})".Trim();
+            FatherLine = $"Father: {student.FatherName}".Trim();
+            MotherLine = $"Mother: {student.MotherName}".Trim();
+
+            var hasAnyEnrollment = await db.Enrollments
+                .AsNoTracking()
+                .AnyAsync(e => e.StudentId == _studentId);
+            ActiveStatusText = hasAnyEnrollment ? "Active" : "Inactive";
 
             var enrollments = student.Enrollments.ToList();
             static string ProgramLabel(ProgramType p) => p switch
@@ -244,6 +494,27 @@ public partial class StudentProfileViewModel : ObservableObject
                 ProgramType.EuroLab => "EUROLAB",
                 _ => p.ToString()
             };
+
+            foreach (var e in enrollments.OrderBy(e => e.ProgramType).ThenBy(e => e.LevelOrClass))
+            {
+                Programs.Add(new ProgramEnrollmentRowVm
+                {
+                    EnrollmentId = e.EnrollmentId,
+                    ProgramText = ProgramLabel(e.ProgramType),
+                    LevelOrClassText = string.IsNullOrWhiteSpace(e.LevelOrClass) ? "—" : e.LevelOrClass,
+                    AgreementTotalText = $"{e.AgreementTotal:0.00} €",
+                    BooksText = $"{e.BooksAmount:0.00} €",
+                    DownPaymentText = $"{e.DownPayment:0.00} €",
+                    InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
+                        ? $"{e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}"
+                        : "—",
+                    InstallmentAmountText = e.InstallmentCount > 0
+                        ? BuildInstallmentAmountText(e)
+                        : "—",
+                    StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Active" : e.Status,
+                    CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
+                });
+            }
 
             // Summary across enrollments (grouped by caret in list; here we aggregate)
             decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
@@ -364,4 +635,56 @@ public partial class StudentProfileViewModel : ObservableObject
             _isLoading = false;
         }
     }
+    private static string BuildInstallmentAmountText(Enrollment e)
+    {
+        var schedule = InstallmentPlanHelper.GetInstallmentSchedule(e);
+        if (schedule.Count == 0)
+            return "—";
+
+        var first = schedule[0];
+        var last = schedule[schedule.Count - 1];
+
+        if (first == last)
+            return $"{first:0} €";
+
+        return $"{first:0} € (last {last:0} €)";
+    }
+
+
+    private static (string Name, string Surname) SplitName(string? fullName)
+    {
+        var value = (fullName ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(value)) return ("", "");
+
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return (parts[0], "");
+
+        return (parts[0], string.Join(" ", parts.Skip(1)));
+    }
+
+    private static string JoinName(string? name, string? surname)
+    {
+        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+    }
+
+    private static (string Phone, string Email) SplitPhoneEmail(string? value)
+    {
+        var raw = (value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw)) return ("", "");
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts.Length == 2 ? (parts[0], parts[1]) : (raw, "");
+    }
+
+    private static string JoinPhoneEmail(string? phone, string? email)
+    {
+        var p = phone?.Trim() ?? "";
+        var e = email?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(p)) return e;
+        if (string.IsNullOrWhiteSpace(e)) return p;
+        return $"{p} | {e}";
+    }
+
 }

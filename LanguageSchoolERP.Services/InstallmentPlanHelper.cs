@@ -11,50 +11,93 @@ public static class InstallmentPlanHelper
         if (e.InstallmentCount <= 0 || e.InstallmentStartMonth is null)
             return false;
 
-        // Normalize start month to first day
         var start = new DateTime(e.InstallmentStartMonth.Value.Year, e.InstallmentStartMonth.Value.Month, 1);
-
-        // If plan starts in the future, not overdue
         if (today < start)
             return false;
 
-        var agreement = e.AgreementTotal;
         var paid = e.DownPayment + SumPayments(e);
-
-        var remaining = agreement - paid;
+        var remaining = e.AgreementTotal - paid;
         if (remaining <= 0)
             return false;
 
-        // installments elapsed (inclusive of start month)
         int monthsElapsed = MonthsBetweenInclusive(start, new DateTime(today.Year, today.Month, 1));
         int installmentsDue = Math.Min(e.InstallmentCount, monthsElapsed);
-
         if (installmentsDue <= 0)
             return false;
 
-        decimal expectedPaid = ExpectedPaidSoFar(agreement, e.InstallmentCount, installmentsDue);
+        var schedule = GetInstallmentSchedule(e);
+        decimal expectedPaid = e.DownPayment;
+        for (int i = 0; i < installmentsDue && i < schedule.Count; i++)
+            expectedPaid += schedule[i];
 
-        return paid + 0.009m < expectedPaid; // tiny tolerance for rounding
+        return paid + 0.009m < expectedPaid;
     }
 
-    public static decimal ExpectedPaidSoFar(decimal agreementTotal, int installmentCount, int installmentsDue)
+    public static IReadOnlyList<decimal> GetInstallmentSchedule(Enrollment e)
     {
-        if (installmentCount <= 0 || installmentsDue <= 0) return 0m;
+        var result = new List<decimal>();
 
-        // base installment
-        var baseAmount = Math.Round(agreementTotal / installmentCount, 2, MidpointRounding.AwayFromZero);
+        if (e.InstallmentCount <= 0)
+            return result;
 
-        // remainder goes to last installment
-        var expected = baseAmount * installmentsDue;
+        var financedAmount = GetRoundedFinancedAmount(e);
+        if (financedAmount <= 0)
+            return result;
 
-        // If we’ve reached the last installment, expected is the full agreement
-        if (installmentsDue >= installmentCount)
-            expected = agreementTotal;
+        var baseAmount = Math.Floor(financedAmount / e.InstallmentCount);
 
-        // Cap to agreement
-        if (expected > agreementTotal) expected = agreementTotal;
+        for (int i = 0; i < e.InstallmentCount - 1; i++)
+            result.Add(baseAmount);
 
-        return expected;
+        var used = baseAmount * Math.Max(0, e.InstallmentCount - 1);
+        var lastAmount = financedAmount - used;
+        result.Add(lastAmount);
+
+        return result;
+    }
+
+    public static decimal GetRegularInstallmentAmount(Enrollment e)
+    {
+        var schedule = GetInstallmentSchedule(e);
+        return schedule.Count == 0 ? 0m : schedule[0];
+    }
+
+    public static decimal GetNextInstallmentAmount(Enrollment e)
+    {
+        if (e.InstallmentCount <= 0)
+        {
+            var paid = e.DownPayment + SumPayments(e);
+            var remaining = e.AgreementTotal - paid;
+            return remaining > 0 ? remaining : 0m;
+        }
+
+        var schedule = GetInstallmentSchedule(e);
+        if (schedule.Count == 0)
+            return 0m;
+
+        var paidTowardInstallments = SumPayments(e);
+
+        foreach (var installment in schedule)
+        {
+            if (paidTowardInstallments >= installment)
+            {
+                paidTowardInstallments -= installment;
+                continue;
+            }
+
+            return installment - paidTowardInstallments;
+        }
+
+        return 0m;
+    }
+
+    private static decimal GetRoundedFinancedAmount(Enrollment e)
+    {
+        var financed = e.AgreementTotal - e.DownPayment;
+        if (financed <= 0)
+            return 0m;
+
+        return Math.Round(financed, 0, MidpointRounding.AwayFromZero);
     }
 
     private static decimal SumPayments(Enrollment e)
@@ -70,7 +113,6 @@ public static class InstallmentPlanHelper
 
     private static int MonthsBetweenInclusive(DateTime startMonth, DateTime endMonth)
     {
-        // both should be first day of month
         int months = (endMonth.Year - startMonth.Year) * 12 + (endMonth.Month - startMonth.Month) + 1;
         return Math.Max(0, months);
     }

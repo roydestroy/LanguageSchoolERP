@@ -1,0 +1,53 @@
+<Window x:Class="LanguageSchoolERP.App.Windows.AddProgramEnrollmentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding DialogTitle}" Height="540" Width="460"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Program Enrollment" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+            <TextBlock Text="Program"/>
+            <ComboBox Margin="0,4,0,10"
+                      ItemsSource="{Binding ProgramTypes}"
+                      SelectedItem="{Binding SelectedProgramType}"/>
+
+            <TextBlock Text="Level / Class"/>
+            <TextBox Margin="0,4,0,10" Text="{Binding LevelOrClass}"/>
+
+            <TextBlock Text="Agreement total (€)"/>
+            <TextBox Margin="0,4,0,10" Text="{Binding AgreementTotalText}"/>
+
+            <TextBlock Text="Books (€)"/>
+            <TextBox Margin="0,4,0,10" Text="{Binding BooksAmountText}"/>
+
+            <TextBlock Text="Downpayment (€)"/>
+            <TextBox Margin="0,4,0,10" Text="{Binding DownPaymentText}"/>
+
+            <TextBlock Text="Installments count (0-12)"/>
+            <TextBox Margin="0,4,0,10" Text="{Binding InstallmentCountText}"/>
+
+            <TextBlock Text="Installments start month"/>
+            <DatePicker Margin="0,4,0,10" SelectedDate="{Binding InstallmentStartMonth}"/>
+
+            <TextBlock Text="Enrollment comments"/>
+            <TextBox Margin="0,4,0,0" Text="{Binding EnrollmentComments}" AcceptsReturn="True" Height="80" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <DockPanel Grid.Row="1" Margin="0,14,0,0">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="IndianRed" VerticalAlignment="Center"/>
+
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="Cancel" Width="100" Margin="0,0,8,0" IsCancel="True"/>
+                <Button Content="{Binding SaveButtonText}" Width="120" Command="{Binding SaveCommand}"/>
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

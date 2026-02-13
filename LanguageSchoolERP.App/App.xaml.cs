@@ -27,6 +27,9 @@ public partial class App : Application
         services.AddTransient<AddPaymentViewModel>();
         services.AddTransient<Windows.AddPaymentWindow>();
 
+        services.AddTransient<AddProgramEnrollmentViewModel>();
+        services.AddTransient<Windows.AddProgramEnrollmentWindow>();
+
         // Services layer
         services.AddSingleton<ReceiptNumberService>();
         services.AddSingleton<ExcelReceiptGenerator>();

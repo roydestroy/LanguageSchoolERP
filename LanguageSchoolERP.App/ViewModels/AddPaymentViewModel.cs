@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
-public record EnrollmentOption(Guid EnrollmentId, string Label)
+public record EnrollmentOption(Guid EnrollmentId, string Label, decimal SuggestedAmount)
 {
     public override string ToString() => Label;
 }
@@ -46,6 +46,7 @@ public partial class AddPaymentViewModel : ObservableObject
     public IRelayCommand SaveCommand { get; }
 
     private AddPaymentInit? _init;
+    private readonly Dictionary<Guid, decimal> _suggestedAmountsByEnrollment = new();
 
     public AddPaymentViewModel(
         DbContextFactory dbFactory,
@@ -71,6 +72,7 @@ public partial class AddPaymentViewModel : ObservableObject
         SelectedPaymentMethod = PaymentMethod.Cash;
 
         EnrollmentOptions.Clear();
+        _suggestedAmountsByEnrollment.Clear();
 
         using var db = _dbFactory.Create();
         DbSeeder.EnsureSeeded(db);
@@ -89,6 +91,7 @@ public partial class AddPaymentViewModel : ObservableObject
         var enrollments = await db.Enrollments
             .AsNoTracking()
             .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId)
+            .Include(e => e.Payments)
             .OrderBy(e => e.ProgramType)
             .ToListAsync();
 
@@ -98,10 +101,28 @@ public partial class AddPaymentViewModel : ObservableObject
                 ? $"{e.ProgramType}"
                 : $"{e.ProgramType} ({e.LevelOrClass})";
 
-            EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, label));
+            var suggested = InstallmentPlanHelper.GetNextInstallmentAmount(e);
+            _suggestedAmountsByEnrollment[e.EnrollmentId] = suggested;
+
+            var optionLabel = suggested > 0
+                ? $"{label} - next: {suggested:0} €"
+                : label;
+
+            EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, optionLabel, suggested));
         }
 
         SelectedEnrollmentOption = EnrollmentOptions.FirstOrDefault();
+    }
+
+
+    partial void OnSelectedEnrollmentOptionChanged(EnrollmentOption? value)
+    {
+        if (value is null) return;
+
+        if (_suggestedAmountsByEnrollment.TryGetValue(value.EnrollmentId, out var suggested) && suggested > 0)
+        {
+            AmountText = suggested.ToString("0", CultureInfo.InvariantCulture);
+        }
     }
 
     private async Task SaveAsync()

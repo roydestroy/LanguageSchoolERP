@@ -11,7 +11,14 @@ public partial class StudentProfileWindow : Window
     {
         InitializeComponent();
         _vm = vm;
+        _vm.RequestClose += HandleRequestClose;
+        Closed += (_, __) => _vm.RequestClose -= HandleRequestClose;
         DataContext = vm;
+    }
+
+    private void HandleRequestClose()
+    {
+        Close();
     }
 
     public void Initialize(Guid studentId)

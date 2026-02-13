@@ -4,6 +4,44 @@
         Title="Student Profile" Height="780" Width="1150"
         WindowStartupLocation="CenterOwner">
 
+    <Window.Resources>
+        <Style x:Key="EditableTextBoxStyle" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter Property="IsReadOnly" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="EditButtonStyle" TargetType="Button">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="EditModeButtonStyle" TargetType="Button">
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="EditableDatePickerStyle" TargetType="DatePicker">
+            <Setter Property="IsEnabled" Value="False"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter Property="IsEnabled" Value="True"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,6 +59,7 @@
             <StackPanel>
                 <TextBlock Text="{Binding FullName}" FontSize="22" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding ContactLine}" Foreground="#666666" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding ActiveStatusText}" Foreground="#444444" FontWeight="SemiBold" Margin="0,4,0,0"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
@@ -74,30 +113,148 @@
             <TabItem Header="Profile">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Student" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                            <TextBlock Text="{Binding FullName}" />
-                            <TextBlock Text="{Binding DobLine}" Margin="0,6,0,0"/>
-                            <TextBlock Text="{Binding PhoneLine}" Margin="0,6,0,0"/>
-                            <TextBlock Text="{Binding EmailLine}" Margin="0,6,0,0"/>
+                        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                <Button Content="Edit"
+                                        Width="90"
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource EditButtonStyle}"
+                                        Command="{Binding EditProfileCommand}"/>
+                                <Button Content="Save"
+                                        Width="90"
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource EditModeButtonStyle}"
+                                        Command="{Binding SaveProfileCommand}"/>
+                                <Button Content="Cancel"
+                                        Width="90"
+                                        Style="{StaticResource EditModeButtonStyle}"
+                                        Command="{Binding CancelEditCommand}"/>
+                                <Button Content="Delete Student"
+                                        Width="120"
+                                        Margin="10,0,0,0"
+                                        Background="#B00020"
+                                        Foreground="White"
+                                        Command="{Binding DeleteStudentCommand}"/>
+                            </StackPanel>
+                        </DockPanel>
 
-                            <TextBlock Text="Notes" FontWeight="SemiBold" Margin="0,16,0,6"/>
-                            <TextBlock Text="{Binding Notes}" TextWrapping="Wrap"/>
-                        </StackPanel>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Parents" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                            <TextBlock Text="{Binding FatherLine}" />
-                            <TextBlock Text="{Binding MotherLine}" Margin="0,6,0,0"/>
-                        </StackPanel>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Student" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                <TextBlock Text="Student Name" Foreground="#666666" FontSize="12"/>
+                                <TextBox Text="{Binding EditableStudentName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Student Surname" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableStudentSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Date of Birth" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
+
+                                <TextBlock Text="Phone" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditablePhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Email" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Notes" FontWeight="SemiBold" Margin="0,16,0,6"/>
+                                <TextBox Text="{Binding EditableNotes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Style="{StaticResource EditableTextBoxStyle}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Parents" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+                                <TextBlock Text="Father Name" Foreground="#666666" FontSize="12"/>
+                                <TextBox Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Father Surname" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Father Phone" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableFatherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Father Email" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Mother Name" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
+                                <TextBox Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Mother Surname" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Mother Phone" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableMotherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+                                <TextBlock Text="Mother Email" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+                                <TextBox Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
                 </ScrollViewer>
+            </TabItem>
+
+
+            <TabItem Header="Programs">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel>
+                        <TextBlock Text="Program Enrollments (Selected Year)" FontWeight="SemiBold" />
+                        <Button DockPanel.Dock="Right" Content="Add Program" Width="120" Command="{Binding AddProgramCommand}"/>
+                    </DockPanel>
+
+                    <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
+                        <DataGrid ItemsSource="{Binding Programs}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="120"/>
+                                <DataGridTextColumn Header="Level/Class" Binding="{Binding LevelOrClassText}" Width="120"/>
+                                <DataGridTextColumn Header="Agreement" Binding="{Binding AgreementTotalText}" Width="110"/>
+                                <DataGridTextColumn Header="Books" Binding="{Binding BooksText}" Width="100"/>
+                                <DataGridTextColumn Header="Downpayment" Binding="{Binding DownPaymentText}" Width="120"/>
+                                <DataGridTextColumn Header="Installments" Binding="{Binding InstallmentsText}" Width="130"/>
+                                <DataGridTextColumn Header="Installment Amount" Binding="{Binding InstallmentAmountText}" Width="130"/>
+                                <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="90"/>
+                                <DataGridTextColumn Header="Comments" Binding="{Binding CommentsText}" Width="*"/>
+                                <DataGridTemplateColumn Header="Actions" Width="160">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit"
+                                                        Margin="0,0,6,0"
+                                                        Padding="8,2"
+                                                        Command="{Binding DataContext.EditProgramCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="Remove"
+                                                        Background="#B00020"
+                                                        Foreground="White"
+                                                        Padding="8,2"
+                                                        Command="{Binding DataContext.RemoveProgramCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
             </TabItem>
 
             <TabItem Header="Payments">

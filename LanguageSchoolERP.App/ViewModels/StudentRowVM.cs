@@ -13,6 +13,10 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private string contactLine = "";
     [ObservableProperty] private string yearLabel = "";
 
+    [ObservableProperty] private bool isActive;
+    public string ActiveBadgeText => IsActive ? "ACTIVE" : "INACTIVE";
+    public Brush ActiveBadgeBackground => IsActive ? Brushes.SeaGreen : Brushes.Gray;
+
     [ObservableProperty] private decimal balance;
     public string BalanceText => $"{Balance:0.00} €";
 
@@ -27,4 +31,10 @@ public partial class StudentRowVm : ObservableObject
 
     partial void OnIsExpandedChanged(bool value)
         => OnPropertyChanged(nameof(ExpandedVisibility));
+
+    partial void OnIsActiveChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ActiveBadgeText));
+        OnPropertyChanged(nameof(ActiveBadgeBackground));
+    }
 }
