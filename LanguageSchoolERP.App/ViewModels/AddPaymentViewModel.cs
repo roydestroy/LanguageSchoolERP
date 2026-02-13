@@ -105,7 +105,7 @@ public partial class AddPaymentViewModel : ObservableObject
             _suggestedAmountsByEnrollment[e.EnrollmentId] = suggested;
 
             var optionLabel = suggested > 0
-                ? $"{label} - next: {suggested:0.00} €"
+                ? $"{label} - next: {suggested:0} €"
                 : label;
 
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, optionLabel, suggested));
@@ -121,7 +121,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
         if (_suggestedAmountsByEnrollment.TryGetValue(value.EnrollmentId, out var suggested) && suggested > 0)
         {
-            AmountText = suggested.ToString("0.00", CultureInfo.InvariantCulture);
+            AmountText = suggested.ToString("0", CultureInfo.InvariantCulture);
         }
     }
 

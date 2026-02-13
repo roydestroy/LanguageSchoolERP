@@ -509,7 +509,7 @@ public partial class StudentProfileViewModel : ObservableObject
                         ? $"{e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}"
                         : "—",
                     InstallmentAmountText = e.InstallmentCount > 0
-                        ? $"{InstallmentPlanHelper.GetRegularInstallmentAmount(e):0.00} €"
+                        ? BuildInstallmentAmountText(e)
                         : "—",
                     StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Active" : e.Status,
                     CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
@@ -635,6 +635,22 @@ public partial class StudentProfileViewModel : ObservableObject
             _isLoading = false;
         }
     }
+    private static string BuildInstallmentAmountText(Enrollment e)
+    {
+        var schedule = InstallmentPlanHelper.GetInstallmentSchedule(e);
+        if (schedule.Count == 0)
+            return "—";
+
+        var first = schedule[0];
+        var last = schedule[schedule.Count - 1];
+
+        if (first == last)
+            return $"{first:0} €";
+
+        return $"{first:0} € (last {last:0} €)";
+    }
+
+
     private static (string Name, string Surname) SplitName(string? fullName)
     {
         var value = (fullName ?? "").Trim();
