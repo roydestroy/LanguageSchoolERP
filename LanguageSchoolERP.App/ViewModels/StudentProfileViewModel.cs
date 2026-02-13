@@ -219,10 +219,35 @@ public partial class StudentProfileViewModel : ObservableObject
                 .OrderByDescending(p => p.PaymentDate)
                 .ToList();
 
+            var downpaymentRows = enrollments
+                .Where(e => e.DownPayment > 0)
+                .OrderByDescending(e => e.Payments.Any() ? e.Payments.Min(p => p.PaymentDate) : DateTime.MinValue)
+                .Select(e =>
+                {
+                    var firstPaymentDate = e.Payments
+                        .OrderBy(p => p.PaymentDate)
+                        .Select(p => (DateTime?)p.PaymentDate)
+                        .FirstOrDefault();
+
+                    return new PaymentRowVm
+                    {
+                        TypeText = "Downpayment",
+                        DateText = firstPaymentDate?.ToString("dd/MM/yyyy") ?? "—",
+                        AmountText = $"{e.DownPayment:0.00} €",
+                        Method = "Enrollment",
+                        Notes = "Enrollment downpayment"
+                    };
+                })
+                .ToList();
+
+            foreach (var row in downpaymentRows)
+                Payments.Add(row);
+
             foreach (var p in payments)
             {
                 Payments.Add(new PaymentRowVm
                 {
+                    TypeText = "Payment",
                     DateText = p.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{p.Amount:0.00} €",
                     Method = p.Method.ToString(),

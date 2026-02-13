@@ -108,7 +108,7 @@
                     </Grid.RowDefinitions>
 
                     <DockPanel>
-                        <TextBlock Text="Payments (Selected Year)" FontWeight="SemiBold" />
+                        <TextBlock Text="Payments (Selected Year, including Downpayment)" FontWeight="SemiBold" />
                         <Button DockPanel.Dock="Right" Content="Add Payment" Width="120" Command="{Binding AddPaymentCommand}"/>
                     </DockPanel>
 
@@ -119,6 +119,7 @@
                                   HeadersVisibility="Column"
                                   CanUserAddRows="False">
                             <DataGrid.Columns>
+                                <DataGridTextColumn Header="Type" Binding="{Binding TypeText}" Width="140"/>
                                 <DataGridTextColumn Header="Date" Binding="{Binding DateText}" Width="140"/>
                                 <DataGridTextColumn Header="Amount" Binding="{Binding AmountText}" Width="140"/>
                                 <DataGridTextColumn Header="Method" Binding="{Binding Method}" Width="140"/>
