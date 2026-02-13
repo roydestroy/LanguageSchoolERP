@@ -16,12 +16,23 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class StudentsViewModel : ObservableObject
 {
+    private const string AllStudentsFilter = "All students";
+    private const string ActiveStudentsFilter = "Active only";
+    private const string InactiveStudentsFilter = "Inactive only";
+
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
+    public ObservableCollection<string> StudentStatusFilters { get; } =
+    [
+        AllStudentsFilter,
+        ActiveStudentsFilter,
+        InactiveStudentsFilter
+    ];
 
     [ObservableProperty] private string searchText = "";
+    [ObservableProperty] private string selectedStudentStatusFilter = AllStudentsFilter;
 
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand NewStudentCommand { get; }
@@ -57,6 +68,12 @@ public partial class StudentsViewModel : ObservableObject
         // lightweight debounce not needed yet; refresh on typing is fine for now
         _ = LoadAsync();
     }
+
+    partial void OnSelectedStudentStatusFilterChanged(string value)
+    {
+        _ = LoadAsync();
+    }
+
     private void OpenNewStudentDialog()
     {
         var win = App.Services.GetRequiredService<LanguageSchoolERP.App.Windows.NewStudentWindow>();
@@ -94,18 +111,24 @@ public partial class StudentsViewModel : ObservableObject
 
             var year = _state.SelectedAcademicYear;
 
-            // Find the selected academic period
+            // Selected academic period is optional; students should remain visible even if no period exists.
             var period = await db.AcademicPeriods
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Name == year);
-
-            if (period is null)
-            {
-                // If it doesn't exist yet, show empty list (later we’ll create periods via UI)
-                return;
-            }
+            var selectedPeriodId = period?.AcademicPeriodId;
 
             var baseQuery = db.Students.AsNoTracking();
+
+            baseQuery = SelectedStudentStatusFilter switch
+            {
+                ActiveStudentsFilter => selectedPeriodId == null
+                    ? baseQuery.Where(_ => false)
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                InactiveStudentsFilter => selectedPeriodId == null
+                    ? baseQuery
+                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                _ => baseQuery
+            };
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
@@ -117,21 +140,10 @@ public partial class StudentsViewModel : ObservableObject
             }
 
             var students = await baseQuery
-                .Include(s => s.Enrollments.Where(en => en.AcademicPeriodId == period.AcademicPeriodId))
+                .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
                     .ThenInclude(en => en.Payments)
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
-
-            var activeStudentIds = (await db.Enrollments
-                .AsNoTracking()
-                .Select(e => e.StudentId)
-                .Distinct()
-                .ToListAsync())
-                .ToHashSet();
-
-            var now = DateTime.Now;
-            var currentMonthStart = new DateTime(now.Year, now.Month, 1);
-            var nextMonthStart = currentMonthStart.AddMonths(1);
 
             foreach (var s in students)
             {
@@ -159,7 +171,7 @@ public partial class StudentsViewModel : ObservableObject
                     YearLabel = $"Year: {year}",
                     Balance = balance,
                     IsOverdue = overdue,
-                    IsActive = activeStudentIds.Contains(s.StudentId),
+                    IsActive = yearEnrollments.Count > 0,
                     IsExpanded = false
                 };
 
