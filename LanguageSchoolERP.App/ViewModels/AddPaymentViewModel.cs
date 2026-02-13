@@ -46,7 +46,6 @@ public partial class AddPaymentViewModel : ObservableObject
     public IRelayCommand SaveCommand { get; }
 
     private AddPaymentInit? _init;
-    private Guid _academicPeriodId;
 
     public AddPaymentViewModel(
         DbContextFactory dbFactory,
@@ -86,7 +85,6 @@ public partial class AddPaymentViewModel : ObservableObject
             return;
         }
 
-        _academicPeriodId = period.AcademicPeriodId;
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
@@ -136,8 +134,8 @@ public partial class AddPaymentViewModel : ObservableObject
 
         try
         {
-            // 1) Get receipt number first (atomic per academic year)
-            var receiptNumber = await _receiptNumberService.GetNextReceiptNumberAsync(_academicPeriodId);
+            // 1) Get receipt number first (atomic per student per academic year)
+            var receiptNumber = await _receiptNumberService.GetNextReceiptNumberAsync(SelectedEnrollmentOption.EnrollmentId);
 
             using var db = _dbFactory.Create();
             DbSeeder.EnsureSeeded(db);
