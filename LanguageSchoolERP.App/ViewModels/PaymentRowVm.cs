@@ -1,0 +1,12 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace LanguageSchoolERP.App.ViewModels;
+
+public partial class PaymentRowVm : ObservableObject
+{
+    [ObservableProperty] private string dateText = "";
+    [ObservableProperty] private string amountText = "";
+    [ObservableProperty] private string method = "";
+    [ObservableProperty] private string notes = "";
+    public string ProgramText { get; set; } = "";
+}

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Office.Interop.Excel" Version="16.0.18925.20022" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LanguageSchoolERP.Core\LanguageSchoolERP.Core.csproj" />
+    <ProjectReference Include="..\LanguageSchoolERP.Data\LanguageSchoolERP.Data.csproj" />
+  </ItemGroup>
+
+</Project>

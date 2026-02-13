@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="LanguageSchoolERP.App/LanguageSchoolERP.App.csproj" />
+  <Project Path="LanguageSchoolERP.Core/LanguageSchoolERP.Core.csproj" />
+  <Project Path="LanguageSchoolERP.Data/LanguageSchoolERP.Data.csproj" />
+  <Project Path="LanguageSchoolERP.Services/LanguageSchoolERP.Services.csproj" />
+</Solution>
