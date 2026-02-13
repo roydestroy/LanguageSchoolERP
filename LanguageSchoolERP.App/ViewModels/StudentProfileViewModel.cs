@@ -225,15 +225,10 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
-                var firstPaymentDate = enrollment.Payments
-                    .OrderBy(p => p.PaymentDate)
-                    .Select(p => (DateTime?)p.PaymentDate)
-                    .FirstOrDefault();
-
                 Payments.Add(new PaymentRowVm
                 {
                     TypeText = "Downpayment",
-                    DateText = firstPaymentDate?.ToString("dd/MM/yyyy") ?? "—",
+                    DateText = "—",
                     AmountText = $"{enrollment.DownPayment:0.00} €",
                     Method = "Enrollment",
                     Notes = "Enrollment downpayment"
