@@ -171,11 +171,36 @@ public partial class StudentProfileViewModel : ObservableObject
                 _ => p.ToString()
             };
 
+            const decimal downpaymentTolerance = 0.01m;
+
+            static bool HasDownpaymentHint(Payment payment)
+            {
+                var notes = payment.Notes ?? string.Empty;
+                var method = payment.Method.ToString();
+                return notes.Contains("downpayment", StringComparison.OrdinalIgnoreCase)
+                    || notes.Contains("down payment", StringComparison.OrdinalIgnoreCase)
+                    || notes.Contains("enrollment", StringComparison.OrdinalIgnoreCase)
+                    || method.Contains("downpayment", StringComparison.OrdinalIgnoreCase)
+                    || method.Contains("enrollment", StringComparison.OrdinalIgnoreCase);
+            }
+
+            // Find one matching downpayment payment per enrollment (if any).
+            var matchedDownpaymentByEnrollment = enrollments
+                .Where(e => e.DownPayment > 0)
+                .ToDictionary(
+                    e => e.EnrollmentId,
+                    e => e.Payments
+                        .Where(p => Math.Abs(p.Amount - e.DownPayment) <= downpaymentTolerance || HasDownpaymentHint(p))
+                        .OrderBy(p => p.PaymentDate)
+                        .FirstOrDefault());
+
             // Summary across enrollments (grouped by caret in list; here we aggregate)
             decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
-            decimal downSum = enrollments.Sum(e => e.DownPayment);
             decimal paidSum = enrollments.Sum(e => e.Payments.Sum(p => p.Amount));
-            decimal paidTotal = downSum + paidSum;
+            decimal unmatchedDownpaymentSum = enrollments
+                .Where(e => e.DownPayment > 0)
+                .Sum(e => matchedDownpaymentByEnrollment[e.EnrollmentId] is null ? e.DownPayment : 0m);
+            decimal paidTotal = paidSum + unmatchedDownpaymentSum;
             decimal balance = agreementSum - paidTotal;
             if (balance < 0) balance = 0;
 
@@ -220,50 +245,29 @@ public partial class StudentProfileViewModel : ObservableObject
                 .OrderByDescending(x => x.Payment.PaymentDate)
                 .ToList();
 
-            var downpaymentPaymentIds = new HashSet<Guid>();
-            const decimal downpaymentTolerance = 0.01m;
+            var downpaymentPaymentIds = matchedDownpaymentByEnrollment.Values
+                .Where(p => p is not null)
+                .Select(p => p!.PaymentId)
+                .ToHashSet();
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
-                var earliestPayment = enrollment.Payments
+                if (matchedDownpaymentByEnrollment[enrollment.EnrollmentId] is not null)
+                    continue;
+
+                var firstPaymentDate = enrollment.Payments
                     .OrderBy(p => p.PaymentDate)
+                    .Select(p => (DateTime?)p.PaymentDate)
                     .FirstOrDefault();
 
-                bool hasMatchingPayment = false;
-                if (earliestPayment is not null)
+                Payments.Add(new PaymentRowVm
                 {
-                    var paymentNotes = earliestPayment.Notes ?? string.Empty;
-                    var methodText = earliestPayment.Method.ToString();
-                    var amountMatches = Math.Abs(earliestPayment.Amount - enrollment.DownPayment) <= downpaymentTolerance;
-                    var textMatches = paymentNotes.Contains("downpayment", StringComparison.OrdinalIgnoreCase)
-                        || paymentNotes.Contains("down payment", StringComparison.OrdinalIgnoreCase)
-                        || paymentNotes.Contains("enrollment", StringComparison.OrdinalIgnoreCase)
-                        || methodText.Contains("downpayment", StringComparison.OrdinalIgnoreCase)
-                        || methodText.Contains("enrollment", StringComparison.OrdinalIgnoreCase);
-
-                    if (amountMatches || textMatches)
-                    {
-                        hasMatchingPayment = true;
-                        downpaymentPaymentIds.Add(earliestPayment.PaymentId);
-                    }
-                }
-
-                if (!hasMatchingPayment)
-                {
-                    var firstPaymentDate = enrollment.Payments
-                        .OrderBy(p => p.PaymentDate)
-                        .Select(p => (DateTime?)p.PaymentDate)
-                        .FirstOrDefault();
-
-                    Payments.Add(new PaymentRowVm
-                    {
-                        TypeText = "Downpayment",
-                        DateText = firstPaymentDate?.ToString("dd/MM/yyyy") ?? "—",
-                        AmountText = $"{enrollment.DownPayment:0.00} €",
-                        Method = "Enrollment",
-                        Notes = "Enrollment downpayment"
-                    });
-                }
+                    TypeText = "Downpayment",
+                    DateText = firstPaymentDate?.ToString("dd/MM/yyyy") ?? "—",
+                    AmountText = $"{enrollment.DownPayment:0.00} €",
+                    Method = "Enrollment",
+                    Notes = "Enrollment downpayment"
+                });
             }
 
             foreach (var row in paymentRows)
