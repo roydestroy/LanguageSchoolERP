@@ -509,7 +509,7 @@ public partial class StudentProfileViewModel : ObservableObject
                         ? $"{e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}"
                         : "—",
                     InstallmentAmountText = e.InstallmentCount > 0
-                        ? $"{InstallmentPlanHelper.GetRegularInstallmentAmount(e.AgreementTotal, e.InstallmentCount):0.00} €"
+                        ? $"{InstallmentPlanHelper.GetRegularInstallmentAmount(e):0.00} €"
                         : "—",
                     StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Active" : e.Status,
                     CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
