@@ -4,6 +4,7 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LanguageSchoolERP.App.Windows;
@@ -214,44 +215,66 @@ public partial class StudentProfileViewModel : ObservableObject
             ProgressText = $"{progress:0}%";
 
             // Payments table (all payments in this year across enrollments)
-            var payments = enrollments
-                .SelectMany(e => e.Payments)
-                .OrderByDescending(p => p.PaymentDate)
+            var paymentRows = enrollments
+                .SelectMany(e => e.Payments.Select(p => new { Payment = p }))
+                .OrderByDescending(x => x.Payment.PaymentDate)
                 .ToList();
 
-            var downpaymentRows = enrollments
-                .Where(e => e.DownPayment > 0)
-                .OrderByDescending(e => e.Payments.Any() ? e.Payments.Min(p => p.PaymentDate) : DateTime.MinValue)
-                .Select(e =>
+            var downpaymentPaymentIds = new HashSet<Guid>();
+            const decimal downpaymentTolerance = 0.01m;
+
+            foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
+            {
+                var earliestPayment = enrollment.Payments
+                    .OrderBy(p => p.PaymentDate)
+                    .FirstOrDefault();
+
+                bool hasMatchingPayment = false;
+                if (earliestPayment is not null)
                 {
-                    var firstPaymentDate = e.Payments
+                    var paymentNotes = earliestPayment.Notes ?? string.Empty;
+                    var methodText = earliestPayment.Method.ToString();
+                    var amountMatches = Math.Abs(earliestPayment.Amount - enrollment.DownPayment) <= downpaymentTolerance;
+                    var textMatches = paymentNotes.Contains("downpayment", StringComparison.OrdinalIgnoreCase)
+                        || paymentNotes.Contains("down payment", StringComparison.OrdinalIgnoreCase)
+                        || paymentNotes.Contains("enrollment", StringComparison.OrdinalIgnoreCase)
+                        || methodText.Contains("downpayment", StringComparison.OrdinalIgnoreCase)
+                        || methodText.Contains("enrollment", StringComparison.OrdinalIgnoreCase);
+
+                    if (amountMatches || textMatches)
+                    {
+                        hasMatchingPayment = true;
+                        downpaymentPaymentIds.Add(earliestPayment.PaymentId);
+                    }
+                }
+
+                if (!hasMatchingPayment)
+                {
+                    var firstPaymentDate = enrollment.Payments
                         .OrderBy(p => p.PaymentDate)
                         .Select(p => (DateTime?)p.PaymentDate)
                         .FirstOrDefault();
 
-                    return new PaymentRowVm
+                    Payments.Add(new PaymentRowVm
                     {
                         TypeText = "Downpayment",
                         DateText = firstPaymentDate?.ToString("dd/MM/yyyy") ?? "—",
-                        AmountText = $"{e.DownPayment:0.00} €",
+                        AmountText = $"{enrollment.DownPayment:0.00} €",
                         Method = "Enrollment",
                         Notes = "Enrollment downpayment"
-                    };
-                })
-                .ToList();
+                    });
+                }
+            }
 
-            foreach (var row in downpaymentRows)
-                Payments.Add(row);
-
-            foreach (var p in payments)
+            foreach (var row in paymentRows)
             {
                 Payments.Add(new PaymentRowVm
                 {
-                    TypeText = "Payment",
-                    DateText = p.PaymentDate.ToString("dd/MM/yyyy"),
-                    AmountText = $"{p.Amount:0.00} €",
-                    Method = p.Method.ToString(),
-                    Notes = p.Notes ?? ""
+                    TypeText = downpaymentPaymentIds.Contains(row.Payment.PaymentId) ? "Downpayment" : "Payment",
+                    DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
+                    AmountText = $"{row.Payment.Amount:0.00} €",
+                    Method = row.Payment.Method.ToString(),
+                    Notes = row.Payment.Notes ?? ""
                 });
             }
             var receiptRows = enrollments
