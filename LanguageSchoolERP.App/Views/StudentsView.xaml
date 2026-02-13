@@ -45,6 +45,7 @@
 											<ColumnDefinition Width="Auto"/>
 											<ColumnDefinition Width="Auto"/>
 											<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
@@ -62,15 +63,23 @@
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
-                                        <!-- Overdue badge -->
+                                        <!-- Active badge -->
                                         <Border Grid.Column="2" Margin="12,0,0,0" Padding="8,3"
+                                                CornerRadius="999"
+                                                Background="{Binding ActiveBadgeBackground}"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding ActiveBadgeText}" Foreground="White" FontSize="12"/>
+                                        </Border>
+
+                                        <!-- Overdue badge -->
+                                        <Border Grid.Column="3" Margin="12,0,0,0" Padding="8,3"
                                                 CornerRadius="999"
                                                 Background="{Binding OverdueBadgeBackground}"
                                                 VerticalAlignment="Center">
                                             <TextBlock Text="{Binding OverdueBadgeText}" Foreground="White" FontSize="12"/>
                                         </Border>
 										
-										<Button Grid.Column="3"
+										<Button Grid.Column="4"
 												Margin="12,0,0,0"
 												Width="90" Height="32"
 												Content="Open"
@@ -79,7 +88,7 @@
 												VerticalAlignment="Center"/>
 
 										<!-- Expand caret -->
-                                        <ToggleButton Grid.Column="4" Margin="12,0,0,0"
+                                        <ToggleButton Grid.Column="5" Margin="12,0,0,0"
                                                       Width="36" Height="36"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                                       Content="⌄"

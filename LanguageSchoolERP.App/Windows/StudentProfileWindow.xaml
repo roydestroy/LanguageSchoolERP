@@ -59,6 +59,7 @@
             <StackPanel>
                 <TextBlock Text="{Binding FullName}" FontSize="22" FontWeight="SemiBold"/>
                 <TextBlock Text="{Binding ContactLine}" Foreground="#666666" Margin="0,4,0,0"/>
+                <TextBlock Text="{Binding ActiveStatusText}" Foreground="#444444" FontWeight="SemiBold" Margin="0,4,0,0"/>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
@@ -133,6 +134,12 @@
                                         Width="90"
                                         Style="{StaticResource EditModeButtonStyle}"
                                         Command="{Binding CancelEditCommand}"/>
+                                <Button Content="Delete Student"
+                                        Width="120"
+                                        Margin="10,0,0,0"
+                                        Background="#B00020"
+                                        Foreground="White"
+                                        Command="{Binding DeleteStudentCommand}"/>
                             </StackPanel>
                         </DockPanel>
 

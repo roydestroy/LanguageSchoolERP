@@ -45,6 +45,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
+    [ObservableProperty] private string activeStatusText = "Inactive";
     [ObservableProperty] private string notes = "";
     [ObservableProperty] private bool isEditing;
 
@@ -80,6 +81,9 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand EditProfileCommand { get; }
     public IAsyncRelayCommand SaveProfileCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
+    public IAsyncRelayCommand DeleteStudentCommand { get; }
+
+    public event Action? RequestClose;
     public StudentProfileViewModel(
         AppState state,
         DbContextFactory dbFactory,
@@ -94,6 +98,7 @@ public partial class StudentProfileViewModel : ObservableObject
         EditProfileCommand = new RelayCommand(StartEdit);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
         CancelEditCommand = new RelayCommand(CancelEdit);
+        DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync);
 
     }
 
@@ -154,6 +159,43 @@ public partial class StudentProfileViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show(ex.ToString(), "Save profile failed");
+        }
+    }
+
+    private async Task DeleteStudentAsync()
+    {
+        var result = System.Windows.MessageBox.Show(
+            "Are you sure you want to delete this student? This action cannot be undone.",
+            "Confirm Delete",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var student = await db.Students
+                .FirstOrDefaultAsync(s => s.StudentId == _studentId);
+
+            if (student is null)
+            {
+                System.Windows.MessageBox.Show("Student not found.");
+                return;
+            }
+
+            db.Students.Remove(student);
+            await db.SaveChangesAsync();
+
+            System.Windows.MessageBox.Show("Student deleted successfully.");
+            RequestClose?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Delete student failed");
         }
     }
 
@@ -368,6 +410,11 @@ public partial class StudentProfileViewModel : ObservableObject
             EmailLine = string.IsNullOrWhiteSpace(student.Email) ? "Email: —" : $"Email: {student.Email}";
             FatherLine = $"Father: {student.FatherName}".Trim();
             MotherLine = $"Mother: {student.MotherName}".Trim();
+
+            var hasAnyEnrollment = await db.Enrollments
+                .AsNoTracking()
+                .AnyAsync(e => e.StudentId == _studentId);
+            ActiveStatusText = hasAnyEnrollment ? "Active" : "Inactive";
 
             var enrollments = student.Enrollments.ToList();
             static string ProgramLabel(ProgramType p) => p switch

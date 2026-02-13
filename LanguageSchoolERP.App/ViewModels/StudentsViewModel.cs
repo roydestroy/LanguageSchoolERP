@@ -76,6 +76,7 @@ public partial class StudentsViewModel : ObservableObject
         // Initialize the VM for this specific student + global year default
         win.Initialize(studentId);
 
+        win.Closed += (_, __) => _ = LoadAsync();
         win.Show();
 
     }
@@ -104,8 +105,7 @@ public partial class StudentsViewModel : ObservableObject
                 return;
             }
 
-            var baseQuery = db.Students.AsNoTracking()
-                .Where(s => s.Enrollments.Any(en => en.AcademicPeriodId == period.AcademicPeriodId));
+            var baseQuery = db.Students.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
@@ -121,6 +121,13 @@ public partial class StudentsViewModel : ObservableObject
                     .ThenInclude(en => en.Payments)
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
+
+            var activeStudentIds = (await db.Enrollments
+                .AsNoTracking()
+                .Select(e => e.StudentId)
+                .Distinct()
+                .ToListAsync())
+                .ToHashSet();
 
             var now = DateTime.Now;
             var currentMonthStart = new DateTime(now.Year, now.Month, 1);
@@ -152,6 +159,7 @@ public partial class StudentsViewModel : ObservableObject
                     YearLabel = $"Year: {year}",
                     Balance = balance,
                     IsOverdue = overdue,
+                    IsActive = activeStudentIds.Contains(s.StudentId),
                     IsExpanded = false
                 };
 
