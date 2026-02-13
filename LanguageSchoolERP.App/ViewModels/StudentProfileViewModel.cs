@@ -23,6 +23,16 @@ public partial class StudentProfileViewModel : ObservableObject
     private Guid _studentId;
     private bool _isLoading;
 
+    private string _originalFullName = "";
+    private DateTime? _originalDateOfBirth;
+    private string _originalPhone = "";
+    private string _originalEmail = "";
+    private string _originalFatherName = "";
+    private string _originalFatherContact = "";
+    private string _originalMotherName = "";
+    private string _originalMotherContact = "";
+    private string _originalNotes = "";
+
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
     public ObservableCollection<ReceiptRowVm> Receipts { get; } = new();
@@ -31,6 +41,17 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
     [ObservableProperty] private string notes = "";
+    [ObservableProperty] private bool isEditing;
+
+    [ObservableProperty] private string editableFullName = "";
+    [ObservableProperty] private DateTime? editableDateOfBirth;
+    [ObservableProperty] private string editablePhone = "";
+    [ObservableProperty] private string editableEmail = "";
+    [ObservableProperty] private string editableFatherName = "";
+    [ObservableProperty] private string editableFatherContact = "";
+    [ObservableProperty] private string editableMotherName = "";
+    [ObservableProperty] private string editableMotherContact = "";
+    [ObservableProperty] private string editableNotes = "";
 
     [ObservableProperty] private string dobLine = "";
     [ObservableProperty] private string phoneLine = "";
@@ -46,6 +67,9 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private double progressPercent = 0;
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
+    public IRelayCommand EditProfileCommand { get; }
+    public IAsyncRelayCommand SaveProfileCommand { get; }
+    public IRelayCommand CancelEditCommand { get; }
     public StudentProfileViewModel(
         AppState state,
         DbContextFactory dbFactory,
@@ -57,7 +81,65 @@ public partial class StudentProfileViewModel : ObservableObject
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
+        EditProfileCommand = new RelayCommand(StartEdit);
+        SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
+        CancelEditCommand = new RelayCommand(CancelEdit);
 
+    }
+
+    private void StartEdit()
+    {
+        IsEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        EditableFullName = _originalFullName;
+        EditableDateOfBirth = _originalDateOfBirth;
+        EditablePhone = _originalPhone;
+        EditableEmail = _originalEmail;
+        EditableFatherName = _originalFatherName;
+        EditableFatherContact = _originalFatherContact;
+        EditableMotherName = _originalMotherName;
+        EditableMotherContact = _originalMotherContact;
+        EditableNotes = _originalNotes;
+        IsEditing = false;
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var student = await db.Students
+                .FirstOrDefaultAsync(s => s.StudentId == _studentId);
+
+            if (student is null)
+            {
+                System.Windows.MessageBox.Show("Student not found.");
+                return;
+            }
+
+            student.FullName = EditableFullName.Trim();
+            student.DateOfBirth = EditableDateOfBirth;
+            student.Phone = EditablePhone.Trim();
+            student.Email = EditableEmail.Trim();
+            student.FatherName = EditableFatherName.Trim();
+            student.FatherContact = EditableFatherContact.Trim();
+            student.MotherName = EditableMotherName.Trim();
+            student.MotherContact = EditableMotherContact.Trim();
+            student.Notes = EditableNotes.Trim();
+
+            await db.SaveChangesAsync();
+            IsEditing = false;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Save profile failed");
+        }
     }
 
     public void Initialize(Guid studentId)
@@ -229,6 +311,26 @@ public partial class StudentProfileViewModel : ObservableObject
             FullName = student.FullName;
             ContactLine = $"{student.Phone}  |  {student.Email}".Trim(' ', '|');
             Notes = student.Notes ?? "";
+
+            _originalFullName = student.FullName ?? "";
+            _originalDateOfBirth = student.DateOfBirth;
+            _originalPhone = student.Phone ?? "";
+            _originalEmail = student.Email ?? "";
+            _originalFatherName = student.FatherName ?? "";
+            _originalFatherContact = student.FatherContact ?? "";
+            _originalMotherName = student.MotherName ?? "";
+            _originalMotherContact = student.MotherContact ?? "";
+            _originalNotes = student.Notes ?? "";
+
+            EditableFullName = _originalFullName;
+            EditableDateOfBirth = _originalDateOfBirth;
+            EditablePhone = _originalPhone;
+            EditableEmail = _originalEmail;
+            EditableFatherName = _originalFatherName;
+            EditableFatherContact = _originalFatherContact;
+            EditableMotherName = _originalMotherName;
+            EditableMotherContact = _originalMotherContact;
+            EditableNotes = _originalNotes;
 
             DobLine = student.DateOfBirth.HasValue ? $"DOB: {student.DateOfBirth:dd/MM/yyyy}" : "DOB: —";
             PhoneLine = string.IsNullOrWhiteSpace(student.Phone) ? "Phone: —" : $"Phone: {student.Phone}";
