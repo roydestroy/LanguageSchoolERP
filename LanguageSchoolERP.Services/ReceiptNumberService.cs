@@ -1,6 +1,7 @@
-﻿using LanguageSchoolERP.Core.Models;
-using LanguageSchoolERP.Data;
+﻿using LanguageSchoolERP.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.Services;
@@ -14,35 +15,32 @@ public class ReceiptNumberService
         _dbFactory = dbFactory;
     }
 
-    public async Task<int> GetNextReceiptNumberAsync(Guid academicPeriodId)
+    public async Task<int> GetNextReceiptNumberAsync(Guid enrollmentId)
     {
         using var db = _dbFactory.Create();
         DbSeeder.EnsureSeeded(db);
 
         using var tx = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
-        var counter = await db.ReceiptCounters
-            .FirstOrDefaultAsync(c => c.AcademicPeriodId == academicPeriodId);
+        var enrollmentInfo = await db.Enrollments
+            .AsNoTracking()
+            .Where(e => e.EnrollmentId == enrollmentId)
+            .Select(e => new { e.StudentId, e.AcademicPeriodId })
+            .FirstOrDefaultAsync();
 
-        if (counter == null)
-        {
-            counter = new ReceiptCounter
-            {
-                AcademicPeriodId = academicPeriodId,
-                NextReceiptNumber = 1
-            };
+        if (enrollmentInfo is null)
+            throw new InvalidOperationException("Enrollment not found.");
 
-            db.ReceiptCounters.Add(counter);
-            await db.SaveChangesAsync();
-        }
+        // Numbering is per student per academic year.
+        var maxReceiptForStudentYear = await db.Receipts
+            .Where(r => r.Payment.Enrollment.StudentId == enrollmentInfo.StudentId
+                     && r.Payment.Enrollment.AcademicPeriodId == enrollmentInfo.AcademicPeriodId)
+            .Select(r => (int?)r.ReceiptNumber)
+            .MaxAsync() ?? 0;
 
+        var number = maxReceiptForStudentYear + 1;
 
-        var number = counter.NextReceiptNumber;
-        counter.NextReceiptNumber++;
-
-        await db.SaveChangesAsync();
         await tx.CommitAsync();
-
         return number;
     }
 }

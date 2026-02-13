@@ -10,6 +10,7 @@ using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using System.Globalization;
+using System.IO;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
@@ -17,8 +18,10 @@ public partial class StudentProfileViewModel : ObservableObject
 {
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
+    private readonly ExcelReceiptGenerator _excelReceiptGenerator;
 
     private Guid _studentId;
+    private bool _isLoading;
 
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
@@ -43,13 +46,17 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private double progressPercent = 0;
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
-    public StudentProfileViewModel(AppState state, DbContextFactory dbFactory)
+    public StudentProfileViewModel(
+        AppState state,
+        DbContextFactory dbFactory,
+        ExcelReceiptGenerator excelReceiptGenerator)
     {
         _state = state;
         _dbFactory = dbFactory;
+        _excelReceiptGenerator = excelReceiptGenerator;
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
-        PrintReceiptCommand = new RelayCommand(PrintSelectedReceipt);
+        PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
 
     }
 
@@ -77,12 +84,77 @@ public partial class StudentProfileViewModel : ObservableObject
             _ = LoadAsync(); // refresh payments + balance
         }
     }
-    private void PrintSelectedReceipt()
+    private async Task PrintSelectedReceiptAsync()
     {
         if (SelectedReceipt is null)
         {
             System.Windows.MessageBox.Show("Please select a receipt first.");
             return;
+        }
+
+        if (SelectedReceipt.IsDownpayment && !SelectedReceipt.HasPdf)
+        {
+            try
+            {
+                using var db = _dbFactory.Create();
+                DbSeeder.EnsureSeeded(db);
+
+                var enrollment = await db.Enrollments
+                    .AsNoTracking()
+                    .Include(e => e.Student)
+                    .Include(e => e.AcademicPeriod)
+                    .FirstOrDefaultAsync(e => e.EnrollmentId == SelectedReceipt.EnrollmentId);
+
+                if (enrollment is null)
+                {
+                    System.Windows.MessageBox.Show("Enrollment not found for downpayment receipt.");
+                    return;
+                }
+
+                var student = enrollment.Student;
+                var academicYear = enrollment.AcademicPeriod.Name;
+
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var receiptsRoot = Path.Combine(baseDir, "Receipts");
+
+                var studentFolder = ReceiptPathService.GetStudentFolder(
+                    baseDir: receiptsRoot,
+                    dbName: _state.SelectedDatabaseName,
+                    academicYear: academicYear,
+                    studentFullName: student.FullName
+                );
+
+                var fileName = $"downpayment-{enrollment.EnrollmentId:N}.pdf";
+                var pdfPath = Path.Combine(studentFolder, fileName);
+
+                var templatePath = ReceiptTemplateResolver.GetTemplatePath(_state.SelectedDatabaseName);
+                var issueDate = DateTime.Today;
+
+                var data = new ReceiptPrintData(
+                    ReceiptNumber: 0,
+                    IssueDate: issueDate,
+                    StudentName: student.FullName,
+                    StudentPhone: student.Phone ?? "",
+                    StudentEmail: student.Email ?? "",
+                    Amount: enrollment.DownPayment,
+                    PaymentMethod: "Enrollment Downpayment",
+                    ProgramLabel: enrollment.ProgramType.ToString(),
+                    AcademicYear: academicYear,
+                    Notes: "Enrollment downpayment"
+                );
+
+                _excelReceiptGenerator.GenerateReceiptPdf(templatePath, pdfPath, data);
+
+                SelectedReceipt.PdfPath = pdfPath;
+                SelectedReceipt.HasPdf = true;
+                SelectedReceipt.NumberText = "DP";
+                SelectedReceipt.DateText = issueDate.ToString("dd/MM/yyyy");
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(ex.ToString(), "Downpayment receipt generation failed");
+                return;
+            }
         }
 
         if (!SelectedReceipt.HasPdf || string.IsNullOrWhiteSpace(SelectedReceipt.PdfPath))
@@ -125,6 +197,9 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
+        if (_isLoading) return;
+        _isLoading = true;
+
         try
         {
             using var db = _dbFactory.Create();
@@ -214,19 +289,32 @@ public partial class StudentProfileViewModel : ObservableObject
             ProgressText = $"{progress:0}%";
 
             // Payments table (all payments in this year across enrollments)
-            var payments = enrollments
-                .SelectMany(e => e.Payments)
-                .OrderByDescending(p => p.PaymentDate)
+            var paymentRows = enrollments
+                .SelectMany(e => e.Payments.Select(p => new { Payment = p }))
+                .OrderByDescending(x => x.Payment.PaymentDate)
                 .ToList();
 
-            foreach (var p in payments)
+            foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
                 Payments.Add(new PaymentRowVm
                 {
-                    DateText = p.PaymentDate.ToString("dd/MM/yyyy"),
-                    AmountText = $"{p.Amount:0.00} €",
-                    Method = p.Method.ToString(),
-                    Notes = p.Notes ?? ""
+                    TypeText = "Downpayment",
+                    DateText = "—",
+                    AmountText = $"{enrollment.DownPayment:0.00} €",
+                    Method = "Enrollment",
+                    Notes = "Enrollment downpayment"
+                });
+            }
+
+            foreach (var row in paymentRows)
+            {
+                Payments.Add(new PaymentRowVm
+                {
+                    TypeText = "Payment",
+                    DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
+                    AmountText = $"{row.Payment.Amount:0.00} €",
+                    Method = row.Payment.Method.ToString(),
+                    Notes = row.Payment.Notes ?? ""
                 });
             }
             var receiptRows = enrollments
@@ -250,10 +338,30 @@ public partial class StudentProfileViewModel : ObservableObject
                 });
             }
 
+            foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
+            {
+                Receipts.Add(new ReceiptRowVm
+                {
+                    IsDownpayment = true,
+                    EnrollmentId = enrollment.EnrollmentId,
+                    NumberText = "DP",
+                    DateText = "—",
+                    AmountText = $"{enrollment.DownPayment:0.00} €",
+                    MethodText = "Enrollment",
+                    ProgramText = ProgramLabel(enrollment.ProgramType),
+                    HasPdf = false,
+                    PdfPath = ""
+                });
+            }
+
         }
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show(ex.ToString(), "LoadAsync failed");
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }
