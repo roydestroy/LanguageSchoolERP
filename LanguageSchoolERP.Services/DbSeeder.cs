@@ -31,6 +31,25 @@ public static class DbSeeder
             }
         }
 
+        if (!db.ContractTemplates.Any())
+        {
+            db.ContractTemplates.Add(new ContractTemplate
+            {
+                Name = "Default Contract",
+                BranchKey = "Filothei",
+                TemplateFilePath = "Templates/Contracts/filothei-default.docx",
+                IsActive = true
+            });
+            db.ContractTemplates.Add(new ContractTemplate
+            {
+                Name = "Default Contract",
+                BranchKey = "NeaIonia",
+                TemplateFilePath = "Templates/Contracts/nea-ionia-default.docx",
+                IsActive = true
+            });
+        }
+
+
         foreach (var p in db.AcademicPeriods.ToList())
         {
             var counter = db.ReceiptCounters.FirstOrDefault(rc => rc.AcademicPeriodId == p.AcademicPeriodId);

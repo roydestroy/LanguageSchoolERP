@@ -30,6 +30,9 @@ public partial class App : Application
         services.AddTransient<AddProgramEnrollmentViewModel>();
         services.AddTransient<Windows.AddProgramEnrollmentWindow>();
 
+        services.AddTransient<CreateContractViewModel>();
+        services.AddTransient<Windows.CreateContractWindow>();
+
         // Services layer
         services.AddSingleton<ReceiptNumberService>();
         services.AddSingleton<ExcelReceiptGenerator>();

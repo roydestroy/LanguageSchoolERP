@@ -42,6 +42,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
     public ObservableCollection<ReceiptRowVm> Receipts { get; } = new();
     public ObservableCollection<ProgramEnrollmentRowVm> Programs { get; } = new();
+    public ObservableCollection<ContractRowVm> Contracts { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
@@ -86,6 +87,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand AddProgramCommand { get; }
     public IRelayCommand<ProgramEnrollmentRowVm> EditProgramCommand { get; }
     public IAsyncRelayCommand<ProgramEnrollmentRowVm> RemoveProgramCommand { get; }
+    public IRelayCommand CreateContractCommand { get; }
 
     public event Action? RequestClose;
     public StudentProfileViewModel(
@@ -106,6 +108,7 @@ public partial class StudentProfileViewModel : ObservableObject
         AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
         EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
         RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
+        CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
 
     }
 
@@ -278,6 +281,19 @@ public partial class StudentProfileViewModel : ObservableObject
         _ = LoadAvailableYearsAsync();
         _ = LoadAsync();
     }
+    private void OpenCreateContractDialog()
+    {
+        var win = App.Services.GetRequiredService<CreateContractWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new CreateContractInit(_studentId, LocalAcademicYear));
+
+        var result = win.ShowDialog();
+        if (result == true)
+        {
+            _ = LoadAsync();
+        }
+    }
+
     private void OpenAddPaymentDialog()
     {
         var win = App.Services.GetRequiredService<AddPaymentWindow>();
@@ -416,6 +432,7 @@ public partial class StudentProfileViewModel : ObservableObject
             Payments.Clear();
             Receipts.Clear();
             Programs.Clear();
+            Contracts.Clear();
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
@@ -428,8 +445,8 @@ public partial class StudentProfileViewModel : ObservableObject
                 .Include(s => s.Enrollments.Where(e => e.AcademicPeriodId == period.AcademicPeriodId))
                     .ThenInclude(e => e.Payments)
                         .ThenInclude(p => p.Receipts)
-                .Include(s => s.Enrollments.Where(e => e.AcademicPeriodId == period.AcademicPeriodId))
-                    .ThenInclude(e => e.Payments)
+                .Include(s => s.Contracts)
+                    .ThenInclude(c => c.Template)
                 .FirstOrDefaultAsync(s => s.StudentId == _studentId);
 
 
@@ -622,6 +639,27 @@ public partial class StudentProfileViewModel : ObservableObject
                     ProgramText = ProgramLabel(enrollment.ProgramType),
                     HasPdf = false,
                     PdfPath = ""
+                });
+            }
+
+            var contracts = student.Contracts
+                .Where(c => enrollments.Any(e => e.EnrollmentId == c.EnrollmentId))
+                .OrderByDescending(c => c.CreatedAt)
+                .ToList();
+
+            foreach (var contract in contracts)
+            {
+                var enrollment = enrollments.FirstOrDefault(e => e.EnrollmentId == contract.EnrollmentId);
+                if (enrollment is null) continue;
+
+                Contracts.Add(new ContractRowVm
+                {
+                    CreatedAtText = contract.CreatedAt.ToString("dd/MM/yyyy"),
+                    ProgramText = ProgramLabel(enrollment.ProgramType),
+                    TemplateName = contract.Template?.Name ?? "—",
+                    BranchText = contract.Template?.BranchKey ?? "—",
+                    PdfStatusText = string.IsNullOrWhiteSpace(contract.PdfPath) ? "Pending" : "Generated",
+                    DataPreview = string.IsNullOrWhiteSpace(contract.DataJson) ? "{}" : contract.DataJson
                 });
             }
 
