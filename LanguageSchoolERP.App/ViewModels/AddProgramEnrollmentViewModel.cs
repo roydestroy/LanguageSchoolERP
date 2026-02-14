@@ -33,11 +33,39 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private string enrollmentComments = "";
     [ObservableProperty] private string installmentCountText = "0";
     [ObservableProperty] private DateTime? installmentStartMonth;
+
+    [ObservableProperty] private bool includesStudyLab;
+    [ObservableProperty] private string studyLabMonthlyPriceText = "";
+
+    [ObservableProperty] private bool includesTransportation;
+    [ObservableProperty] private string transportationMonthlyPriceText = "";
+
+    public bool IsLanguageSchoolProgram => SelectedProgramType == ProgramType.LanguageSchool;
+    public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
+
     [ObservableProperty] private string errorMessage = "";
     [ObservableProperty] private string dialogTitle = "Add Program Enrollment";
     [ObservableProperty] private string saveButtonText = "Add Program";
 
     public IAsyncRelayCommand SaveCommand { get; }
+
+    partial void OnSelectedProgramTypeChanged(ProgramType value)
+    {
+        OnPropertyChanged(nameof(IsLanguageSchoolProgram));
+        OnPropertyChanged(nameof(IsStudyLabProgram));
+
+        if (value != ProgramType.LanguageSchool)
+        {
+            IncludesStudyLab = false;
+            StudyLabMonthlyPriceText = "";
+        }
+
+        if (value != ProgramType.StudyLab)
+        {
+            IncludesTransportation = false;
+            TransportationMonthlyPriceText = "";
+        }
+    }
 
     public AddProgramEnrollmentViewModel(DbContextFactory dbFactory)
     {
@@ -59,6 +87,10 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         EnrollmentComments = "";
         InstallmentCountText = "0";
         InstallmentStartMonth = null;
+        IncludesStudyLab = false;
+        StudyLabMonthlyPriceText = "";
+        IncludesTransportation = false;
+        TransportationMonthlyPriceText = "";
         ErrorMessage = "";
 
         if (_editingEnrollmentId.HasValue)
@@ -89,6 +121,10 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                 EnrollmentComments = enrollment.Comments ?? "";
                 InstallmentCountText = enrollment.InstallmentCount.ToString(CultureInfo.InvariantCulture);
                 InstallmentStartMonth = enrollment.InstallmentStartMonth;
+                IncludesStudyLab = enrollment.IncludesStudyLab;
+                StudyLabMonthlyPriceText = enrollment.StudyLabMonthlyPrice?.ToString("0.00", CultureInfo.InvariantCulture) ?? "";
+                IncludesTransportation = enrollment.IncludesTransportation;
+                TransportationMonthlyPriceText = enrollment.TransportationMonthlyPrice?.ToString("0.00", CultureInfo.InvariantCulture) ?? "";
             }
             catch (Exception ex)
             {
@@ -125,6 +161,30 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         {
             ErrorMessage = "Installments count must be a number between 0 and 12.";
             return;
+        }
+
+        decimal? studyLabPrice = null;
+        if (IsLanguageSchoolProgram && IncludesStudyLab)
+        {
+            if (!TryParseMoney(StudyLabMonthlyPriceText, out var parsedStudyLabPrice) || parsedStudyLabPrice < 0)
+            {
+                ErrorMessage = "Study Lab monthly price must be a valid number (>= 0).";
+                return;
+            }
+
+            studyLabPrice = parsedStudyLabPrice;
+        }
+
+        decimal? transportationPrice = null;
+        if (IsStudyLabProgram && IncludesTransportation)
+        {
+            if (!TryParseMoney(TransportationMonthlyPriceText, out var parsedTransportationPrice) || parsedTransportationPrice < 0)
+            {
+                ErrorMessage = "Transportation monthly price must be a valid number (>= 0).";
+                return;
+            }
+
+            transportationPrice = parsedTransportationPrice;
         }
 
         DateTime? startMonth = null;
@@ -180,6 +240,10 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                 enrollment.Comments = EnrollmentComments.Trim();
                 enrollment.InstallmentCount = installmentCount;
                 enrollment.InstallmentStartMonth = startMonth;
+                enrollment.IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab;
+                enrollment.StudyLabMonthlyPrice = IsLanguageSchoolProgram && IncludesStudyLab ? studyLabPrice : null;
+                enrollment.IncludesTransportation = IsStudyLabProgram && IncludesTransportation;
+                enrollment.TransportationMonthlyPrice = IsStudyLabProgram && IncludesTransportation ? transportationPrice : null;
             }
             else
             {
@@ -195,7 +259,11 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                     Comments = EnrollmentComments.Trim(),
                     Status = "Active",
                     InstallmentCount = installmentCount,
-                    InstallmentStartMonth = startMonth
+                    InstallmentStartMonth = startMonth,
+                    IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab,
+                    StudyLabMonthlyPrice = IsLanguageSchoolProgram && IncludesStudyLab ? studyLabPrice : null,
+                    IncludesTransportation = IsStudyLabProgram && IncludesTransportation,
+                    TransportationMonthlyPrice = IsStudyLabProgram && IncludesTransportation ? transportationPrice : null
                 };
 
                 db.Enrollments.Add(enrollment);

@@ -5,6 +5,10 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
 
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -95,6 +99,28 @@
 
                     <TextBlock Text="Downpayment (€)"/>
                     <TextBox Margin="0,4,0,10" Text="{Binding DownPaymentText}"/>
+
+                    <CheckBox Margin="0,0,0,10"
+                              Content="Add Study Lab"
+                              IsChecked="{Binding IncludesStudyLab}"
+                              Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <StackPanel Margin="0,0,0,10"
+                                Visibility="{Binding IncludesStudyLab, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Study Lab monthly price (€)"/>
+                        <TextBox Margin="0,4,0,0" Text="{Binding StudyLabMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+                    <CheckBox Margin="0,0,0,10"
+                              Content="Add Transportation"
+                              IsChecked="{Binding IncludesTransportation}"
+                              Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <StackPanel Margin="0,0,0,10"
+                                Visibility="{Binding IncludesTransportation, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock Text="Transportation monthly price (€)"/>
+                        <TextBox Margin="0,4,0,0" Text="{Binding TransportationMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
 					
 					<TextBlock Text="Installments count (e.g., 8)"/>
 					<TextBox Margin="0,4,0,10" Text="{Binding InstallmentCountText}"/>

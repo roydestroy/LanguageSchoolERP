@@ -54,7 +54,34 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private string installmentCountText = "0";
     [ObservableProperty] private DateTime? installmentStartMonth;
 
+    [ObservableProperty] private bool includesStudyLab;
+    [ObservableProperty] private string studyLabMonthlyPriceText = "";
+
+    [ObservableProperty] private bool includesTransportation;
+    [ObservableProperty] private string transportationMonthlyPriceText = "";
+
+    public bool IsLanguageSchoolProgram => SelectedProgramType == ProgramType.LanguageSchool;
+    public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
+
     public IRelayCommand CreateCommand { get; }
+
+    partial void OnSelectedProgramTypeChanged(ProgramType value)
+    {
+        OnPropertyChanged(nameof(IsLanguageSchoolProgram));
+        OnPropertyChanged(nameof(IsStudyLabProgram));
+
+        if (value != ProgramType.LanguageSchool)
+        {
+            IncludesStudyLab = false;
+            StudyLabMonthlyPriceText = "";
+        }
+
+        if (value != ProgramType.StudyLab)
+        {
+            IncludesTransportation = false;
+            TransportationMonthlyPriceText = "";
+        }
+    }
 
     public NewStudentViewModel(AppState state, DbContextFactory dbFactory)
     {
@@ -93,6 +120,30 @@ public partial class NewStudentViewModel : ObservableObject
         {
             ErrorMessage = "Installments count must be a number between 0 and 12.";
             return;
+        }
+
+        decimal? studyLabPrice = null;
+        if (IsLanguageSchoolProgram && IncludesStudyLab)
+        {
+            if (!TryParseMoney(StudyLabMonthlyPriceText, out var parsedStudyLabPrice) || parsedStudyLabPrice < 0)
+            {
+                ErrorMessage = "Study Lab monthly price must be a valid number (>= 0).";
+                return;
+            }
+
+            studyLabPrice = parsedStudyLabPrice;
+        }
+
+        decimal? transportationPrice = null;
+        if (IsStudyLabProgram && IncludesTransportation)
+        {
+            if (!TryParseMoney(TransportationMonthlyPriceText, out var parsedTransportationPrice) || parsedTransportationPrice < 0)
+            {
+                ErrorMessage = "Transportation monthly price must be a valid number (>= 0).";
+                return;
+            }
+
+            transportationPrice = parsedTransportationPrice;
         }
 
         DateTime? startMonth = null;
@@ -147,7 +198,11 @@ public partial class NewStudentViewModel : ObservableObject
                 Comments = EnrollmentComments.Trim(),
                 Status = "Active",
                 InstallmentCount = installmentCount,
-                InstallmentStartMonth = startMonth
+                InstallmentStartMonth = startMonth,
+                IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab,
+                StudyLabMonthlyPrice = IsLanguageSchoolProgram && IncludesStudyLab ? studyLabPrice : null,
+                IncludesTransportation = IsStudyLabProgram && IncludesTransportation,
+                TransportationMonthlyPrice = IsStudyLabProgram && IncludesTransportation ? transportationPrice : null
             };
 
             student.Enrollments.Add(enrollment);
