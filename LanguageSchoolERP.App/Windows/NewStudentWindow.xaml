@@ -1,7 +1,7 @@
 <Window x:Class="LanguageSchoolERP.App.Windows.NewStudentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="New Student" Height="640" Width="780"
+        Title="New Student" Height="760" Width="860"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
 
@@ -28,8 +28,11 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Student Details" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Full name"/>
-                    <TextBox Margin="0,4,0,10" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="Student name"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding StudentName, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Student surname"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding StudentSurname, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock Text="Date of birth (optional)"/>
                     <DatePicker Margin="0,4,0,10" SelectedDate="{Binding DateOfBirth}"/>
@@ -49,16 +52,28 @@
                     <TextBlock Text="Parent Details" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
                     <TextBlock Text="Father name"/>
-                    <TextBox Margin="0,4,0,10" Text="{Binding FatherName}"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding FatherName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Father contact"/>
-                    <TextBox Margin="0,4,0,10" Text="{Binding FatherContact}"/>
+                    <TextBlock Text="Father surname"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding FatherSurname, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Father phone"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding FatherPhone, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Father email"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding FatherEmail, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock Text="Mother name"/>
-                    <TextBox Margin="0,4,0,10" Text="{Binding MotherName}"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding MotherName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Mother contact"/>
-                    <TextBox Margin="0,4,0,16" Text="{Binding MotherContact}"/>
+                    <TextBlock Text="Mother surname"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding MotherSurname, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Mother phone"/>
+                    <TextBox Margin="0,4,0,10" Text="{Binding MotherPhone, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Mother email"/>
+                    <TextBox Margin="0,4,0,16" Text="{Binding MotherEmail, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <Separator Margin="0,6,0,12"/>
 

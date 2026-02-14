@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
-using static Azure.Core.HttpHeader;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
@@ -24,7 +24,8 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
 
     // Student
-    [ObservableProperty] private string fullName = "";
+    [ObservableProperty] private string studentName = "";
+    [ObservableProperty] private string studentSurname = "";
     [ObservableProperty] private DateTime? dateOfBirth;
     [ObservableProperty] private string phone = "";
     [ObservableProperty] private string email = "";
@@ -32,9 +33,14 @@ public partial class NewStudentViewModel : ObservableObject
 
     // Parents
     [ObservableProperty] private string fatherName = "";
-    [ObservableProperty] private string fatherContact = "";
+    [ObservableProperty] private string fatherSurname = "";
+    [ObservableProperty] private string fatherPhone = "";
+    [ObservableProperty] private string fatherEmail = "";
+
     [ObservableProperty] private string motherName = "";
-    [ObservableProperty] private string motherContact = "";
+    [ObservableProperty] private string motherSurname = "";
+    [ObservableProperty] private string motherPhone = "";
+    [ObservableProperty] private string motherEmail = "";
 
     // Enrollment
     [ObservableProperty] private string levelOrClass = "";
@@ -61,9 +67,10 @@ public partial class NewStudentViewModel : ObservableObject
     {
         ErrorMessage = "";
 
-        if (string.IsNullOrWhiteSpace(FullName))
+        var fullName = JoinName(StudentName, StudentSurname);
+        if (string.IsNullOrWhiteSpace(fullName))
         {
-            ErrorMessage = "Full name is required.";
+            ErrorMessage = "Student name is required.";
             return;
         }
 
@@ -97,7 +104,6 @@ public partial class NewStudentViewModel : ObservableObject
                 return;
             }
 
-            // Normalize to first day of that month
             var d = installmentStartMonth.Value;
             startMonth = new DateTime(d.Year, d.Month, 1);
         }
@@ -106,7 +112,6 @@ public partial class NewStudentViewModel : ObservableObject
         {
             using var db = _dbFactory.Create();
 
-            // Ensure academic periods exist
             DbSeeder.EnsureSeeded(db);
 
             var period = await db.AcademicPeriods
@@ -120,15 +125,15 @@ public partial class NewStudentViewModel : ObservableObject
 
             var student = new Student
             {
-                FullName = FullName.Trim(),
+                FullName = fullName,
                 DateOfBirth = DateOfBirth,
                 Phone = Phone.Trim(),
                 Email = Email.Trim(),
                 Notes = Notes.Trim(),
-                FatherName = FatherName.Trim(),
-                FatherContact = FatherContact.Trim(),
-                MotherName = MotherName.Trim(),
-                MotherContact = MotherContact.Trim(),
+                FatherName = JoinName(FatherName, FatherSurname),
+                FatherContact = JoinPhoneEmail(FatherPhone, FatherEmail),
+                MotherName = JoinName(MotherName, MotherSurname),
+                MotherContact = JoinPhoneEmail(MotherPhone, MotherEmail),
             };
 
             var enrollment = new Enrollment
@@ -158,11 +163,26 @@ public partial class NewStudentViewModel : ObservableObject
         }
     }
 
+    private static string JoinName(string? name, string? surname)
+    {
+        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+    }
+
+    private static string JoinPhoneEmail(string? phone, string? email)
+    {
+        var p = phone?.Trim() ?? "";
+        var e = email?.Trim() ?? "";
+
+        if (string.IsNullOrWhiteSpace(p)) return e;
+        if (string.IsNullOrWhiteSpace(e)) return p;
+        return $"{p} | {e}";
+    }
+
     private static bool TryParseMoney(string text, out decimal value)
     {
         text = (text ?? "").Trim();
 
-        // Accept "123", "123.45", "123,45"
         if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out value))
             return true;
 
