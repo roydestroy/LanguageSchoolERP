@@ -11,6 +11,8 @@
   <ItemGroup>
     <None Remove="Templates\ΑΠΟΔΕΙΞΗ Ν.ΙΩΝΙΑ.xlsx" />
     <None Remove="Templates\ΑΠΟΔΕΙΞΗ ΦΙΛΟΘΕΗ.xlsx" />
+    <None Remove="Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΝΕΑ ΙΩΝΙΑ.dotm" />
+    <None Remove="Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΦΙΛΟΘΕΗ.dotm" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +32,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\ΑΠΟΔΕΙΞΗ ΦΙΛΟΘΕΗ.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΝΕΑ ΙΩΝΙΑ.dotm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΦΙΛΟΘΕΗ.dotm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
