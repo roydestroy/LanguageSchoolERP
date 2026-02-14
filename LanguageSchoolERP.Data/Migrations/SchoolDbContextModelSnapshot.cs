@@ -142,6 +142,12 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<DateTime?>("InstallmentStartMonth")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IncludesStudyLab")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IncludesTransportation")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LevelOrClass")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -156,10 +162,10 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("StudyLabMonthlyFee")
+                    b.Property<decimal?>("StudyLabMonthlyPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("TransportationMonthlyFee")
+                    b.Property<decimal?>("TransportationMonthlyPrice")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("EnrollmentId");
@@ -332,6 +338,11 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Navigation("Enrollment");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
+                {
+                    b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>

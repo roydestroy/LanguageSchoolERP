@@ -5,6 +5,12 @@ public class Enrollment
     public int InstallmentCount { get; set; } = 0; // 0 means “not set / pay anytime”
     public DateTime? InstallmentStartMonth { get; set; } // store as first day of month
 
+    public bool IncludesStudyLab { get; set; }
+    public decimal? StudyLabMonthlyPrice { get; set; }
+
+    public bool IncludesTransportation { get; set; }
+    public decimal? TransportationMonthlyPrice { get; set; }
+
     public Guid EnrollmentId { get; set; } = Guid.NewGuid();
 
     public Guid StudentId { get; set; }
