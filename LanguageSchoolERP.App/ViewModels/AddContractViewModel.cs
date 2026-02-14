@@ -160,14 +160,28 @@ public partial class AddContractViewModel : ObservableObject
                 DataJson = JsonSerializer.Serialize(payload)
             };
 
+            // Debug prints (show in Output window)
+            System.Diagnostics.Debug.WriteLine($"StudentId: {contract.StudentId}");
+            System.Diagnostics.Debug.WriteLine($"EnrollmentId: {contract.EnrollmentId}");
+            System.Diagnostics.Debug.WriteLine($"TemplateId: {contract.ContractTemplateId}");
+            System.Diagnostics.Debug.WriteLine($"CreatedAt: {contract.CreatedAt:O}");
+            System.Diagnostics.Debug.WriteLine($"DataJson: {contract.DataJson}");
+
             db.Contracts.Add(contract);
             await db.SaveChangesAsync();
 
             RequestClose?.Invoke(this, true);
         }
+        catch (DbUpdateException ex)
+        {
+            // This is the important one (FK / NOT NULL / etc.)
+            var inner = ex.InnerException?.Message ?? "(no inner exception)";
+            ErrorMessage = $"DbUpdateException: {ex.Message}\nInner: {inner}";
+        }
         catch (Exception ex)
         {
-            ErrorMessage = ex.Message;
+            ErrorMessage = ex.ToString();
         }
+
     }
 }

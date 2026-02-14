@@ -127,7 +127,16 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<decimal>("DownPayment")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool>("HasStudyLab")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasTransportation")
+                        .HasColumnType("bit");
+
                     b.Property<int>("InstallmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstallmentDayOfMonth")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("InstallmentStartMonth")
@@ -146,6 +155,12 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("StudyLabMonthlyFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TransportationMonthlyFee")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("EnrollmentId");
 
@@ -309,7 +324,7 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasOne("LanguageSchoolERP.Core.Models.Student", "Student")
                         .WithMany("Contracts")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ContractTemplate");
@@ -317,11 +332,6 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Navigation("Enrollment");
 
                     b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
-                {
-                    b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
@@ -374,6 +384,11 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("AcademicPeriod");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
+                {
+                    b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
