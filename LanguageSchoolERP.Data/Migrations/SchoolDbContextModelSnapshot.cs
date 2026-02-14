@@ -46,28 +46,63 @@ namespace LanguageSchoolERP.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<Guid>("ContractTemplateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DocxPath")
+                    b.Property<string>("DataJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<string>("PdfPath")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ContractId");
 
+                    b.HasIndex("ContractTemplateId");
+
                     b.HasIndex("EnrollmentId");
 
+                    b.HasIndex("StudentId");
+
                     b.ToTable("Contracts");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
+                {
+                    b.Property<Guid>("ContractTemplateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BranchKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TemplateRelativePath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.HasKey("ContractTemplateId");
+
+                    b.ToTable("ContractTemplates");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
@@ -92,7 +127,16 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<decimal>("DownPayment")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool>("HasStudyLab")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasTransportation")
+                        .HasColumnType("bit");
+
                     b.Property<int>("InstallmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstallmentDayOfMonth")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("InstallmentStartMonth")
@@ -111,6 +155,12 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("StudyLabMonthlyFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TransportationMonthlyFee")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("EnrollmentId");
 
@@ -259,13 +309,29 @@ namespace LanguageSchoolERP.Data.Migrations
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Contract", b =>
                 {
+                    b.HasOne("LanguageSchoolERP.Core.Models.ContractTemplate", "ContractTemplate")
+                        .WithMany("Contracts")
+                        .HasForeignKey("ContractTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("LanguageSchoolERP.Core.Models.Enrollment", "Enrollment")
                         .WithMany("Contracts")
                         .HasForeignKey("EnrollmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LanguageSchoolERP.Core.Models.Student", "Student")
+                        .WithMany("Contracts")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ContractTemplate");
+
                     b.Navigation("Enrollment");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
@@ -320,6 +386,11 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Navigation("AcademicPeriod");
                 });
 
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
+                {
+                    b.Navigation("Contracts");
+                });
+
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
                 {
                     b.Navigation("Contracts");
@@ -334,6 +405,8 @@ namespace LanguageSchoolERP.Data.Migrations
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Student", b =>
                 {
+                    b.Navigation("Contracts");
+
                     b.Navigation("Enrollments");
                 });
 #pragma warning restore 612, 618

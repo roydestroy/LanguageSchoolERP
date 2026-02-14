@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LanguageSchoolERP.Data.Migrations
 {
     [DbContext(typeof(SchoolDbContext))]
-    [Migration("20260212103819_AddAcademicPeriods")]
-    partial class AddAcademicPeriods
+    [Migration("20260214180645_AddEnrollmentContractFields")]
+    partial class AddEnrollmentContractFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,28 +49,63 @@ namespace LanguageSchoolERP.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<Guid>("ContractTemplateId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DocxPath")
+                    b.Property<string>("DataJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("EnrollmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<string>("PdfPath")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ContractId");
 
+                    b.HasIndex("ContractTemplateId");
+
                     b.HasIndex("EnrollmentId");
 
+                    b.HasIndex("StudentId");
+
                     b.ToTable("Contracts");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
+                {
+                    b.Property<Guid>("ContractTemplateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BranchKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TemplateRelativePath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.HasKey("ContractTemplateId");
+
+                    b.ToTable("ContractTemplates");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
@@ -95,6 +130,21 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<decimal>("DownPayment")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool>("HasStudyLab")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasTransportation")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("InstallmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstallmentDayOfMonth")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("InstallmentStartMonth")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("LevelOrClass")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -108,6 +158,12 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("StudyLabMonthlyFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TransportationMonthlyFee")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("EnrollmentId");
 
@@ -175,10 +231,31 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.HasKey("ReceiptId");
 
-                    b.HasIndex("PaymentId")
-                        .IsUnique();
+                    b.HasIndex("PaymentId");
 
                     b.ToTable("Receipts");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ReceiptCounter", b =>
+                {
+                    b.Property<int>("ReceiptCounterId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReceiptCounterId"));
+
+                    b.Property<Guid>("AcademicPeriodId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("NextReceiptNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReceiptCounterId");
+
+                    b.HasIndex("AcademicPeriodId")
+                        .IsUnique();
+
+                    b.ToTable("ReceiptCounters");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Student", b =>
@@ -235,13 +312,29 @@ namespace LanguageSchoolERP.Data.Migrations
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Contract", b =>
                 {
+                    b.HasOne("LanguageSchoolERP.Core.Models.ContractTemplate", "ContractTemplate")
+                        .WithMany("Contracts")
+                        .HasForeignKey("ContractTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("LanguageSchoolERP.Core.Models.Enrollment", "Enrollment")
                         .WithMany("Contracts")
                         .HasForeignKey("EnrollmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LanguageSchoolERP.Core.Models.Student", "Student")
+                        .WithMany("Contracts")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ContractTemplate");
+
                     b.Navigation("Enrollment");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
@@ -277,12 +370,28 @@ namespace LanguageSchoolERP.Data.Migrations
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Receipt", b =>
                 {
                     b.HasOne("LanguageSchoolERP.Core.Models.Payment", "Payment")
-                        .WithOne("Receipt")
-                        .HasForeignKey("LanguageSchoolERP.Core.Models.Receipt", "PaymentId")
+                        .WithMany("Receipts")
+                        .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ReceiptCounter", b =>
+                {
+                    b.HasOne("LanguageSchoolERP.Core.Models.AcademicPeriod", "AcademicPeriod")
+                        .WithMany()
+                        .HasForeignKey("AcademicPeriodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AcademicPeriod");
+                });
+
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.ContractTemplate", b =>
+                {
+                    b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Enrollment", b =>
@@ -294,12 +403,13 @@ namespace LanguageSchoolERP.Data.Migrations
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Payment", b =>
                 {
-                    b.Navigation("Receipt")
-                        .IsRequired();
+                    b.Navigation("Receipts");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Student", b =>
                 {
+                    b.Navigation("Contracts");
+
                     b.Navigation("Enrollments");
                 });
 #pragma warning restore 612, 618

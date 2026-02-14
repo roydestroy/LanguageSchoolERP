@@ -23,4 +23,7 @@ public class Student
 
     public ICollection<Enrollment> Enrollments { get; set; }
         = new List<Enrollment>();
+
+    public ICollection<Contract> Contracts { get; set; }
+        = new List<Contract>();
 }

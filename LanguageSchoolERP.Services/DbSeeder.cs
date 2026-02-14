@@ -15,6 +15,26 @@ public static class DbSeeder
             db.AcademicPeriods.Add(new AcademicPeriod { Name = "2025-2026", IsCurrent = true });
             db.SaveChanges();
         }
+
+        if (!db.ContractTemplates.Any())
+        {
+            db.ContractTemplates.Add(new ContractTemplate
+            {
+                Name = "Συμφωνητικό Φιλοθέη",
+                BranchKey = "FILOTHEI",
+                TemplateRelativePath = @"Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΦΙΛΟΘΕΗ.dotm",
+                IsActive = true
+            });
+            db.ContractTemplates.Add(new ContractTemplate
+            {
+                Name = "Συμφωνητικό Νέα Ιωνία",
+                BranchKey = "NEA_IONIA",
+                TemplateRelativePath = @"Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΝΕΑ ΙΩΝΙΑ.dotm",
+                IsActive = true
+            });
+            db.SaveChanges();
+        }
+
         // Ensure there is exactly 1 receipt counter per academic period
         var periods = db.AcademicPeriods.AsNoTracking().ToList();
 

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-
-namespace LanguageSchoolERP.Core.Models;
+﻿namespace LanguageSchoolERP.Core.Models;
 
 public class Enrollment
 {
@@ -25,10 +23,18 @@ public class Enrollment
 
     public string Comments { get; set; } = "";
     public string Status { get; set; } = "Active";
+    public bool HasTransportation { get; set; }
+    public decimal TransportationMonthlyFee { get; set; }   // decimal(18,2)
+
+    public bool HasStudyLab { get; set; }
+    public decimal StudyLabMonthlyFee { get; set; }         // decimal(18,2)
+
+    public int InstallmentDayOfMonth { get; set; } = 1;
 
     public ICollection<Payment> Payments { get; set; }
         = new List<Payment>();
 
     public ICollection<Contract> Contracts { get; set; }
         = new List<Contract>();
+
 }
