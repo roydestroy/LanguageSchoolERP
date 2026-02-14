@@ -10,6 +10,7 @@ public class SchoolDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Receipt> Receipts => Set<Receipt>();
     public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<ContractTemplate> ContractTemplates => Set<ContractTemplate>();
     public DbSet<AcademicPeriod> AcademicPeriods => Set<AcademicPeriod>();
     public DbSet<ReceiptCounter> ReceiptCounters => Set<ReceiptCounter>();
 
@@ -32,5 +33,16 @@ public class SchoolDbContext : DbContext
             .HasIndex(x => x.AcademicPeriodId)
             .IsUnique();
 
+        modelBuilder.Entity<ContractTemplate>()
+            .Property(x => x.Name)
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<ContractTemplate>()
+            .Property(x => x.BranchKey)
+            .HasMaxLength(100);
+
+        modelBuilder.Entity<ContractTemplate>()
+            .Property(x => x.TemplateRelativePath)
+            .HasMaxLength(400);
     }
 }

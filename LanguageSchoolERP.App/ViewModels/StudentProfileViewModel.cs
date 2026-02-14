@@ -42,6 +42,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<PaymentRowVm> Payments { get; } = new();
     public ObservableCollection<ReceiptRowVm> Receipts { get; } = new();
     public ObservableCollection<ProgramEnrollmentRowVm> Programs { get; } = new();
+    public ObservableCollection<ContractRowVm> Contracts { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
@@ -78,6 +79,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent = 0;
     public IRelayCommand AddPaymentCommand { get; }
+    public IRelayCommand CreateContractCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
     public IRelayCommand EditProfileCommand { get; }
     public IAsyncRelayCommand SaveProfileCommand { get; }
@@ -98,6 +100,7 @@ public partial class StudentProfileViewModel : ObservableObject
         _excelReceiptGenerator = excelReceiptGenerator;
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
+        CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
         EditProfileCommand = new RelayCommand(StartEdit);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
@@ -292,6 +295,30 @@ public partial class StudentProfileViewModel : ObservableObject
             _ = LoadAsync(); // refresh payments + balance
         }
     }
+    private void OpenCreateContractDialog()
+    {
+        var win = App.Services.GetRequiredService<AddContractWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+
+        win.Initialize(new AddContractInit(_studentId, LocalAcademicYear, ResolveBranchKey()));
+
+        var result = win.ShowDialog();
+        if (result == true)
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    private string ResolveBranchKey()
+    {
+        return _state.SelectedDatabaseName switch
+        {
+            "FilotheiSchoolERP" => "FILOTHEI",
+            "NeaIoniaSchoolERP" => "NEA_IONIA",
+            _ => "FILOTHEI"
+        };
+    }
+
     private async Task PrintSelectedReceiptAsync()
     {
         if (SelectedReceipt is null)
@@ -416,6 +443,7 @@ public partial class StudentProfileViewModel : ObservableObject
             Payments.Clear();
             Receipts.Clear();
             Programs.Clear();
+            Contracts.Clear();
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
@@ -622,6 +650,24 @@ public partial class StudentProfileViewModel : ObservableObject
                     ProgramText = ProgramLabel(enrollment.ProgramType),
                     HasPdf = false,
                     PdfPath = ""
+                });
+            }
+
+            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
+            var contractRows = await db.Contracts
+                .AsNoTracking()
+                .Where(c => c.StudentId == _studentId && enrollmentIds.Contains(c.EnrollmentId))
+                .Include(c => c.ContractTemplate)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+
+            foreach (var c in contractRows)
+            {
+                Contracts.Add(new ContractRowVm
+                {
+                    CreatedAtText = c.CreatedAt.ToString("dd/MM/yyyy"),
+                    TemplateText = c.ContractTemplate?.Name ?? "—",
+                    HasPdfText = string.IsNullOrWhiteSpace(c.PdfPath) ? "No" : "Yes"
                 });
             }
 
