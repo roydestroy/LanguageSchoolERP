@@ -279,7 +279,8 @@
                                 <DataGridTextColumn Header="Type" Binding="{Binding TypeText}" Width="140"/>
                                 <DataGridTextColumn Header="Date" Binding="{Binding DateText}" Width="140"/>
                                 <DataGridTextColumn Header="Amount" Binding="{Binding AmountText}" Width="140"/>
-                                <DataGridTextColumn Header="Method" Binding="{Binding Method}" Width="140"/>
+                                <DataGridTextColumn Header="Method" Binding="{Binding Method}" Width="120"/>
+                                <DataGridTextColumn Header="Reason" Binding="{Binding ReasonText}" Width="150"/>
                                 <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>
                             </DataGrid.Columns>
                         </DataGrid>
@@ -304,6 +305,7 @@
 							<DataGridTextColumn Header="Date" Binding="{Binding DateText}" Width="120"/>
 							<DataGridTextColumn Header="Amount" Binding="{Binding AmountText}" Width="120"/>
 							<DataGridTextColumn Header="Method" Binding="{Binding MethodText}" Width="120"/>
+							<DataGridTextColumn Header="Reason" Binding="{Binding ReasonText}" Width="150"/>
 							<DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="150"/>
 						</DataGrid.Columns>
 					</DataGrid>
@@ -318,24 +320,43 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <DockPanel>
-                        <TextBlock Text="Contracts (Selected Year)" FontWeight="SemiBold" />
-                        <Button DockPanel.Dock="Right"
-                                Content="Create Contract"
-                                Width="140"
-                                Command="{Binding CreateContractCommand}"/>
-                    </DockPanel>
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock Text="Contracts (Selected Year)" FontWeight="SemiBold" />
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="Create" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
+                                <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
+                                <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}"/>
+                                <Button Content="Delete" Width="120" Command="{Binding DeleteContractCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Background" Value="#C0392B"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Foreground" Value="#444444"/>
+                                                    <Setter Property="Background" Value="#DDDDDD"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </DockPanel>
+                        <TextBlock Margin="0,8,0,0" Foreground="#C0392B" FontWeight="SemiBold" Text="{Binding PendingContractsText}"/>
+                    </StackPanel>
 
                     <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
                         <DataGrid ItemsSource="{Binding Contracts}"
+                                  SelectedItem="{Binding SelectedContract}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
                                   CanUserAddRows="False">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Created At" Binding="{Binding CreatedAtText}" Width="180"/>
-                                <DataGridTextColumn Header="Template" Binding="{Binding TemplateText}" Width="*"/>
-                                <DataGridTextColumn Header="Has PDF" Binding="{Binding HasPdfText}" Width="120"/>
+                                <DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="*"/>
+                                <DataGridTextColumn Header="Pending" Binding="{Binding IsPendingPrint}" Width="90"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Border>

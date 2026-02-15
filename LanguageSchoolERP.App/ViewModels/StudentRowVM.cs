@@ -24,6 +24,11 @@ public partial class StudentRowVm : ObservableObject
     public string OverdueBadgeText => IsOverdue ? "OVERDUE" : "OK";
     public Brush OverdueBadgeBackground => IsOverdue ? Brushes.IndianRed : Brushes.SeaGreen;
 
+    [ObservableProperty] private bool hasPendingContract;
+    public string PendingContractBadgeText => "CONTRACT PENDING";
+    public Brush PendingContractBadgeBackground => Brushes.DarkOrange;
+    public Visibility PendingContractVisibility => HasPendingContract ? Visibility.Visible : Visibility.Collapsed;
+
     [ObservableProperty] private bool isExpanded;
     public Visibility ExpandedVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
@@ -36,5 +41,12 @@ public partial class StudentRowVm : ObservableObject
     {
         OnPropertyChanged(nameof(ActiveBadgeText));
         OnPropertyChanged(nameof(ActiveBadgeBackground));
+    }
+
+    partial void OnHasPendingContractChanged(bool value)
+    {
+        OnPropertyChanged(nameof(PendingContractVisibility));
+        OnPropertyChanged(nameof(PendingContractBadgeText));
+        OnPropertyChanged(nameof(PendingContractBadgeBackground));
     }
 }

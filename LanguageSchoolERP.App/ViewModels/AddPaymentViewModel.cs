@@ -37,6 +37,31 @@ public partial class AddPaymentViewModel : ObservableObject
 
     [ObservableProperty] private PaymentMethod selectedPaymentMethod = PaymentMethod.Cash;
 
+    public IReadOnlyList<string> PaymentReasons { get; } =
+    [
+        "ΙΑΝΟΥΑΡΙΟΣ",
+        "ΦΕΒΡΟΥΑΡΙΟΣ",
+        "ΜΑΡΤΙΟΣ",
+        "ΑΠΡΙΛΙΟΣ",
+        "ΜΑΪΟΣ",
+        "ΙΟΥΝΙΟΣ",
+        "ΙΟΥΛΙΟΣ",
+        "ΑΥΓΟΥΣΤΟΣ",
+        "ΣΕΠΤΕΜΒΡΙΟΣ",
+        "ΟΚΤΩΒΡΙΟΣ",
+        "ΝΟΕΜΒΡΙΟΣ",
+        "ΔΕΚΕΜΒΡΙΟΣ",
+        "ΠΛΗΡΟΦΟΡΙΚΗ",
+        "ΠΡΟΚΑΤΑΒΟΛΗ",
+        "ΒΙΒΛΙΑ",
+        "ΕΞΕΤΑΣΤΡΑ",
+        "ΕΝΑΝΤΙ",
+        "ΕΞΟΦΛΗΣΗ",
+        "ΔΙΔΑΚΤΡΑ"
+    ];
+
+    [ObservableProperty] private string selectedReason = "ΔΙΔΑΚΤΡΑ";
+
     [ObservableProperty] private string amountText = "";
     [ObservableProperty] private DateTime? paymentDate = DateTime.Today;
     [ObservableProperty] private string notes = "";
@@ -70,6 +95,7 @@ public partial class AddPaymentViewModel : ObservableObject
         AmountText = "";
         PaymentDate = DateTime.Today;
         SelectedPaymentMethod = PaymentMethod.Cash;
+        SelectedReason = "ΔΙΔΑΚΤΡΑ";
 
         EnrollmentOptions.Clear();
         _suggestedAmountsByEnrollment.Clear();
@@ -168,7 +194,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 PaymentDate = PaymentDate.Value.Date,
                 Amount = amount,
                 Method = SelectedPaymentMethod,
-                Notes = Notes?.Trim() ?? ""
+                Notes = BuildStoredNotes(SelectedReason, Notes)
             };
 
             db.Payments.Add(payment);
@@ -235,6 +261,20 @@ public partial class AddPaymentViewModel : ObservableObject
         {
             ErrorMessage = ex.Message;
         }
+    }
+
+    private static string BuildStoredNotes(string reason, string? notes)
+    {
+        var safeReason = (reason ?? "").Trim();
+        var safeNotes = (notes ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(safeReason))
+            return safeNotes;
+
+        if (string.IsNullOrWhiteSpace(safeNotes))
+            return safeReason;
+
+        return $"{safeReason} | {safeNotes}";
     }
 
     private static bool TryParseMoney(string text, out decimal value)

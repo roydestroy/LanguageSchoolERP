@@ -36,6 +36,8 @@ public partial class App : Application
         // Services layer
         services.AddSingleton<ReceiptNumberService>();
         services.AddSingleton<ExcelReceiptGenerator>();
+        services.AddSingleton<ContractDocumentService>();
+        services.AddSingleton<ContractBookmarkBuilder>();
 
         // Global state
         services.AddSingleton<AppState>();
