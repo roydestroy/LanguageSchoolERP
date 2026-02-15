@@ -80,11 +80,13 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string balanceText = "0.00 €";
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent = 0;
+    [ObservableProperty] private string pendingContractsText = "";
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand CreateContractCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
     public IRelayCommand EditContractCommand { get; }
     public IRelayCommand ExportContractPdfCommand { get; }
+    public IRelayCommand DeleteContractCommand { get; }
     public IRelayCommand EditProfileCommand { get; }
     public IAsyncRelayCommand SaveProfileCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
@@ -110,6 +112,7 @@ public partial class StudentProfileViewModel : ObservableObject
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
         EditContractCommand = new RelayCommand(EditSelectedContract);
         ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync());
+        DeleteContractCommand = new RelayCommand(() => _ = DeleteSelectedContractAsync());
         EditProfileCommand = new RelayCommand(StartEdit);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
         CancelEditCommand = new RelayCommand(CancelEdit);
@@ -398,6 +401,49 @@ public partial class StudentProfileViewModel : ObservableObject
         }
     }
 
+
+    private async Task DeleteSelectedContractAsync()
+    {
+        if (SelectedContract is null)
+        {
+            System.Windows.MessageBox.Show("Please select a contract first.");
+            return;
+        }
+
+        var confirm = System.Windows.MessageBox.Show(
+            "Delete selected contract? This will remove it from the list and delete generated files if they exist.",
+            "Delete Contract",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirm != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
+            if (contract is null)
+            {
+                System.Windows.MessageBox.Show("Contract not found in database.");
+                return;
+            }
+
+            TryDeleteFile(contract.DocxPath);
+            TryDeleteFile(contract.PdfPath);
+
+            db.Contracts.Remove(contract);
+            await db.SaveChangesAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Delete contract failed");
+        }
+    }
+
     private async Task PrintSelectedReceiptAsync()
     {
         if (SelectedReceipt is null)
@@ -523,12 +569,17 @@ public partial class StudentProfileViewModel : ObservableObject
             Receipts.Clear();
             Programs.Clear();
             Contracts.Clear();
+            PendingContractsText = "";
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Name == LocalAcademicYear);
 
-            if (period is null) return;
+            if (period is null)
+            {
+                PendingContractsText = "No pending contracts.";
+                return;
+            }
 
             var student = await db.Students
                 .AsNoTracking()
@@ -742,17 +793,24 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var c in contractRows)
             {
+                var isPendingPrint = string.IsNullOrWhiteSpace(c.PdfPath);
                 Contracts.Add(new ContractRowVm
                 {
                     ContractId = c.ContractId,
                     CreatedAtText = c.CreatedAt.ToString("dd/MM/yyyy"),
                     TemplateText = c.ContractTemplate?.Name ?? "—",
                     HasDocxText = string.IsNullOrWhiteSpace(c.DocxPath) ? "No" : "Yes",
-                    HasPdfText = string.IsNullOrWhiteSpace(c.PdfPath) ? "No" : "Yes",
+                    HasPdfText = isPendingPrint ? "No" : "Yes",
+                    IsPendingPrint = isPendingPrint,
                     DocxPath = c.DocxPath,
                     PdfPath = c.PdfPath
                 });
             }
+
+            var pendingCount = Contracts.Count(c => c.IsPendingPrint);
+            PendingContractsText = pendingCount > 0
+                ? $"⚠ Pending contracts: {pendingCount} (not printed/signed)"
+                : "No pending contracts.";
 
         }
         catch (Exception ex)
@@ -779,6 +837,16 @@ public partial class StudentProfileViewModel : ObservableObject
         return $"{first:0} € (last {last:0} €)";
     }
 
+
+
+    private static void TryDeleteFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
+        if (File.Exists(path))
+            File.Delete(path);
+    }
 
     private static (string Name, string Surname) SplitName(string? fullName)
     {
