@@ -26,12 +26,12 @@ public sealed class ContractBookmarkBuilder
 
         if (payload.IncludesTransportation)
         {
-            values["slab"] = "\r\nΓια την μεταφορά από το Σχολείο προς το Φροντιστήριο, το συμφωνηθέν ποσό καθορίζεται ως εξής:";
+            values["slab"] = "Για την μεταφορά από το Σχολείο προς το Φροντιστήριο, το συμφωνηθέν ποσό καθορίζεται ως εξής:";
             values["slabc"] = $"{(payload.TransportationMonthlyPrice ?? 0m):0.##}€/μήνα";
         }
         else if (payload.IncludesStudyLab)
         {
-            values["slab"] = "\r\nΓια την συμμετοχή στο πρόγραμμα Study Lab το συμφωνηθέν ποσό καθορίζεται ως εξής:";
+            values["slab"] = "Για την συμμετοχή στο πρόγραμμα Study Lab το συμφωνηθέν ποσό καθορίζεται ως εξής:";
             values["slabc"] = $"{(payload.StudyLabMonthlyPrice ?? 0m):0.##}€/μήνα";
         }
         else

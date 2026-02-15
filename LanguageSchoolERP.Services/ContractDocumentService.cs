@@ -42,7 +42,15 @@ public sealed class ContractDocumentService
                     continue;
 
                 var range = doc.Bookmarks[bookmark].Range;
-                range.Text = value;
+                var valueToWrite = value;
+
+                if (string.Equals(bookmark, "slab", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(value))
+                {
+                    valueToWrite = "\r" + value.TrimStart('\r', '\n');
+                }
+
+                range.Text = valueToWrite;
                 if (BoldBookmarks.Contains(bookmark))
                     range.Bold = 1;
 
@@ -53,7 +61,7 @@ public sealed class ContractDocumentService
             if (installmentCount <= 0 || !financedPositive)
                 RemoveInstallmentsTable(doc);
             else
-                RemoveEmptyInstallmentRows(doc);
+                RemoveUnusedInstallmentRows(doc, installmentCount);
 
             object outputPath = outputDocxPath;
             doc.SaveAs2(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
@@ -155,18 +163,19 @@ public sealed class ContractDocumentService
         }
     }
 
-    private static void RemoveEmptyInstallmentRows(Document doc)
+    private static void RemoveUnusedInstallmentRows(Document doc, int installmentCount)
     {
         var table = FindInstallmentsTable(doc);
         if (table is null)
             return;
 
-        for (var row = table.Rows.Count; row >= 1; row--)
-        {
-            if (row <= 2)
-                continue;
+        var rowsToKeep = Math.Max(0, installmentCount);
+        var firstInstallmentRow = 3; // 1: section header, 2: column header
+        var maxUsedRow = firstInstallmentRow + rowsToKeep - 1;
 
-            if (IsRowEffectivelyEmpty(table.Rows[row]))
+        for (var row = table.Rows.Count; row >= firstInstallmentRow; row--)
+        {
+            if (row > maxUsedRow)
                 table.Rows[row].Delete();
         }
     }
@@ -184,24 +193,6 @@ public sealed class ContractDocumentService
         }
 
         return null;
-    }
-
-    private static bool IsRowEffectivelyEmpty(Row row)
-    {
-        for (var cellIndex = 1; cellIndex <= row.Cells.Count; cellIndex++)
-        {
-            var raw = row.Cells[cellIndex].Range.Text ?? "";
-            var cleaned = raw
-                .Replace("\r", "")
-                .Replace("\a", "")
-                .Replace("\v", "")
-                .Trim();
-
-            if (!string.IsNullOrWhiteSpace(cleaned))
-                return false;
-        }
-
-        return true;
     }
 
     public void OpenDocumentInWord(string docxPath)
