@@ -22,14 +22,14 @@ public static class DbSeeder
             {
                 Name = "Συμφωνητικό Φιλοθέη",
                 BranchKey = "FILOTHEI",
-                TemplateRelativePath = @"Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΦΙΛΟΘΕΗ.dotm",
+                TemplateRelativePath = @"Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΦΙΛΟΘΕΗ.docx",
                 IsActive = true
             });
             db.ContractTemplates.Add(new ContractTemplate
             {
                 Name = "Συμφωνητικό Νέα Ιωνία",
                 BranchKey = "NEA_IONIA",
-                TemplateRelativePath = @"Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΝΕΑ ΙΩΝΙΑ.dotm",
+                TemplateRelativePath = @"Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΝΕΑ ΙΩΝΙΑ.docx",
                 IsActive = true
             });
             db.SaveChanges();
