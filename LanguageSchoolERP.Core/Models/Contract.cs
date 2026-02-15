@@ -14,7 +14,7 @@ public class Contract
     public ContractTemplate ContractTemplate { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; } = DateTime.Now;
-
+    public string DocxPath { get; set; } = "";
     public string? PdfPath { get; set; }
 
     public string DataJson { get; set; } = "{}";
