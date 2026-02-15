@@ -378,12 +378,18 @@ public partial class StudentProfileViewModel : ObservableObject
                 return;
             }
 
-            var dir = Path.GetDirectoryName(SelectedContract.DocxPath)!;
-            var pdfPath = ContractPathService.GetContractPdfPath(dir, SelectedContract.ContractId);
+            var pdfPath = ContractPathService.GetContractPdfPathFromDocxPath(SelectedContract.DocxPath);
             _contractDocumentService.ExportPdfWithPageDuplication(SelectedContract.DocxPath, pdfPath);
 
             contract.PdfPath = pdfPath;
             await db.SaveChangesAsync();
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = pdfPath,
+                UseShellExecute = true
+            });
+
             await LoadAsync();
         }
         catch (Exception ex)

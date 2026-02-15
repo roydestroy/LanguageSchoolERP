@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using LanguageSchoolERP.Core.Models;
 
 namespace LanguageSchoolERP.Services;
@@ -16,12 +17,13 @@ public sealed class ContractBookmarkBuilder
             ["gen"] = InferFemale(payload.GuardianFullName) ? "η" : "ο",
             ["gen1"] = InferFemale(payload.GuardianFullName) ? "υπογεγραμμένη" : "υπογεγραμμένος",
             ["tou"] = InferFemale(payload.StudentFullName) ? "της" : "του",
-            ["on_up"] = payload.GuardianFullName,
-            ["on_sp"] = ToGenitiveFullName(payload.StudentFullName),
+            ["on_up"] = NormalizeNameForContract(payload.GuardianFullName),
+            ["on_sp"] = NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
             ["per_prg"] = payload.ProgramNameUpper,
             ["tit_prg"] = payload.ProgramTitleUpperWithExtras,
             ["sun_pos"] = FormatPlainAmount(payload.AgreementTotal),
-            ["prok_pos"] = FormatPlainAmount(payload.DownPayment)
+            ["prok_pos"] = FormatPlainAmount(payload.DownPayment),
+            ["up_pos"] = FormatPlainAmount(payload.AgreementTotal - payload.DownPayment)
         };
 
         if (payload.IncludesTransportation)
@@ -123,19 +125,54 @@ public sealed class ContractBookmarkBuilder
         if (parts.Length == 0)
             return fullName;
 
-        parts[0] = ToGenitiveGivenName(parts[0]);
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (ContainsGreek(parts[i]))
+                parts[i] = ToGenitiveGreekWord(parts[i]);
+        }
+
         return string.Join(" ", parts);
     }
 
-    private static string ToGenitiveGivenName(string name)
+    private static string ToGenitiveGreekWord(string name)
     {
-        if (name.EndsWith("ος", StringComparison.OrdinalIgnoreCase))
-            return name[..^2] + "ου";
-        if (name.EndsWith("ας", StringComparison.OrdinalIgnoreCase))
-            return name[..^2] + "α";
-        if (name.EndsWith("ης", StringComparison.OrdinalIgnoreCase))
-            return name[..^2] + "η";
+        var normalized = RemoveGreekTonos(name ?? string.Empty);
 
-        return name;
+        if (normalized.EndsWith("ος", StringComparison.OrdinalIgnoreCase))
+            return normalized[..^2] + "ου";
+        if (normalized.EndsWith("ας", StringComparison.OrdinalIgnoreCase))
+            return normalized[..^2] + "α";
+        if (normalized.EndsWith("ης", StringComparison.OrdinalIgnoreCase))
+            return normalized[..^2] + "η";
+
+        return normalized;
     }
+
+    private static string NormalizeNameForContract(string value)
+    {
+        var noTonos = RemoveGreekTonos(value ?? "");
+        return noTonos.Trim().ToUpper(GreekCulture);
+    }
+
+    private static bool ContainsGreek(string value)
+    {
+        foreach (var ch in value)
+        {
+            if ((ch >= 'Ͱ' && ch <= 'Ͽ') || (ch >= 'ἀ' && ch <= '῿'))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static string RemoveGreekTonos(string value)
+    {
+        var normalized = value.Normalize(NormalizationForm.FormD);
+        var chars = normalized
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            .ToArray();
+
+        return new string(chars).Normalize(NormalizationForm.FormC);
+    }
+
 }

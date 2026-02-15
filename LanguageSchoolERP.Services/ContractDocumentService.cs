@@ -10,7 +10,7 @@ public sealed class ContractDocumentService
 {
     private static readonly HashSet<string> BoldBookmarks = new(StringComparer.OrdinalIgnoreCase)
     {
-        "on_up", "on_sp", "per_prg", "tit_prg", "sun_pos", "prok_pos", "cur"
+        "on_up", "on_sp", "per_prg", "tit_prg", "sun_pos", "prok_pos", "up_pos", "cur"
     };
 
     public string GenerateDocxFromTemplate(

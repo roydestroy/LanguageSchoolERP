@@ -182,7 +182,7 @@ public partial class AddContractViewModel : ObservableObject
             };
 
             var folder = ContractPathService.GetContractFolder(_init.AcademicYear, payload.StudentLastName, payload.StudentFirstName);
-            var docxPath = ContractPathService.GetContractDocxPath(folder, contractId);
+            var docxPath = ContractPathService.GetContractDocxPath(folder, payload.ProgramTitleUpperWithExtras, contractId);
             var templatePath = Path.Combine(AppContext.BaseDirectory, template.TemplateRelativePath);
             var financedPositive = (payload.AgreementTotal - payload.DownPayment) > 0;
 
