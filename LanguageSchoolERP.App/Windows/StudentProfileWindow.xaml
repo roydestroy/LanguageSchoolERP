@@ -320,14 +320,16 @@
 
                     <DockPanel>
                         <TextBlock Text="Contracts (Selected Year)" FontWeight="SemiBold" />
-                        <Button DockPanel.Dock="Right"
-                                Content="Create Contract"
-                                Width="140"
-                                Command="{Binding CreateContractCommand}"/>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Create Contract" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
+                            <Button Content="Edit Contract" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
+                            <Button Content="Export PDF" Width="120" Command="{Binding ExportContractPdfCommand}"/>
+                        </StackPanel>
                     </DockPanel>
 
                     <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
                         <DataGrid ItemsSource="{Binding Contracts}"
+                                  SelectedItem="{Binding SelectedContract}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
@@ -335,6 +337,7 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Created At" Binding="{Binding CreatedAtText}" Width="180"/>
                                 <DataGridTextColumn Header="Template" Binding="{Binding TemplateText}" Width="*"/>
+                                <DataGridTextColumn Header="Has DOCX" Binding="{Binding HasDocxText}" Width="120"/>
                                 <DataGridTextColumn Header="Has PDF" Binding="{Binding HasPdfText}" Width="120"/>
                             </DataGrid.Columns>
                         </DataGrid>

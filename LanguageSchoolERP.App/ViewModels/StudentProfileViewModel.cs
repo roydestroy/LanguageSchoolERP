@@ -19,6 +19,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private readonly ExcelReceiptGenerator _excelReceiptGenerator;
+    private readonly ContractDocumentService _contractDocumentService;
 
     private Guid _studentId;
     private bool _isLoading;
@@ -44,6 +45,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<ProgramEnrollmentRowVm> Programs { get; } = new();
     public ObservableCollection<ContractRowVm> Contracts { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
+    [ObservableProperty] private ContractRowVm? selectedContract;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
@@ -81,6 +83,8 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand CreateContractCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
+    public IRelayCommand EditContractCommand { get; }
+    public IRelayCommand ExportContractPdfCommand { get; }
     public IRelayCommand EditProfileCommand { get; }
     public IAsyncRelayCommand SaveProfileCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
@@ -93,15 +97,19 @@ public partial class StudentProfileViewModel : ObservableObject
     public StudentProfileViewModel(
         AppState state,
         DbContextFactory dbFactory,
-        ExcelReceiptGenerator excelReceiptGenerator)
+        ExcelReceiptGenerator excelReceiptGenerator,
+        ContractDocumentService contractDocumentService)
     {
         _state = state;
         _dbFactory = dbFactory;
         _excelReceiptGenerator = excelReceiptGenerator;
+        _contractDocumentService = contractDocumentService;
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
         CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
+        EditContractCommand = new RelayCommand(EditSelectedContract);
+        ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync());
         EditProfileCommand = new RelayCommand(StartEdit);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
         CancelEditCommand = new RelayCommand(CancelEdit);
@@ -317,6 +325,71 @@ public partial class StudentProfileViewModel : ObservableObject
             "NeaIoniaSchoolERP" => "NEA_IONIA",
             _ => "FILOTHEI"
         };
+    }
+
+
+    private void EditSelectedContract()
+    {
+        if (SelectedContract is null)
+        {
+            System.Windows.MessageBox.Show("Please select a contract first.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
+        {
+            System.Windows.MessageBox.Show("The contract DOCX file was not found.");
+            return;
+        }
+
+        try
+        {
+            _contractDocumentService.OpenDocumentInWord(SelectedContract.DocxPath);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Open contract failed");
+        }
+    }
+
+    private async Task ExportSelectedContractPdfAsync()
+    {
+        if (SelectedContract is null)
+        {
+            System.Windows.MessageBox.Show("Please select a contract first.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
+        {
+            System.Windows.MessageBox.Show("The contract DOCX file was not found.");
+            return;
+        }
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
+            if (contract is null)
+            {
+                System.Windows.MessageBox.Show("Contract not found in database.");
+                return;
+            }
+
+            var dir = Path.GetDirectoryName(SelectedContract.DocxPath)!;
+            var pdfPath = ContractPathService.GetContractPdfPath(dir, SelectedContract.ContractId);
+            _contractDocumentService.ExportPdfWithPageDuplication(SelectedContract.DocxPath, pdfPath);
+
+            contract.PdfPath = pdfPath;
+            await db.SaveChangesAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Export contract PDF failed");
+        }
     }
 
     private async Task PrintSelectedReceiptAsync()
@@ -665,9 +738,13 @@ public partial class StudentProfileViewModel : ObservableObject
             {
                 Contracts.Add(new ContractRowVm
                 {
+                    ContractId = c.ContractId,
                     CreatedAtText = c.CreatedAt.ToString("dd/MM/yyyy"),
                     TemplateText = c.ContractTemplate?.Name ?? "—",
-                    HasPdfText = string.IsNullOrWhiteSpace(c.PdfPath) ? "No" : "Yes"
+                    HasDocxText = string.IsNullOrWhiteSpace(c.DocxPath) ? "No" : "Yes",
+                    HasPdfText = string.IsNullOrWhiteSpace(c.PdfPath) ? "No" : "Yes",
+                    DocxPath = c.DocxPath,
+                    PdfPath = c.PdfPath
                 });
             }
 
