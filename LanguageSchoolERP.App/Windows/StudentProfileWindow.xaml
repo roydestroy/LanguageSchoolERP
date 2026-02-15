@@ -327,7 +327,7 @@
                                 <Button Content="Create" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
                                 <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
                                 <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}"/>
-                                <Button Content="Delete" Width="120" Background="#C0392B" Foreground="White" Command="{Binding DeleteContractCommand}">
+                                <Button Content="Delete" Width="120" Command="{Binding DeleteContractCommand}">
                                     <Button.Style>
                                         <Style TargetType="Button">
                                             <Setter Property="Foreground" Value="White"/>

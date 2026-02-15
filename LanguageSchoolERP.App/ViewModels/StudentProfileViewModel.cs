@@ -742,7 +742,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
-                var downpaymentDate = ResolveDownpaymentDateText(enrollment.EnrollmentId, contractCreatedByEnrollment);
+                var downpaymentDate = ResolveDownpaymentDateText(enrollment, contractCreatedByEnrollment);
                 Payments.Add(new PaymentRowVm
                 {
                     TypeText = "Downpayment",
@@ -790,7 +790,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
-                var downpaymentDate = ResolveDownpaymentDateText(enrollment.EnrollmentId, contractCreatedByEnrollment);
+                var downpaymentDate = ResolveDownpaymentDateText(enrollment, contractCreatedByEnrollment);
                 Receipts.Add(new ReceiptRowVm
                 {
                     IsDownpayment = true,
@@ -876,11 +876,20 @@ public partial class StudentProfileViewModel : ObservableObject
         return $"{e.InstallmentCount} from {startDate:dd/MM/yyyy}";
     }
 
-    private static string ResolveDownpaymentDateText(Guid enrollmentId, IReadOnlyDictionary<Guid, DateTime> contractCreatedByEnrollment)
+    private static string ResolveDownpaymentDateText(Enrollment enrollment, IReadOnlyDictionary<Guid, DateTime> contractCreatedByEnrollment)
     {
-        return contractCreatedByEnrollment.TryGetValue(enrollmentId, out var createdAt)
-            ? createdAt.ToString("dd/MM/yyyy")
-            : "—";
+        if (contractCreatedByEnrollment.TryGetValue(enrollment.EnrollmentId, out var createdAt))
+            return createdAt.ToString("dd/MM/yyyy");
+
+        var firstPaymentDate = enrollment.Payments
+            .OrderBy(p => p.PaymentDate)
+            .Select(p => p.PaymentDate)
+            .FirstOrDefault();
+
+        if (firstPaymentDate != default)
+            return firstPaymentDate.ToString("dd/MM/yyyy");
+
+        return DateTime.Today.ToString("dd/MM/yyyy");
     }
 
     private static string ParseReason(string? notes)
