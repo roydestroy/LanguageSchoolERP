@@ -47,7 +47,7 @@ public sealed class ContractDocumentService
                 if (string.Equals(bookmark, "slab", StringComparison.OrdinalIgnoreCase)
                     && !string.IsNullOrWhiteSpace(value))
                 {
-                    valueToWrite = "\r" + value.TrimStart('\r', '\n');
+                    valueToWrite = "\r\n" + value.TrimStart('\r', '\n');
                 }
 
                 range.Text = valueToWrite;
@@ -169,15 +169,47 @@ public sealed class ContractDocumentService
         if (table is null)
             return;
 
-        var rowsToKeep = Math.Max(0, installmentCount);
-        var firstInstallmentRow = 3; // 1: section header, 2: column header
-        var maxUsedRow = firstInstallmentRow + rowsToKeep - 1;
+        var targetInstallmentCount = Math.Max(0, installmentCount);
+        var foundInstallmentRows = 0;
 
-        for (var row = table.Rows.Count; row >= firstInstallmentRow; row--)
+        for (var row = table.Rows.Count; row >= 1; row--)
         {
-            if (row > maxUsedRow)
-                table.Rows[row].Delete();
+            var rowObj = table.Rows[row];
+            var hasInstallmentText = RowContainsInstallmentText(rowObj);
+
+            if (hasInstallmentText)
+                foundInstallmentRows++;
+
+            var shouldDeleteBecauseExcessInstallment = hasInstallmentText && foundInstallmentRows > targetInstallmentCount;
+            var shouldDeleteBecauseEmpty = IsRowEffectivelyEmpty(rowObj);
+
+            if (shouldDeleteBecauseExcessInstallment || shouldDeleteBecauseEmpty)
+                rowObj.Delete();
         }
+    }
+
+    private static bool IsRowEffectivelyEmpty(Row row)
+    {
+        for (var cellIndex = 1; cellIndex <= row.Cells.Count; cellIndex++)
+        {
+            var text = row.Cells[cellIndex].Range.Text ?? "";
+            if (text.Length > 2)
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool RowContainsInstallmentText(Row row)
+    {
+        for (var cellIndex = 1; cellIndex <= row.Cells.Count; cellIndex++)
+        {
+            var text = row.Cells[cellIndex].Range.Text ?? "";
+            if (text.Contains("Δόση", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     private static Table? FindInstallmentsTable(Document doc)
