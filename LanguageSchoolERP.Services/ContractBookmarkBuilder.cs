@@ -26,12 +26,12 @@ public sealed class ContractBookmarkBuilder
 
         if (payload.IncludesTransportation)
         {
-            values["slab"] = "Για την μεταφορά από το Σχολείο προς το Φροντιστήριο, το συμφωνηθέν ποσό καθορίζεται ως εξής:";
+            values["slab"] = "\r\nΓια την μεταφορά από το Σχολείο προς το Φροντιστήριο, το συμφωνηθέν ποσό καθορίζεται ως εξής:";
             values["slabc"] = $"{(payload.TransportationMonthlyPrice ?? 0m):0.##}€/μήνα";
         }
         else if (payload.IncludesStudyLab)
         {
-            values["slab"] = "Για την συμμετοχή στο πρόγραμμα Study Lab το συμφωνηθέν ποσό καθορίζεται ως εξής:";
+            values["slab"] = "\r\nΓια την συμμετοχή στο πρόγραμμα Study Lab το συμφωνηθέν ποσό καθορίζεται ως εξής:";
             values["slabc"] = $"{(payload.StudyLabMonthlyPrice ?? 0m):0.##}€/μήνα";
         }
         else
@@ -64,6 +64,13 @@ public sealed class ContractBookmarkBuilder
 
     private static void BuildInstallments(Dictionary<string, string> values, Enrollment enrollment)
     {
+        for (var i = 1; i <= 12; i++)
+        {
+            values[$"aa{i}"] = "";
+            values[$"dat{i}"] = "";
+            values[$"dos{i}"] = "";
+        }
+
         var financed = enrollment.AgreementTotal - enrollment.DownPayment;
         if (enrollment.InstallmentCount <= 0 || financed <= 0 || enrollment.InstallmentStartMonth is null)
             return;

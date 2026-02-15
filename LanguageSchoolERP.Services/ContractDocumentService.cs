@@ -52,6 +52,8 @@ public sealed class ContractDocumentService
 
             if (installmentCount <= 0 || !financedPositive)
                 RemoveInstallmentsTable(doc);
+            else
+                RemoveEmptyInstallmentRows(doc);
 
             object outputPath = outputDocxPath;
             doc.SaveAs2(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
@@ -141,18 +143,8 @@ public sealed class ContractDocumentService
 
     private static void RemoveInstallmentsTable(Document doc)
     {
-        foreach (var marker in new[] { "aa1", "dat1", "dos1" })
-        {
-            if (!doc.Bookmarks.Exists(marker))
-                continue;
-
-            var range = doc.Bookmarks[marker].Range;
-            if (range.Tables.Count > 0)
-            {
-                range.Tables[1].Delete();
-                break;
-            }
-        }
+        var table = FindInstallmentsTable(doc);
+        table?.Delete();
 
         if (doc.Bookmarks.Exists("clear"))
         {
@@ -161,6 +153,55 @@ public sealed class ContractDocumentService
             object clearName = "clear";
             doc.Bookmarks.Add(clearName.ToString(), clearRange);
         }
+    }
+
+    private static void RemoveEmptyInstallmentRows(Document doc)
+    {
+        var table = FindInstallmentsTable(doc);
+        if (table is null)
+            return;
+
+        for (var row = table.Rows.Count; row >= 1; row--)
+        {
+            if (row <= 2)
+                continue;
+
+            if (IsRowEffectivelyEmpty(table.Rows[row]))
+                table.Rows[row].Delete();
+        }
+    }
+
+    private static Table? FindInstallmentsTable(Document doc)
+    {
+        foreach (var marker in new[] { "aa1", "dat1", "dos1" })
+        {
+            if (!doc.Bookmarks.Exists(marker))
+                continue;
+
+            var range = doc.Bookmarks[marker].Range;
+            if (range.Tables.Count > 0)
+                return range.Tables[1];
+        }
+
+        return null;
+    }
+
+    private static bool IsRowEffectivelyEmpty(Row row)
+    {
+        for (var cellIndex = 1; cellIndex <= row.Cells.Count; cellIndex++)
+        {
+            var raw = row.Cells[cellIndex].Range.Text ?? "";
+            var cleaned = raw
+                .Replace("\r", "")
+                .Replace("\a", "")
+                .Replace("\v", "")
+                .Trim();
+
+            if (!string.IsNullOrWhiteSpace(cleaned))
+                return false;
+        }
+
+        return true;
     }
 
     public void OpenDocumentInWord(string docxPath)

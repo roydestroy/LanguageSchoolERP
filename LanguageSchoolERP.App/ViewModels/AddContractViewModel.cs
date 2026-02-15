@@ -83,8 +83,11 @@ public partial class AddContractViewModel : ObservableObject
             return;
         }
 
-        StudentName = student.FullName;
-        GuardianName = string.IsNullOrWhiteSpace(student.FatherName) ? student.MotherName : student.FatherName;
+        var (_, studentSurname) = SplitName(student.FullName);
+        StudentName = EnsureSurname(student.FullName, studentSurname);
+
+        var defaultGuardian = string.IsNullOrWhiteSpace(student.FatherName) ? student.MotherName : student.FatherName;
+        GuardianName = EnsureSurname(defaultGuardian, studentSurname);
 
         var templates = await db.ContractTemplates
             .AsNoTracking()
@@ -146,7 +149,11 @@ public partial class AddContractViewModel : ObservableObject
             var enrollment = await db.Enrollments.AsNoTracking().FirstAsync(x => x.EnrollmentId == SelectedEnrollment.EnrollmentId);
             var template = await db.ContractTemplates.AsNoTracking().FirstAsync(x => x.ContractTemplateId == SelectedTemplate.ContractTemplateId);
 
-            var (firstName, lastName) = SplitName(student.FullName);
+            var (_, studentSurname) = SplitName(student.FullName);
+            var effectiveStudentName = EnsureSurname((StudentName ?? "").Trim(), studentSurname);
+            var effectiveGuardianName = EnsureSurname((GuardianName ?? "").Trim(), studentSurname);
+
+            var (firstName, lastName) = SplitName(effectiveStudentName);
             var contractId = Guid.NewGuid();
 
             var payload = new ContractPayload
@@ -156,10 +163,10 @@ public partial class AddContractViewModel : ObservableObject
                 EnrollmentId = enrollment.EnrollmentId,
                 AcademicYear = _init.AcademicYear,
                 BranchKey = _init.BranchKey,
-                StudentFullName = student.FullName,
+                StudentFullName = effectiveStudentName,
                 StudentFirstName = firstName,
                 StudentLastName = lastName,
-                GuardianFullName = (GuardianName ?? "").Trim(),
+                GuardianFullName = effectiveGuardianName,
                 ProgramNameUpper = enrollment.ProgramType.ToString().ToUpperInvariant(),
                 ProgramTitleUpperWithExtras = ContractBookmarkBuilder.BuildProgramTitleUpperWithExtras(enrollment),
                 AgreementTotal = enrollment.AgreementTotal,
@@ -214,6 +221,24 @@ public partial class AddContractViewModel : ObservableObject
             ErrorMessage = ex.ToString();
         }
 
+    }
+
+
+    private static string EnsureSurname(string fullName, string defaultSurname)
+    {
+        var normalized = (fullName ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return normalized;
+
+        var (_, surname) = SplitName(normalized);
+        if (!string.IsNullOrWhiteSpace(surname))
+            return normalized;
+
+        var fallbackSurname = (defaultSurname ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(fallbackSurname))
+            return normalized;
+
+        return $"{normalized} {fallbackSurname}".Trim();
     }
 
     private static (string FirstName, string LastName) SplitName(string fullName)
