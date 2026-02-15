@@ -322,10 +322,10 @@
                         <DockPanel>
                             <TextBlock Text="Contracts (Selected Year)" FontWeight="SemiBold" />
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button Content="Create Contract" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
-                                <Button Content="Edit Contract" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
+                                <Button Content="Create" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
+                                <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
                                 <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}"/>
-                                <Button Content="Delete Contract" Width="130" Command="{Binding DeleteContractCommand}"/>
+                                <Button Content="Delete" Width="120" Background="#C0392B" Foreground="White" Command="{Binding DeleteContractCommand}"/>
                             </StackPanel>
                         </DockPanel>
                         <TextBlock Margin="0,8,0,0" Foreground="#C0392B" FontWeight="SemiBold" Text="{Binding PendingContractsText}"/>
@@ -340,9 +340,7 @@
                                   CanUserAddRows="False">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Created At" Binding="{Binding CreatedAtText}" Width="180"/>
-                                <DataGridTextColumn Header="Template" Binding="{Binding TemplateText}" Width="*"/>
-                                <DataGridTextColumn Header="Has DOCX" Binding="{Binding HasDocxText}" Width="120"/>
-                                <DataGridTextColumn Header="Has PDF" Binding="{Binding HasPdfText}" Width="120"/>
+                                <DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="*"/>
                                 <DataGridTextColumn Header="Pending" Binding="{Binding IsPendingPrint}" Width="90"/>
                             </DataGrid.Columns>
                         </DataGrid>

@@ -110,9 +110,9 @@ public partial class StudentProfileViewModel : ObservableObject
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
         CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
-        EditContractCommand = new RelayCommand(EditSelectedContract);
-        ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync());
-        DeleteContractCommand = new RelayCommand(() => _ = DeleteSelectedContractAsync());
+        EditContractCommand = new RelayCommand(EditSelectedContract, () => SelectedContract is not null);
+        ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync(), () => SelectedContract is not null);
+        DeleteContractCommand = new RelayCommand(() => _ = DeleteSelectedContractAsync(), () => SelectedContract is not null);
         EditProfileCommand = new RelayCommand(StartEdit);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
         CancelEditCommand = new RelayCommand(CancelEdit);
@@ -121,6 +121,14 @@ public partial class StudentProfileViewModel : ObservableObject
         EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
         RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
 
+    }
+
+
+    partial void OnSelectedContractChanged(ContractRowVm? value)
+    {
+        EditContractCommand.NotifyCanExecuteChanged();
+        ExportContractPdfCommand.NotifyCanExecuteChanged();
+        DeleteContractCommand.NotifyCanExecuteChanged();
     }
 
     private void StartEdit()
@@ -569,6 +577,7 @@ public partial class StudentProfileViewModel : ObservableObject
             Receipts.Clear();
             Programs.Clear();
             Contracts.Clear();
+            SelectedContract = null;
             PendingContractsText = "";
 
             var period = await db.AcademicPeriods
@@ -787,20 +796,24 @@ public partial class StudentProfileViewModel : ObservableObject
             var contractRows = await db.Contracts
                 .AsNoTracking()
                 .Where(c => c.StudentId == _studentId && enrollmentIds.Contains(c.EnrollmentId))
-                .Include(c => c.ContractTemplate)
+                .Include(c => c.Enrollment)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
             foreach (var c in contractRows)
             {
                 var isPendingPrint = string.IsNullOrWhiteSpace(c.PdfPath);
+                var programText = c.Enrollment is null
+                    ? "—"
+                    : string.IsNullOrWhiteSpace(c.Enrollment.LevelOrClass)
+                        ? c.Enrollment.ProgramType.ToString()
+                        : $"{c.Enrollment.ProgramType} ({c.Enrollment.LevelOrClass})";
+
                 Contracts.Add(new ContractRowVm
                 {
                     ContractId = c.ContractId,
                     CreatedAtText = c.CreatedAt.ToString("dd/MM/yyyy"),
-                    TemplateText = c.ContractTemplate?.Name ?? "—",
-                    HasDocxText = string.IsNullOrWhiteSpace(c.DocxPath) ? "No" : "Yes",
-                    HasPdfText = isPendingPrint ? "No" : "Yes",
+                    ProgramText = programText,
                     IsPendingPrint = isPendingPrint,
                     DocxPath = c.DocxPath,
                     PdfPath = c.PdfPath
