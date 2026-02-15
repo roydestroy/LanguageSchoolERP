@@ -10,6 +10,7 @@ public class ReceiptRowVm
     public string DateText { get; set; } = "";
     public string AmountText { get; set; } = "";
     public string MethodText { get; set; } = "";
+    public string ReasonText { get; set; } = "";
     public string ProgramText { get; set; } = "";
     public bool HasPdf { get; set; }
     public string PdfPath { get; set; } = "";

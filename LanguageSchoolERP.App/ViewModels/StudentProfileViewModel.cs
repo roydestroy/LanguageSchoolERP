@@ -673,7 +673,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     BooksText = $"{e.BooksAmount:0.00} €",
                     DownPaymentText = $"{e.DownPayment:0.00} €",
                     InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
-                        ? $"{e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}"
+                        ? BuildInstallmentPlanText(e)
                         : "—",
                     InstallmentAmountText = e.InstallmentCount > 0
                         ? BuildInstallmentAmountText(e)
@@ -704,7 +704,7 @@ public partial class StudentProfileViewModel : ObservableObject
             // Installment plan summary
             var planParts = enrollments
                 .Where(e => e.InstallmentCount > 0 && e.InstallmentStartMonth != null)
-                .Select(e => $"{ProgramLabel(e.ProgramType)}: {e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}")
+                .Select(e => $"{ProgramLabel(e.ProgramType)}: {BuildInstallmentPlanText(e)}")
                 .ToList();
 
             var planText = planParts.Any()
@@ -726,6 +726,14 @@ public partial class StudentProfileViewModel : ObservableObject
             ProgressPercent = progress;
             ProgressText = $"{progress:0}%";
 
+            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
+            var contractCreatedByEnrollment = await db.Contracts
+                .AsNoTracking()
+                .Where(c => enrollmentIds.Contains(c.EnrollmentId))
+                .GroupBy(c => c.EnrollmentId)
+                .Select(g => new { EnrollmentId = g.Key, CreatedAt = g.Min(c => c.CreatedAt) })
+                .ToDictionaryAsync(x => x.EnrollmentId, x => x.CreatedAt);
+
             // Payments table (all payments in this year across enrollments)
             var paymentRows = enrollments
                 .SelectMany(e => e.Payments.Select(p => new { Payment = p }))
@@ -734,12 +742,14 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
+                var downpaymentDate = ResolveDownpaymentDateText(enrollment.EnrollmentId, contractCreatedByEnrollment);
                 Payments.Add(new PaymentRowVm
                 {
                     TypeText = "Downpayment",
-                    DateText = "—",
+                    DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
                     Method = "Enrollment",
+                    ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     Notes = "Enrollment downpayment"
                 });
             }
@@ -752,7 +762,8 @@ public partial class StudentProfileViewModel : ObservableObject
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{row.Payment.Amount:0.00} €",
                     Method = row.Payment.Method.ToString(),
-                    Notes = row.Payment.Notes ?? ""
+                    ReasonText = ParseReason(row.Payment.Notes),
+                    Notes = ParseAdditionalNotes(row.Payment.Notes)
                 });
             }
             var receiptRows = enrollments
@@ -770,6 +781,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     DateText = x.r.IssueDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{x.p.Amount:0.00} €",
                     MethodText = x.p.Method.ToString(),
+                    ReasonText = ParseReason(x.p.Notes),
                     ProgramText = ProgramLabel(x.e.ProgramType),
                     HasPdf = !string.IsNullOrWhiteSpace(x.r.PdfPath),
                     PdfPath = x.r.PdfPath
@@ -778,21 +790,22 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
+                var downpaymentDate = ResolveDownpaymentDateText(enrollment.EnrollmentId, contractCreatedByEnrollment);
                 Receipts.Add(new ReceiptRowVm
                 {
                     IsDownpayment = true,
                     EnrollmentId = enrollment.EnrollmentId,
                     NumberText = "DP",
-                    DateText = "—",
+                    DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
                     MethodText = "Enrollment",
+                    ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     ProgramText = ProgramLabel(enrollment.ProgramType),
                     HasPdf = false,
                     PdfPath = ""
                 });
             }
 
-            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
             var contractRows = await db.Contracts
                 .AsNoTracking()
                 .Where(c => c.StudentId == _studentId && enrollmentIds.Contains(c.EnrollmentId))
@@ -851,6 +864,44 @@ public partial class StudentProfileViewModel : ObservableObject
     }
 
 
+
+    private static string BuildInstallmentPlanText(Enrollment e)
+    {
+        if (e.InstallmentStartMonth is null)
+            return "—";
+
+        var start = new DateTime(e.InstallmentStartMonth.Value.Year, e.InstallmentStartMonth.Value.Month, 1);
+        var day = e.InstallmentDayOfMonth <= 0 ? 1 : Math.Min(e.InstallmentDayOfMonth, DateTime.DaysInMonth(start.Year, start.Month));
+        var startDate = new DateTime(start.Year, start.Month, day);
+        return $"{e.InstallmentCount} from {startDate:dd/MM/yyyy}";
+    }
+
+    private static string ResolveDownpaymentDateText(Guid enrollmentId, IReadOnlyDictionary<Guid, DateTime> contractCreatedByEnrollment)
+    {
+        return contractCreatedByEnrollment.TryGetValue(enrollmentId, out var createdAt)
+            ? createdAt.ToString("dd/MM/yyyy")
+            : "—";
+    }
+
+    private static string ParseReason(string? notes)
+    {
+        var raw = (notes ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "—";
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts[0];
+    }
+
+    private static string ParseAdditionalNotes(string? notes)
+    {
+        var raw = (notes ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "";
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts.Length == 2 ? parts[1] : "";
+    }
 
     private static void TryDeleteFile(string? path)
     {
