@@ -83,6 +83,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent = 0;
     [ObservableProperty] private string pendingContractsText = "";
+    [ObservableProperty] private bool hasPendingContracts;
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand EditPaymentCommand { get; }
     public IAsyncRelayCommand DeletePaymentCommand { get; }
@@ -675,6 +676,7 @@ public partial class StudentProfileViewModel : ObservableObject
             Contracts.Clear();
             SelectedContract = null;
             PendingContractsText = "";
+            HasPendingContracts = false;
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
@@ -683,6 +685,7 @@ public partial class StudentProfileViewModel : ObservableObject
             if (period is null)
             {
                 PendingContractsText = "Δεν υπάρχουν εκκρεμή συμφωνητικά.";
+                HasPendingContracts = false;
                 return;
             }
 
@@ -945,6 +948,7 @@ public partial class StudentProfileViewModel : ObservableObject
             }
 
             var pendingCount = Contracts.Count(c => c.IsPendingPrint);
+            HasPendingContracts = pendingCount > 0;
             PendingContractsText = pendingCount > 0
                 ? $"⚠ Εκκρεμή συμφωνητικά: {pendingCount}"
                 : "Δεν υπάρχουν εκκρεμή συμφωνητικά.";
