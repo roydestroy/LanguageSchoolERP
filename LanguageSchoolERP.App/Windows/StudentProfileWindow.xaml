@@ -170,9 +170,6 @@
                 <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
                     <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment.IsSyntheticEntry, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -182,9 +179,6 @@
                 <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
                     <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment.IsSyntheticEntry, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -192,9 +186,6 @@
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment.IsSyntheticEntry, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
                     <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
             </Style.Triggers>
