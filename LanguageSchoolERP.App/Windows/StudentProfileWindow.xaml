@@ -40,6 +40,14 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="16">
@@ -289,17 +297,26 @@
             </TabItem>
 
             <TabItem Header="Receipts">
-				<DockPanel Margin="8">
-					<Button DockPanel.Dock="Top"
-							Content="Print Receipt"
-							Width="140"
-							Margin="0,0,0,8"
-							Command="{Binding PrintReceiptCommand}"/>
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-					<DataGrid ItemsSource="{Binding Receipts}"
-							  SelectedItem="{Binding SelectedReceipt}"
-							  AutoGenerateColumns="False"
-							  CanUserAddRows="False">
+                    <DockPanel LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left" Text="Receipts" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button DockPanel.Dock="Right"
+                                Content="Print Receipt"
+                                Width="140"
+                                Command="{Binding PrintReceiptCommand}"/>
+                    </DockPanel>
+
+                    <DataGrid Grid.Row="1"
+                              Margin="0,10,0,0"
+                              ItemsSource="{Binding Receipts}"
+                              SelectedItem="{Binding SelectedReceipt}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="Receipt #" Binding="{Binding NumberText}" Width="100"/>
 							<DataGridTextColumn Header="Date" Binding="{Binding DateText}" Width="120"/>
@@ -308,10 +325,9 @@
 							<DataGridTextColumn Header="Reason" Binding="{Binding ReasonText}" Width="150"/>
 							<DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="150"/>
 						</DataGrid.Columns>
-					</DataGrid>
-				</DockPanel>
-
-			</TabItem>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
 
             <TabItem Header="Contracts">
                 <Grid Margin="12">
@@ -325,20 +341,15 @@
                             <TextBlock DockPanel.Dock="Left" Text="Contracts" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Button Content="Create" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
-                                <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
-                                <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}"/>
-                                <Button Content="Delete" Width="120" Command="{Binding DeleteContractCommand}">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Style.Triggers>
-                                                <Trigger Property="IsEnabled" Value="True">
-                                                    <Setter Property="Foreground" Value="White"/>
-                                                    <Setter Property="Background" Value="#C0392B"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
+                                <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSelectionActionButtonStyle}"/>
+                                <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}" Style="{StaticResource ContractSelectionActionButtonStyle}"/>
+                                <Button Content="Delete"
+                                        Width="120"
+                                        Command="{Binding DeleteContractCommand}"
+                                        Style="{StaticResource ContractSelectionActionButtonStyle}"
+                                        Background="#C0392B"
+                                        BorderBrush="#A93226"
+                                        Foreground="White"/>
                             </StackPanel>
                         </DockPanel>
                         <TextBlock Margin="0,8,0,0" Foreground="#C0392B" FontWeight="SemiBold" Text="{Binding PendingContractsText}"/>

@@ -31,14 +31,16 @@
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style TargetType="ComboBox">
             <Setter Property="MinHeight" Value="34"/>
-            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Padding" Value="8,2"/>
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style TargetType="DatePicker">
@@ -70,12 +72,12 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#356E9F"/>
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#2D608C"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#3A78AE"/>
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#316A99"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#2C5F8B"/>
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#244F74"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#2C6290"/>
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#26537A"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Foreground" Value="#B9C4D0"/>

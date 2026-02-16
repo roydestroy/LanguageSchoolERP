@@ -4,6 +4,42 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="ExpandCaretButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Background" Value="#F4F7FB"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Content" Value="▼"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="CaretBorder"
+                                CornerRadius="7"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CaretBorder" Property="Background" Value="#E8EEF7"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Content" Value="▲"/>
+                                <Setter TargetName="CaretBorder" Property="Background" Value="#DFE9F7"/>
+                                <Setter TargetName="CaretBorder" Property="BorderBrush" Value="#BFD0E6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -18,25 +54,23 @@
                     <ColumnDefinition Width="18"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="Students" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <Button Grid.Column="2" Content="New Student" Width="128" Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
-                <ComboBox Grid.Column="4" Width="140"
+                <ComboBox Grid.Column="2" Width="150"
                           VerticalAlignment="Center"
-                          VerticalContentAlignment="Center"
                           ItemsSource="{Binding StudentStatusFilters}"
                           SelectedItem="{Binding SelectedStudentStatusFilter, Mode=TwoWay}"/>
-                <TextBox Grid.Column="6"
+                <TextBox Grid.Column="4"
                          VerticalAlignment="Center"
-                         VerticalContentAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Search by name, phone, email"/>
+                <Button Grid.Column="6" Content="New Student" Width="128" Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
                 <Button Grid.Column="8" Content="Refresh" Width="92" Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
@@ -101,21 +135,18 @@
                                                 Visibility="{Binding PendingContractVisibility}">
                                             <TextBlock Text="{Binding PendingContractBadgeText}" Foreground="White" FontSize="12"/>
                                         </Border>
-										
-										<Button Grid.Column="5"
-												Margin="12,0,0,0"
-												Width="90" Height="32"
-												Content="Open"
-												Command="{Binding DataContext.OpenStudentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-												CommandParameter="{Binding StudentId}"
-												VerticalAlignment="Center"/>
 
-										<!-- Expand caret -->
+                                        <Button Grid.Column="5"
+                                                Margin="12,0,0,0"
+                                                Width="90" Height="32"
+                                                Content="Open"
+                                                Command="{Binding DataContext.OpenStudentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding StudentId}"
+                                                VerticalAlignment="Center"/>
+
                                         <ToggleButton Grid.Column="6" Margin="12,0,0,0"
-                                                      Width="36" Height="36"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
-                                                      Content="⌄"
-                                                      FontSize="18"
+                                                      Style="{StaticResource ExpandCaretButtonStyle}"
                                                       VerticalAlignment="Center"/>
                                     </Grid>
 
