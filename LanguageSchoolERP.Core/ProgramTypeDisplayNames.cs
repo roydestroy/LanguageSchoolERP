@@ -4,9 +4,9 @@ public static class ProgramTypeDisplayNames
 {
     public static string ToDisplayName(this ProgramType programType) => programType switch
     {
-        ProgramType.LanguageSchool => "Foreign Languages",
-        ProgramType.StudyLab => "School Study",
-        ProgramType.EuroLab => "Computers",
+        ProgramType.LanguageSchool => "Ξένες Γλώσσες",
+        ProgramType.StudyLab => "Σχολική Μελέτη",
+        ProgramType.EuroLab => "Υπολογιστές",
         _ => programType.ToString()
     };
 }
