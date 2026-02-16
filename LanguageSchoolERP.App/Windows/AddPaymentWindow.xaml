@@ -1,7 +1,7 @@
 <Window x:Class="LanguageSchoolERP.App.Windows.AddPaymentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{Binding DialogTitle}" Height="657" Width="625"
+        Title="{Binding DialogTitle}" Height="711" Width="627"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
 
