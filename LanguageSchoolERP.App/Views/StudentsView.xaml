@@ -46,12 +46,13 @@
                                     <!-- Student summary row -->
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-											<ColumnDefinition Width="*"/>
-											<ColumnDefinition Width="Auto"/>
-											<ColumnDefinition Width="Auto"/>
-											<ColumnDefinition Width="Auto"/>
-											<ColumnDefinition Width="Auto"/>
-								<ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
@@ -84,8 +85,17 @@
                                                 VerticalAlignment="Center">
                                             <TextBlock Text="{Binding OverdueBadgeText}" Foreground="White" FontSize="12"/>
                                         </Border>
+
+                                        <!-- Pending contract badge -->
+                                        <Border Grid.Column="4" Margin="12,0,0,0" Padding="8,3"
+                                                CornerRadius="999"
+                                                Background="{Binding PendingContractBadgeBackground}"
+                                                VerticalAlignment="Center"
+                                                Visibility="{Binding PendingContractVisibility}">
+                                            <TextBlock Text="{Binding PendingContractBadgeText}" Foreground="White" FontSize="12"/>
+                                        </Border>
 										
-										<Button Grid.Column="4"
+										<Button Grid.Column="5"
 												Margin="12,0,0,0"
 												Width="90" Height="32"
 												Content="Open"
@@ -94,7 +104,7 @@
 												VerticalAlignment="Center"/>
 
 										<!-- Expand caret -->
-                                        <ToggleButton Grid.Column="5" Margin="12,0,0,0"
+                                        <ToggleButton Grid.Column="6" Margin="12,0,0,0"
                                                       Width="36" Height="36"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                                       Content="⌄"

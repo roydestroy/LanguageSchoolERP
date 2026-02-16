@@ -19,6 +19,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private readonly ExcelReceiptGenerator _excelReceiptGenerator;
+    private readonly ContractDocumentService _contractDocumentService;
 
     private Guid _studentId;
     private bool _isLoading;
@@ -44,6 +45,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<ProgramEnrollmentRowVm> Programs { get; } = new();
     public ObservableCollection<ContractRowVm> Contracts { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
+    [ObservableProperty] private ContractRowVm? selectedContract;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
@@ -78,9 +80,13 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string balanceText = "0.00 €";
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent = 0;
+    [ObservableProperty] private string pendingContractsText = "";
     public IRelayCommand AddPaymentCommand { get; }
     public IRelayCommand CreateContractCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
+    public IRelayCommand EditContractCommand { get; }
+    public IRelayCommand ExportContractPdfCommand { get; }
+    public IRelayCommand DeleteContractCommand { get; }
     public IRelayCommand EditProfileCommand { get; }
     public IAsyncRelayCommand SaveProfileCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
@@ -93,15 +99,20 @@ public partial class StudentProfileViewModel : ObservableObject
     public StudentProfileViewModel(
         AppState state,
         DbContextFactory dbFactory,
-        ExcelReceiptGenerator excelReceiptGenerator)
+        ExcelReceiptGenerator excelReceiptGenerator,
+        ContractDocumentService contractDocumentService)
     {
         _state = state;
         _dbFactory = dbFactory;
         _excelReceiptGenerator = excelReceiptGenerator;
+        _contractDocumentService = contractDocumentService;
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
         CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
+        EditContractCommand = new RelayCommand(EditSelectedContract, () => SelectedContract is not null);
+        ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync(), () => SelectedContract is not null);
+        DeleteContractCommand = new RelayCommand(() => _ = DeleteSelectedContractAsync(), () => SelectedContract is not null);
         EditProfileCommand = new RelayCommand(StartEdit);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
         CancelEditCommand = new RelayCommand(CancelEdit);
@@ -110,6 +121,14 @@ public partial class StudentProfileViewModel : ObservableObject
         EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
         RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
 
+    }
+
+
+    partial void OnSelectedContractChanged(ContractRowVm? value)
+    {
+        EditContractCommand.NotifyCanExecuteChanged();
+        ExportContractPdfCommand.NotifyCanExecuteChanged();
+        DeleteContractCommand.NotifyCanExecuteChanged();
     }
 
     private void StartEdit()
@@ -319,6 +338,120 @@ public partial class StudentProfileViewModel : ObservableObject
         };
     }
 
+
+    private void EditSelectedContract()
+    {
+        if (SelectedContract is null)
+        {
+            System.Windows.MessageBox.Show("Please select a contract first.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
+        {
+            System.Windows.MessageBox.Show("The contract DOCX file was not found.");
+            return;
+        }
+
+        try
+        {
+            _contractDocumentService.OpenDocumentInWord(SelectedContract.DocxPath);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Open contract failed");
+        }
+    }
+
+    private async Task ExportSelectedContractPdfAsync()
+    {
+        if (SelectedContract is null)
+        {
+            System.Windows.MessageBox.Show("Please select a contract first.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
+        {
+            System.Windows.MessageBox.Show("The contract DOCX file was not found.");
+            return;
+        }
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
+            if (contract is null)
+            {
+                System.Windows.MessageBox.Show("Contract not found in database.");
+                return;
+            }
+
+            var pdfPath = ContractPathService.GetContractPdfPathFromDocxPath(SelectedContract.DocxPath);
+            _contractDocumentService.ExportPdfWithPageDuplication(SelectedContract.DocxPath, pdfPath);
+
+            contract.PdfPath = pdfPath;
+            await db.SaveChangesAsync();
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = pdfPath,
+                UseShellExecute = true
+            });
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Export contract PDF failed");
+        }
+    }
+
+
+    private async Task DeleteSelectedContractAsync()
+    {
+        if (SelectedContract is null)
+        {
+            System.Windows.MessageBox.Show("Please select a contract first.");
+            return;
+        }
+
+        var confirm = System.Windows.MessageBox.Show(
+            "Delete selected contract? This will remove it from the list and delete generated files if they exist.",
+            "Delete Contract",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirm != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
+            if (contract is null)
+            {
+                System.Windows.MessageBox.Show("Contract not found in database.");
+                return;
+            }
+
+            TryDeleteFile(contract.DocxPath);
+            TryDeleteFile(contract.PdfPath);
+
+            db.Contracts.Remove(contract);
+            await db.SaveChangesAsync();
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Delete contract failed");
+        }
+    }
+
     private async Task PrintSelectedReceiptAsync()
     {
         if (SelectedReceipt is null)
@@ -373,7 +506,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     StudentEmail: student.Email ?? "",
                     Amount: enrollment.DownPayment,
                     PaymentMethod: "Enrollment Downpayment",
-                    ProgramLabel: enrollment.ProgramType.ToString(),
+                    ProgramLabel: enrollment.ProgramType.ToDisplayName(),
                     AcademicYear: academicYear,
                     Notes: "Enrollment downpayment"
                 );
@@ -444,12 +577,18 @@ public partial class StudentProfileViewModel : ObservableObject
             Receipts.Clear();
             Programs.Clear();
             Contracts.Clear();
+            SelectedContract = null;
+            PendingContractsText = "";
 
             var period = await db.AcademicPeriods
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Name == LocalAcademicYear);
 
-            if (period is null) return;
+            if (period is null)
+            {
+                PendingContractsText = "No pending contracts.";
+                return;
+            }
 
             var student = await db.Students
                 .AsNoTracking()
@@ -515,13 +654,7 @@ public partial class StudentProfileViewModel : ObservableObject
             ActiveStatusText = hasAnyEnrollment ? "Active" : "Inactive";
 
             var enrollments = student.Enrollments.ToList();
-            static string ProgramLabel(ProgramType p) => p switch
-            {
-                ProgramType.LanguageSchool => "School",
-                ProgramType.StudyLab => "Study Lab",
-                ProgramType.EuroLab => "EUROLAB",
-                _ => p.ToString()
-            };
+            static string ProgramLabel(ProgramType p) => p.ToDisplayName();
 
             foreach (var e in enrollments.OrderBy(e => e.ProgramType).ThenBy(e => e.LevelOrClass))
             {
@@ -534,7 +667,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     BooksText = $"{e.BooksAmount:0.00} €",
                     DownPaymentText = $"{e.DownPayment:0.00} €",
                     InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
-                        ? $"{e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}"
+                        ? BuildInstallmentPlanText(e)
                         : "—",
                     InstallmentAmountText = e.InstallmentCount > 0
                         ? BuildInstallmentAmountText(e)
@@ -565,7 +698,7 @@ public partial class StudentProfileViewModel : ObservableObject
             // Installment plan summary
             var planParts = enrollments
                 .Where(e => e.InstallmentCount > 0 && e.InstallmentStartMonth != null)
-                .Select(e => $"{ProgramLabel(e.ProgramType)}: {e.InstallmentCount} from {e.InstallmentStartMonth:MM/yyyy}")
+                .Select(e => $"{ProgramLabel(e.ProgramType)}: {BuildInstallmentPlanText(e)}")
                 .ToList();
 
             var planText = planParts.Any()
@@ -587,6 +720,14 @@ public partial class StudentProfileViewModel : ObservableObject
             ProgressPercent = progress;
             ProgressText = $"{progress:0}%";
 
+            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
+            var contractCreatedByEnrollment = await db.Contracts
+                .AsNoTracking()
+                .Where(c => enrollmentIds.Contains(c.EnrollmentId))
+                .GroupBy(c => c.EnrollmentId)
+                .Select(g => new { EnrollmentId = g.Key, CreatedAt = g.Min(c => c.CreatedAt) })
+                .ToDictionaryAsync(x => x.EnrollmentId, x => x.CreatedAt);
+
             // Payments table (all payments in this year across enrollments)
             var paymentRows = enrollments
                 .SelectMany(e => e.Payments.Select(p => new { Payment = p }))
@@ -595,12 +736,14 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
+                var downpaymentDate = ResolveDownpaymentDateText(enrollment, contractCreatedByEnrollment);
                 Payments.Add(new PaymentRowVm
                 {
                     TypeText = "Downpayment",
-                    DateText = "—",
+                    DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
                     Method = "Enrollment",
+                    ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     Notes = "Enrollment downpayment"
                 });
             }
@@ -613,7 +756,8 @@ public partial class StudentProfileViewModel : ObservableObject
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{row.Payment.Amount:0.00} €",
                     Method = row.Payment.Method.ToString(),
-                    Notes = row.Payment.Notes ?? ""
+                    ReasonText = ParseReason(row.Payment.Notes),
+                    Notes = ParseAdditionalNotes(row.Payment.Notes)
                 });
             }
             var receiptRows = enrollments
@@ -631,6 +775,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     DateText = x.r.IssueDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{x.p.Amount:0.00} €",
                     MethodText = x.p.Method.ToString(),
+                    ReasonText = ParseReason(x.p.Notes),
                     ProgramText = ProgramLabel(x.e.ProgramType),
                     HasPdf = !string.IsNullOrWhiteSpace(x.r.PdfPath),
                     PdfPath = x.r.PdfPath
@@ -639,37 +784,53 @@ public partial class StudentProfileViewModel : ObservableObject
 
             foreach (var enrollment in enrollments.Where(e => e.DownPayment > 0))
             {
+                var downpaymentDate = ResolveDownpaymentDateText(enrollment, contractCreatedByEnrollment);
                 Receipts.Add(new ReceiptRowVm
                 {
                     IsDownpayment = true,
                     EnrollmentId = enrollment.EnrollmentId,
                     NumberText = "DP",
-                    DateText = "—",
+                    DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
                     MethodText = "Enrollment",
+                    ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     ProgramText = ProgramLabel(enrollment.ProgramType),
                     HasPdf = false,
                     PdfPath = ""
                 });
             }
 
-            var enrollmentIds = enrollments.Select(e => e.EnrollmentId).ToList();
             var contractRows = await db.Contracts
                 .AsNoTracking()
                 .Where(c => c.StudentId == _studentId && enrollmentIds.Contains(c.EnrollmentId))
-                .Include(c => c.ContractTemplate)
+                .Include(c => c.Enrollment)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
             foreach (var c in contractRows)
             {
+                var isPendingPrint = string.IsNullOrWhiteSpace(c.PdfPath);
+                var programText = c.Enrollment is null
+                    ? "—"
+                    : string.IsNullOrWhiteSpace(c.Enrollment.LevelOrClass)
+                        ? c.Enrollment.ProgramType.ToDisplayName()
+                        : $"{c.Enrollment.ProgramType} ({c.Enrollment.LevelOrClass})";
+
                 Contracts.Add(new ContractRowVm
                 {
+                    ContractId = c.ContractId,
                     CreatedAtText = c.CreatedAt.ToString("dd/MM/yyyy"),
-                    TemplateText = c.ContractTemplate?.Name ?? "—",
-                    HasPdfText = string.IsNullOrWhiteSpace(c.PdfPath) ? "No" : "Yes"
+                    ProgramText = programText,
+                    IsPendingPrint = isPendingPrint,
+                    DocxPath = c.DocxPath,
+                    PdfPath = c.PdfPath
                 });
             }
+
+            var pendingCount = Contracts.Count(c => c.IsPendingPrint);
+            PendingContractsText = pendingCount > 0
+                ? $"⚠ Pending contracts: {pendingCount} (not printed/signed)"
+                : "No pending contracts.";
 
         }
         catch (Exception ex)
@@ -696,6 +857,63 @@ public partial class StudentProfileViewModel : ObservableObject
         return $"{first:0} € (last {last:0} €)";
     }
 
+
+
+    private static string BuildInstallmentPlanText(Enrollment e)
+    {
+        if (e.InstallmentStartMonth is null)
+            return "—";
+
+        var start = new DateTime(e.InstallmentStartMonth.Value.Year, e.InstallmentStartMonth.Value.Month, 1);
+        var day = e.InstallmentDayOfMonth <= 0 ? 1 : Math.Min(e.InstallmentDayOfMonth, DateTime.DaysInMonth(start.Year, start.Month));
+        var startDate = new DateTime(start.Year, start.Month, day);
+        return $"{e.InstallmentCount} from {startDate:dd/MM/yyyy}";
+    }
+
+    private static string ResolveDownpaymentDateText(Enrollment enrollment, IReadOnlyDictionary<Guid, DateTime> contractCreatedByEnrollment)
+    {
+        if (contractCreatedByEnrollment.TryGetValue(enrollment.EnrollmentId, out var createdAt))
+            return createdAt.ToString("dd/MM/yyyy");
+
+        var firstPaymentDate = enrollment.Payments
+            .OrderBy(p => p.PaymentDate)
+            .Select(p => p.PaymentDate)
+            .FirstOrDefault();
+
+        if (firstPaymentDate != default)
+            return firstPaymentDate.ToString("dd/MM/yyyy");
+
+        return DateTime.Today.ToString("dd/MM/yyyy");
+    }
+
+    private static string ParseReason(string? notes)
+    {
+        var raw = (notes ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "—";
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts[0];
+    }
+
+    private static string ParseAdditionalNotes(string? notes)
+    {
+        var raw = (notes ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "";
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts.Length == 2 ? parts[1] : "";
+    }
+
+    private static void TryDeleteFile(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
+        if (File.Exists(path))
+            File.Delete(path);
+    }
 
     private static (string Name, string Surname) SplitName(string? fullName)
     {

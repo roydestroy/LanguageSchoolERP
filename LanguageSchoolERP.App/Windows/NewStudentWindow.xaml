@@ -86,7 +86,8 @@
                     <TextBlock Text="Program"/>
                     <ComboBox Margin="0,4,0,10"
                               ItemsSource="{Binding ProgramTypes}"
-                              SelectedItem="{Binding SelectedProgramType}"/>
+                              DisplayMemberPath="Name"
+                              SelectedItem="{Binding SelectedProgramOption}"/>
 
                     <TextBlock Text="Level / Class"/>
                     <TextBox Margin="0,4,0,10" Text="{Binding LevelOrClass}"/>

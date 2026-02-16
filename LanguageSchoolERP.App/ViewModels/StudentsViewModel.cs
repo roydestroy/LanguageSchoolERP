@@ -19,6 +19,8 @@ public partial class StudentsViewModel : ObservableObject
     private const string AllStudentsFilter = "All students";
     private const string ActiveStudentsFilter = "Active only";
     private const string InactiveStudentsFilter = "Inactive only";
+    private const string ContractPendingFilter = "Contract pending";
+    private const string OverdueFilter = "Overdue";
 
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
@@ -28,7 +30,9 @@ public partial class StudentsViewModel : ObservableObject
     [
         AllStudentsFilter,
         ActiveStudentsFilter,
-        InactiveStudentsFilter
+        InactiveStudentsFilter,
+        ContractPendingFilter,
+        OverdueFilter
     ];
 
     [ObservableProperty] private string searchText = "";
@@ -127,6 +131,12 @@ public partial class StudentsViewModel : ObservableObject
                 InactiveStudentsFilter => selectedPeriodId == null
                     ? baseQuery
                     : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                ContractPendingFilter => selectedPeriodId == null
+                    ? baseQuery.Where(_ => false)
+                    : baseQuery.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
+                OverdueFilter => selectedPeriodId == null
+                    ? baseQuery.Where(_ => false)
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
                 _ => baseQuery
             };
 
@@ -142,6 +152,7 @@ public partial class StudentsViewModel : ObservableObject
             var students = await baseQuery
                 .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
                     .ThenInclude(en => en.Payments)
+                .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
 
@@ -161,6 +172,13 @@ public partial class StudentsViewModel : ObservableObject
 
                 // Overdue if ANY enrollment is overdue based on installment plan
                 bool overdue = yearEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
+                bool hasPendingContract = s.Contracts.Any(c => string.IsNullOrWhiteSpace(c.PdfPath));
+
+                if (SelectedStudentStatusFilter == OverdueFilter && !overdue)
+                    continue;
+
+                if (SelectedStudentStatusFilter == ContractPendingFilter && !hasPendingContract)
+                    continue;
 
 
                 var row = new StudentRowVm
@@ -171,6 +189,7 @@ public partial class StudentsViewModel : ObservableObject
                     YearLabel = $"Year: {year}",
                     Balance = balance,
                     IsOverdue = overdue,
+                    HasPendingContract = hasPendingContract,
                     IsActive = yearEnrollments.Count > 0,
                     IsExpanded = false
                 };
@@ -183,7 +202,7 @@ public partial class StudentsViewModel : ObservableObject
 
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
-                        Title = en.ProgramType.ToString(),
+                        Title = en.ProgramType.ToDisplayName(),
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Level/Class: {en.LevelOrClass}",
                         AgreementText = $"Agreement: {en.AgreementTotal:0.00} €",
                         PaidText = $"Paid: {enPaid:0.00} €",

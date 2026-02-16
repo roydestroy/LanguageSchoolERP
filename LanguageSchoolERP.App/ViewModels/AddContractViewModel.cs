@@ -3,11 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
@@ -21,6 +17,8 @@ public record ContractTemplateOption(Guid ContractTemplateId, string Name)
 public partial class AddContractViewModel : ObservableObject
 {
     private readonly DbContextFactory _dbFactory;
+    private readonly ContractDocumentService _contractDocumentService;
+    private readonly ContractBookmarkBuilder _bookmarkBuilder;
 
     private AddContractInit? _init;
 
@@ -41,9 +39,14 @@ public partial class AddContractViewModel : ObservableObject
 
     public IRelayCommand SaveCommand { get; }
 
-    public AddContractViewModel(DbContextFactory dbFactory)
+    public AddContractViewModel(
+        DbContextFactory dbFactory,
+        ContractDocumentService contractDocumentService,
+        ContractBookmarkBuilder bookmarkBuilder)
     {
         _dbFactory = dbFactory;
+        _contractDocumentService = contractDocumentService;
+        _bookmarkBuilder = bookmarkBuilder;
         SaveCommand = new AsyncRelayCommand(SaveAsync);
     }
 
@@ -80,8 +83,11 @@ public partial class AddContractViewModel : ObservableObject
             return;
         }
 
-        StudentName = student.FullName;
-        GuardianName = string.IsNullOrWhiteSpace(student.FatherName) ? student.MotherName : student.FatherName;
+        var (_, studentSurname) = SplitName(student.FullName);
+        StudentName = EnsureSurname(student.FullName, studentSurname);
+
+        var defaultGuardian = string.IsNullOrWhiteSpace(student.FatherName) ? student.MotherName : student.FatherName;
+        GuardianName = EnsureSurname(defaultGuardian, studentSurname);
 
         var templates = await db.ContractTemplates
             .AsNoTracking()
@@ -90,9 +96,7 @@ public partial class AddContractViewModel : ObservableObject
             .ToListAsync();
 
         foreach (var t in templates)
-        {
             TemplateOptions.Add(new ContractTemplateOption(t.ContractTemplateId, t.Name));
-        }
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
@@ -104,8 +108,8 @@ public partial class AddContractViewModel : ObservableObject
         foreach (var e in enrollments)
         {
             var label = string.IsNullOrWhiteSpace(e.LevelOrClass)
-                ? e.ProgramType.ToString()
-                : $"{e.ProgramType} ({e.LevelOrClass})";
+                ? e.ProgramType.ToDisplayName()
+                : $"{e.ProgramType.ToDisplayName()} ({e.LevelOrClass})";
 
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, label, 0));
         }
@@ -141,31 +145,66 @@ public partial class AddContractViewModel : ObservableObject
             using var db = _dbFactory.Create();
             DbSeeder.EnsureSeeded(db);
 
-            var payload = new
+            var student = await db.Students.AsNoTracking().FirstAsync(x => x.StudentId == _init.StudentId);
+            var enrollment = await db.Enrollments.AsNoTracking().FirstAsync(x => x.EnrollmentId == SelectedEnrollment.EnrollmentId);
+            var template = await db.ContractTemplates.AsNoTracking().FirstAsync(x => x.ContractTemplateId == SelectedTemplate.ContractTemplateId);
+
+            var (_, studentSurname) = SplitName(student.FullName);
+            var effectiveStudentName = EnsureSurname((StudentName ?? "").Trim(), studentSurname);
+            var effectiveGuardianName = EnsureSurname((GuardianName ?? "").Trim(), studentSurname);
+
+            var (firstName, lastName) = SplitName(effectiveStudentName);
+            var contractId = Guid.NewGuid();
+
+            var payload = new ContractPayload
             {
-                StudentName = StudentName?.Trim() ?? "",
-                GuardianName = GuardianName?.Trim() ?? "",
-                Notes = Notes?.Trim() ?? "",
+                ContractId = contractId,
+                StudentId = student.StudentId,
+                EnrollmentId = enrollment.EnrollmentId,
                 AcademicYear = _init.AcademicYear,
-                BranchKey = _init.BranchKey
+                BranchKey = _init.BranchKey,
+                StudentFullName = effectiveStudentName,
+                StudentFirstName = firstName,
+                StudentLastName = lastName,
+                GuardianFullName = effectiveGuardianName,
+                ProgramNameUpper = enrollment.ProgramType.ToDisplayName().ToUpperInvariant(),
+                ProgramTitleUpperWithExtras = ContractBookmarkBuilder.BuildProgramTitleUpperWithExtras(enrollment),
+                AgreementTotal = enrollment.AgreementTotal,
+                DownPayment = enrollment.DownPayment,
+                IncludesTransportation = enrollment.IncludesTransportation,
+                TransportationMonthlyPrice = enrollment.TransportationMonthlyPrice,
+                IncludesStudyLab = enrollment.IncludesStudyLab,
+                StudyLabMonthlyPrice = enrollment.StudyLabMonthlyPrice,
+                InstallmentCount = enrollment.InstallmentCount,
+                InstallmentStartMonth = enrollment.InstallmentStartMonth,
+                InstallmentDayOfMonth = enrollment.InstallmentDayOfMonth,
+                CreatedAt = CreatedAt
             };
+
+            var folder = ContractPathService.GetContractFolder(_init.AcademicYear, payload.StudentLastName, payload.StudentFirstName);
+            var docxPath = ContractPathService.GetContractDocxPath(folder, payload.ProgramTitleUpperWithExtras, contractId);
+            var templatePath = Path.Combine(AppContext.BaseDirectory, template.TemplateRelativePath);
+            var financedPositive = (payload.AgreementTotal - payload.DownPayment) > 0;
+
+            var bookmarkValues = _bookmarkBuilder.BuildBookmarkValues(payload, enrollment);
+            _contractDocumentService.GenerateDocxFromTemplate(
+                templatePath,
+                docxPath,
+                bookmarkValues,
+                payload.InstallmentCount,
+                financedPositive);
 
             var contract = new Contract
             {
+                ContractId = contractId,
                 StudentId = _init.StudentId,
                 EnrollmentId = SelectedEnrollment.EnrollmentId,
                 ContractTemplateId = SelectedTemplate.ContractTemplateId,
                 CreatedAt = CreatedAt,
+                DocxPath = docxPath,
                 PdfPath = null,
                 DataJson = JsonSerializer.Serialize(payload)
             };
-
-            // Debug prints (show in Output window)
-            System.Diagnostics.Debug.WriteLine($"StudentId: {contract.StudentId}");
-            System.Diagnostics.Debug.WriteLine($"EnrollmentId: {contract.EnrollmentId}");
-            System.Diagnostics.Debug.WriteLine($"TemplateId: {contract.ContractTemplateId}");
-            System.Diagnostics.Debug.WriteLine($"CreatedAt: {contract.CreatedAt:O}");
-            System.Diagnostics.Debug.WriteLine($"DataJson: {contract.DataJson}");
 
             db.Contracts.Add(contract);
             await db.SaveChangesAsync();
@@ -174,7 +213,6 @@ public partial class AddContractViewModel : ObservableObject
         }
         catch (DbUpdateException ex)
         {
-            // This is the important one (FK / NOT NULL / etc.)
             var inner = ex.InnerException?.Message ?? "(no inner exception)";
             ErrorMessage = $"DbUpdateException: {ex.Message}\nInner: {inner}";
         }
@@ -183,5 +221,31 @@ public partial class AddContractViewModel : ObservableObject
             ErrorMessage = ex.ToString();
         }
 
+    }
+
+
+    private static string EnsureSurname(string fullName, string defaultSurname)
+    {
+        var normalized = (fullName ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return normalized;
+
+        var (_, surname) = SplitName(normalized);
+        if (!string.IsNullOrWhiteSpace(surname))
+            return normalized;
+
+        var fallbackSurname = (defaultSurname ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(fallbackSurname))
+            return normalized;
+
+        return $"{normalized} {fallbackSurname}".Trim();
+    }
+
+    private static (string FirstName, string LastName) SplitName(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return ("", "");
+        if (parts.Length == 1) return (parts[0], "");
+        return (parts[0], string.Join(" ", parts.Skip(1)));
     }
 }
