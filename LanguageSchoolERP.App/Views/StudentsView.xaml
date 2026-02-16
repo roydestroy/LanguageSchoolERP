@@ -51,6 +51,60 @@
             </Setter>
         </Style>
 
+
+
+        <Style x:Key="StatusBadgeStyle" TargetType="Border">
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="StatusBadgeTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
+
+
+        <Style x:Key="RoundIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.AccentDark}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="RoundBorder"
+                                CornerRadius="16"
+                                SnapsToDevicePixels="True"
+                                UseLayoutRounding="True"
+                                Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RoundBorder" Property="Background" Value="#3A78AE"/>
+                                <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#316A99"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="RoundBorder" Property="Background" Value="#2C6290"/>
+                                <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#26537A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ExpandCaretButtonStyle" TargetType="ToggleButton">
             <Setter Property="Width" Value="34"/>
             <Setter Property="Height" Value="34"/>
@@ -97,27 +151,35 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="Students" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <ComboBox Grid.Column="2" Width="150"
+                <ComboBox Grid.Column="0" Width="128"
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentStatusFilters}"
                           SelectedItem="{Binding SelectedStudentStatusFilter, Mode=TwoWay}"/>
+                <ComboBox Grid.Column="2" Width="176"
+                          VerticalAlignment="Center"
+                          ItemsSource="{Binding StudentSortOptions}"
+                          SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
                 <TextBox Grid.Column="4"
+                         Height="32"
                          VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Search by name, phone, email"/>
-                <Button Grid.Column="6" Content="New Student" Width="128" Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
-                <Button Grid.Column="8" Content="Refresh" Width="92" Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
+                <Button Grid.Column="6" Content="&#xE710;" ToolTip="New Student"
+                        Style="{StaticResource RoundIconButtonStyle}"
+                        Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
+                <Button Grid.Column="8" Content="&#xE72C;" ToolTip="Refresh"
+                        Style="{StaticResource RoundIconButtonStyle}"
+                        Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
@@ -147,39 +209,42 @@
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                                 <TextBlock Text="{Binding ContactLine}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                                 <TextBlock Text="  •  " Foreground="#999999"/>
-                                                <TextBlock Text="{Binding YearLabel}" Foreground="{StaticResource Brush.TextSecondary}"/>
+                                                <TextBlock Text="{Binding ActiveStatusText}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
                                         </StackPanel>
 
+                                        <!-- Total payment progress -->
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Width="170">
+                                            <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
+                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
+                                        </StackPanel>
+
                                         <!-- Balance -->
-                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="Balance" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
-                                        <!-- Active badge -->
-                                        <Border Grid.Column="2" Margin="12,0,0,0" Padding="8,3"
-                                                CornerRadius="999"
-                                                Background="{Binding ActiveBadgeBackground}"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding ActiveBadgeText}" Foreground="White" FontSize="12"/>
-                                        </Border>
-
                                         <!-- Overdue badge -->
-                                        <Border Grid.Column="3" Margin="12,0,0,0" Padding="8,3"
-                                                CornerRadius="999"
+                                        <Border Grid.Column="3" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding OverdueBadgeBackground}"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding OverdueBadgeText}" Foreground="White" FontSize="12"/>
+                                                BorderBrush="{Binding OverdueBadgeBorder}"
+                                                Visibility="{Binding OverdueBadgeVisibility}">
+                                            <TextBlock Text="{Binding OverdueBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding OverdueBadgeForeground}"/>
                                         </Border>
 
                                         <!-- Pending contract badge -->
-                                        <Border Grid.Column="4" Margin="12,0,0,0" Padding="8,3"
-                                                CornerRadius="999"
+                                        <Border Grid.Column="4" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
-                                                VerticalAlignment="Center"
+                                                BorderBrush="{Binding PendingContractBadgeBorder}"
                                                 Visibility="{Binding PendingContractVisibility}">
-                                            <TextBlock Text="{Binding PendingContractBadgeText}" Foreground="White" FontSize="12"/>
+                                            <TextBlock Text="{Binding PendingContractBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding PendingContractBadgeForeground}"/>
                                         </Border>
 
                                         <Button Grid.Column="5"
@@ -220,6 +285,8 @@
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                                 <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
+                                                                <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" Margin="0,4,0,0"/>
+                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
                                                             </StackPanel>
 
                                                             <TextBlock Grid.Column="1" Margin="12,0,0,0"
