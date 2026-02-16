@@ -170,6 +170,7 @@
                           ItemsSource="{Binding StudentSortOptions}"
                           SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
                 <TextBox Grid.Column="4"
+                         Height="32"
                          VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Search by name, phone, email"/>
