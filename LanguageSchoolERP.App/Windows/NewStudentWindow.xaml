@@ -116,7 +116,7 @@
                     <DatePicker Margin="0,2,0,6" SelectedDate="{Binding InstallmentStartMonth}"/>
 
                     <CheckBox Margin="0,0,0,6"
-                              Content="Προσθήκη αίθουσας μελέτης"
+                              Content="Study Lab"
                               IsChecked="{Binding IncludesStudyLab}"
                               Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
@@ -127,7 +127,7 @@
                     </StackPanel>
 
                     <CheckBox Margin="0,0,0,6"
-                              Content="Προσθήκη μεταφοράς"
+                              Content="Μεταφορά"
                               IsChecked="{Binding IncludesTransportation}"
                               Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 

@@ -66,7 +66,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     [ObservableProperty] private string errorMessage = "";
     [ObservableProperty] private string dialogTitle = "Προσθήκη εγγραφής προγράμματος";
-    [ObservableProperty] private string saveButtonText = "Προσθήκη προγράμματος";
+    [ObservableProperty] private string saveButtonText = "Προσθήκη";
 
     public IAsyncRelayCommand SaveCommand { get; }
 
@@ -156,7 +156,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         else
         {
             DialogTitle = "Προσθήκη εγγραφής προγράμματος";
-            SaveButtonText = "Προσθήκη προγράμματος";
+            SaveButtonText = "Προσθήκη";
         }
     }
 

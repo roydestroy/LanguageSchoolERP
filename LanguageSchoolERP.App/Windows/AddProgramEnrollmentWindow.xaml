@@ -38,7 +38,7 @@
                 <TextBox Margin="0,4,0,10" Text="{Binding DownPaymentText}"/>
 
                 <CheckBox Margin="0,0,0,10"
-                          Content="Προσθήκη αίθουσας μελέτης"
+                          Content="Study Lab"
                           IsChecked="{Binding IncludesStudyLab}"
                           Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
@@ -49,7 +49,7 @@
                 </StackPanel>
 
                 <CheckBox Margin="0,0,0,10"
-                          Content="Προσθήκη μεταφοράς"
+                          Content="Μεταφορά"
                           IsChecked="{Binding IncludesTransportation}"
                           Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
