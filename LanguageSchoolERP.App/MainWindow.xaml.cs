@@ -38,12 +38,21 @@ public partial class MainWindow : Window
             _state.SelectedAcademicYear = YearCombo.SelectedItem?.ToString() ?? _state.SelectedAcademicYear;
         };
 
+        ThemeToggle.Checked += (_, __) => ApplyTheme(true);
+        ThemeToggle.Unchecked += (_, __) => ApplyTheme(false);
+
         // Default screen
         NavigateToStudents();
 
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
+    }
+
+    private void ApplyTheme(bool useDarkTheme)
+    {
+        App.ApplyTheme(useDarkTheme);
+        ThemeToggle.Content = useDarkTheme ? "Light Mode" : "Dark Mode";
     }
 
     private void NavigateToStudents()

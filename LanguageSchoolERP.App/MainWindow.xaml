@@ -4,50 +4,59 @@
         Title="Language School ERP" Height="720" Width="1200"
         WindowStartupLocation="CenterScreen">
 
-    <DockPanel>
+    <DockPanel Background="{StaticResource Brush.Background}">
         <!-- Top Bar -->
-        <Border DockPanel.Dock="Top" Padding="12" Background="#1E1E1E">
+        <Border DockPanel.Dock="Top" Margin="16,16,16,0" Style="{StaticResource CardBorder}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Language School ERP" Foreground="White" FontSize="18" VerticalAlignment="Center"/>
+                <TextBlock Text="Language School ERP" Style="{StaticResource SectionTitleText}" VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock Text="Database:" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="DbCombo" Width="220"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <TextBlock Text="Database:" Margin="0,0,6,0" VerticalAlignment="Center" Style="{StaticResource CaptionText}"/>
+                    <ComboBox x:Name="DbCombo" Width="220" Margin="0"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Academic Year:" Foreground="White" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="YearCombo" Width="140"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="Academic Year:" Margin="0,0,6,0" VerticalAlignment="Center" Style="{StaticResource CaptionText}"/>
+                    <ComboBox x:Name="YearCombo" Width="140" Margin="0"/>
                 </StackPanel>
+
+                <ToggleButton x:Name="ThemeToggle"
+                              Grid.Column="3"
+                              Width="110"
+                              Height="36"
+                              Content="Dark Mode"
+                              VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
         <!-- Content -->
-        <Grid>
+        <Grid Margin="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- Left Nav -->
-            <Border Background="#F2F2F2" Padding="10">
+            <Border Grid.Column="0" Style="{StaticResource CardBorder}">
                 <StackPanel>
                     <Button x:Name="StudentsBtn" Content="Students" Height="40" Margin="0,0,0,8"/>
                     <Button x:Name="ProgramsBtn" Content="Programs" Height="40" Margin="0,0,0,8"/>
                     <Button x:Name="AcademicYearsBtn" Content="Academic Years" Height="40" Margin="0,0,0,8"/>
-                    <Separator Margin="0,10,0,10"/>
-                    <Button Content="Import (Admin)" Height="40"/>
+                    <Separator Margin="0,12"/>
+                    <Button Content="Import (Admin)" Height="40" Style="{StaticResource SecondaryButton}"/>
                 </StackPanel>
             </Border>
 
             <!-- Main Panel -->
-            <Border Grid.Column="1" Background="White" Padding="16">
+            <Border Grid.Column="2" Style="{StaticResource CardBorder}">
                 <ContentControl x:Name="MainContent"/>
             </Border>
         </Grid>

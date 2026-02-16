@@ -1,0 +1,61 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Light palette -->
+    <Color x:Key="LightColor.Background">#FFF7F8FA</Color>
+    <Color x:Key="LightColor.Surface">#FFFFFFFF</Color>
+    <Color x:Key="LightColor.SurfaceAlt">#FFF2F4F7</Color>
+    <Color x:Key="LightColor.Border">#FFD9DEE8</Color>
+    <Color x:Key="LightColor.BorderStrong">#FFBFC7D8</Color>
+    <Color x:Key="LightColor.TextPrimary">#FF1F2937</Color>
+    <Color x:Key="LightColor.TextSecondary">#FF667085</Color>
+    <Color x:Key="LightColor.Accent">#FF2563EB</Color>
+    <Color x:Key="LightColor.AccentHover">#FF1D4ED8</Color>
+    <Color x:Key="LightColor.AccentPressed">#FF1E40AF</Color>
+    <Color x:Key="LightColor.Danger">#FFB42318</Color>
+    <Color x:Key="LightColor.Success">#FF0F7B6C</Color>
+    <Color x:Key="LightColor.RowHover">#FFEAF2FF</Color>
+
+    <!-- Dark palette -->
+    <Color x:Key="DarkColor.Background">#FF111827</Color>
+    <Color x:Key="DarkColor.Surface">#FF1F2937</Color>
+    <Color x:Key="DarkColor.SurfaceAlt">#FF273244</Color>
+    <Color x:Key="DarkColor.Border">#FF344155</Color>
+    <Color x:Key="DarkColor.BorderStrong">#FF55627A</Color>
+    <Color x:Key="DarkColor.TextPrimary">#FFF3F4F6</Color>
+    <Color x:Key="DarkColor.TextSecondary">#FFB6C0D2</Color>
+    <Color x:Key="DarkColor.Accent">#FF60A5FA</Color>
+    <Color x:Key="DarkColor.AccentHover">#FF3B82F6</Color>
+    <Color x:Key="DarkColor.AccentPressed">#FF2563EB</Color>
+    <Color x:Key="DarkColor.Danger">#FFF97066</Color>
+    <Color x:Key="DarkColor.Success">#FF6EE7B7</Color>
+    <Color x:Key="DarkColor.RowHover">#FF1E3A5F</Color>
+
+    <!-- Active theme aliases (default: light) -->
+    <Color x:Key="Color.Background">{StaticResource LightColor.Background}</Color>
+    <Color x:Key="Color.Surface">{StaticResource LightColor.Surface}</Color>
+    <Color x:Key="Color.SurfaceAlt">{StaticResource LightColor.SurfaceAlt}</Color>
+    <Color x:Key="Color.Border">{StaticResource LightColor.Border}</Color>
+    <Color x:Key="Color.BorderStrong">{StaticResource LightColor.BorderStrong}</Color>
+    <Color x:Key="Color.TextPrimary">{StaticResource LightColor.TextPrimary}</Color>
+    <Color x:Key="Color.TextSecondary">{StaticResource LightColor.TextSecondary}</Color>
+    <Color x:Key="Color.Accent">{StaticResource LightColor.Accent}</Color>
+    <Color x:Key="Color.AccentHover">{StaticResource LightColor.AccentHover}</Color>
+    <Color x:Key="Color.AccentPressed">{StaticResource LightColor.AccentPressed}</Color>
+    <Color x:Key="Color.Danger">{StaticResource LightColor.Danger}</Color>
+    <Color x:Key="Color.Success">{StaticResource LightColor.Success}</Color>
+    <Color x:Key="Color.RowHover">{StaticResource LightColor.RowHover}</Color>
+
+    <SolidColorBrush x:Key="Brush.Background" Color="{StaticResource Color.Background}"/>
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource Color.SurfaceAlt}"/>
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}"/>
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{StaticResource Color.BorderStrong}"/>
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}"/>
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{StaticResource Color.AccentPressed}"/>
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}"/>
+    <SolidColorBrush x:Key="Brush.RowHover" Color="{StaticResource Color.RowHover}"/>
+</ResourceDictionary>

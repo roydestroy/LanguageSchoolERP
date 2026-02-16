@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.Linq;
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageSchoolERP.Services;
 using LanguageSchoolERP.App.ViewModels;
@@ -8,6 +10,8 @@ namespace LanguageSchoolERP.App;
 
 public partial class App : Application
 {
+    private static readonly Uri DarkThemeUri = new("Themes/Colors.Dark.xaml", UriKind.Relative);
+
     public static ServiceProvider Services { get; private set; } = null!;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -60,5 +64,22 @@ public partial class App : Application
         mainWindow.Show();
 
         base.OnStartup(e);
+    }
+
+    public static void ApplyTheme(bool useDarkTheme)
+    {
+        var resources = Current.Resources.MergedDictionaries;
+        var existing = resources.FirstOrDefault(d => d.Source != null && d.Source.OriginalString.EndsWith("Colors.Dark.xaml", StringComparison.OrdinalIgnoreCase));
+
+        if (useDarkTheme && existing == null)
+        {
+            resources.Add(new ResourceDictionary { Source = DarkThemeUri });
+            return;
+        }
+
+        if (!useDarkTheme && existing != null)
+        {
+            resources.Remove(existing);
+        }
     }
 }

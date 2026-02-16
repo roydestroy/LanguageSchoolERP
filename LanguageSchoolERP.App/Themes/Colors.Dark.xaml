@@ -1,0 +1,30 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="Color.Background">{StaticResource DarkColor.Background}</Color>
+    <Color x:Key="Color.Surface">{StaticResource DarkColor.Surface}</Color>
+    <Color x:Key="Color.SurfaceAlt">{StaticResource DarkColor.SurfaceAlt}</Color>
+    <Color x:Key="Color.Border">{StaticResource DarkColor.Border}</Color>
+    <Color x:Key="Color.BorderStrong">{StaticResource DarkColor.BorderStrong}</Color>
+    <Color x:Key="Color.TextPrimary">{StaticResource DarkColor.TextPrimary}</Color>
+    <Color x:Key="Color.TextSecondary">{StaticResource DarkColor.TextSecondary}</Color>
+    <Color x:Key="Color.Accent">{StaticResource DarkColor.Accent}</Color>
+    <Color x:Key="Color.AccentHover">{StaticResource DarkColor.AccentHover}</Color>
+    <Color x:Key="Color.AccentPressed">{StaticResource DarkColor.AccentPressed}</Color>
+    <Color x:Key="Color.Danger">{StaticResource DarkColor.Danger}</Color>
+    <Color x:Key="Color.Success">{StaticResource DarkColor.Success}</Color>
+    <Color x:Key="Color.RowHover">{StaticResource DarkColor.RowHover}</Color>
+
+    <SolidColorBrush x:Key="Brush.Background" Color="{StaticResource Color.Background}"/>
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource Color.SurfaceAlt}"/>
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}"/>
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{StaticResource Color.BorderStrong}"/>
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}"/>
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{StaticResource Color.AccentPressed}"/>
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}"/>
+    <SolidColorBrush x:Key="Brush.RowHover" Color="{StaticResource Color.RowHover}"/>
+</ResourceDictionary>
