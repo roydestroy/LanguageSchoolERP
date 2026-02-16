@@ -6,7 +6,7 @@ public static class ProgramTypeDisplayNames
     {
         ProgramType.LanguageSchool => "Ξένες Γλώσσες",
         ProgramType.StudyLab => "Σχολική Μελέτη",
-        ProgramType.EuroLab => "Υπολογιστές",
+        ProgramType.EuroLab => "Πληροφορική",
         _ => programType.ToString()
     };
 }
