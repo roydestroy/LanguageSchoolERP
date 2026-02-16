@@ -30,32 +30,18 @@
     <Color x:Key="DarkColor.Success">#FF6EE7B7</Color>
     <Color x:Key="DarkColor.RowHover">#FF1E3A5F</Color>
 
-    <!-- Active theme aliases (default: light) -->
-    <Color x:Key="Color.Background">{StaticResource LightColor.Background}</Color>
-    <Color x:Key="Color.Surface">{StaticResource LightColor.Surface}</Color>
-    <Color x:Key="Color.SurfaceAlt">{StaticResource LightColor.SurfaceAlt}</Color>
-    <Color x:Key="Color.Border">{StaticResource LightColor.Border}</Color>
-    <Color x:Key="Color.BorderStrong">{StaticResource LightColor.BorderStrong}</Color>
-    <Color x:Key="Color.TextPrimary">{StaticResource LightColor.TextPrimary}</Color>
-    <Color x:Key="Color.TextSecondary">{StaticResource LightColor.TextSecondary}</Color>
-    <Color x:Key="Color.Accent">{StaticResource LightColor.Accent}</Color>
-    <Color x:Key="Color.AccentHover">{StaticResource LightColor.AccentHover}</Color>
-    <Color x:Key="Color.AccentPressed">{StaticResource LightColor.AccentPressed}</Color>
-    <Color x:Key="Color.Danger">{StaticResource LightColor.Danger}</Color>
-    <Color x:Key="Color.Success">{StaticResource LightColor.Success}</Color>
-    <Color x:Key="Color.RowHover">{StaticResource LightColor.RowHover}</Color>
-
-    <SolidColorBrush x:Key="Brush.Background" Color="{StaticResource Color.Background}"/>
-    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}"/>
-    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource Color.SurfaceAlt}"/>
-    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}"/>
-    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{StaticResource Color.BorderStrong}"/>
-    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}"/>
-    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}"/>
-    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}"/>
-    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{StaticResource Color.AccentPressed}"/>
-    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}"/>
-    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}"/>
-    <SolidColorBrush x:Key="Brush.RowHover" Color="{StaticResource Color.RowHover}"/>
+    <!-- Active theme brushes (default: light) -->
+    <SolidColorBrush x:Key="Brush.Background" Color="{StaticResource LightColor.Background}"/>
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource LightColor.Surface}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource LightColor.SurfaceAlt}"/>
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource LightColor.Border}"/>
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{StaticResource LightColor.BorderStrong}"/>
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource LightColor.TextPrimary}"/>
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource LightColor.TextSecondary}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource LightColor.Accent}"/>
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource LightColor.AccentHover}"/>
+    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{StaticResource LightColor.AccentPressed}"/>
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource LightColor.Danger}"/>
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource LightColor.Success}"/>
+    <SolidColorBrush x:Key="Brush.RowHover" Color="{StaticResource LightColor.RowHover}"/>
 </ResourceDictionary>
