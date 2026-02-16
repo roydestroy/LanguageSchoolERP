@@ -55,6 +55,44 @@
 			<Setter Property="Foreground" Value="White"/>
 		</Style>
 
+		<Style x:Key="SecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+			<Setter Property="Background" Value="#EEF2F6"/>
+			<Setter Property="BorderBrush" Value="#D6DEE7"/>
+			<Setter Property="Foreground" Value="#2E3A47"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Border x:Name="ButtonBorder"
+								CornerRadius="0"
+								SnapsToDevicePixels="False"
+								UseLayoutRounding="False"
+								Background="{TemplateBinding Background}"
+								BorderBrush="{TemplateBinding BorderBrush}"
+								BorderThickness="{TemplateBinding BorderThickness}">
+							<ContentPresenter HorizontalAlignment="Center"
+											  VerticalAlignment="Center"
+											  Margin="{TemplateBinding Padding}"/>
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="ButtonBorder" Property="Background" Value="#E2E8EF"/>
+								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#C9D3DF"/>
+							</Trigger>
+							<Trigger Property="IsPressed" Value="True">
+								<Setter TargetName="ButtonBorder" Property="Background" Value="#D4DCE5"/>
+								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#B8C4D2"/>
+							</Trigger>
+							<Trigger Property="IsEnabled" Value="False">
+								<Setter Property="Foreground" Value="#9AA8B6"/>
+								<Setter TargetName="ButtonBorder" Property="Background" Value="#F5F7FA"/>
+								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#E2E8EF"/>
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
 		<Style x:Key="EditableTextBoxStyle" TargetType="TextBox">
             <Setter Property="IsReadOnly" Value="True"/>
             <Style.Triggers>
@@ -64,7 +102,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="EditButtonStyle" TargetType="Button">
+        <Style x:Key="EditButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEditing}" Value="True">
@@ -73,7 +111,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="EditModeButtonStyle" TargetType="Button">
+        <Style x:Key="EditModeButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Collapsed"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsEditing}" Value="True">
@@ -90,7 +128,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button">
+        <Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
@@ -99,7 +137,16 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="ProgramSelectionActionButtonStyle" TargetType="Button">
+        <Style x:Key="ContractSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ProgramSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
@@ -108,13 +155,37 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button">
+        <Style x:Key="ProgramSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
                     <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment.IsSyntheticEntry, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PaymentSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PaymentDangerSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DangerActionButtonStyle}">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
                     <Setter Property="Visibility" Value="Collapsed"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -294,7 +365,7 @@
                         <TextBlock DockPanel.Dock="Left" Text="Program Enrollments" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button Content="Add Program" Width="120" Margin="0,0,8,0" Command="{Binding AddProgramCommand}"/>
-                            <Button Content="Edit" Width="110" Margin="0,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSelectionActionButtonStyle}"/>
+                            <Button Content="Edit" Width="110" Margin="0,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSecondarySelectionActionButtonStyle}"/>
                             <Button Content="Remove"
                                     Width="110"
                                     Command="{Binding RemoveSelectedProgramCommand}"
@@ -338,8 +409,8 @@
                         <TextBlock DockPanel.Dock="Left" Text="Payments" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button Content="Add Payment" Width="120" Margin="0,0,8,0" Command="{Binding AddPaymentCommand}"/>
-                            <Button Content="Edit" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSelectionActionButtonStyle}"/>
-                            <Button Content="Delete" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentSelectionActionButtonStyle}" Background="#B00020" BorderBrush="#8C0019" Foreground="White"/>
+                            <Button Content="Edit" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
+                            <Button Content="Delete" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
                         </StackPanel>
                     </DockPanel>
 
@@ -408,8 +479,8 @@
                             <TextBlock DockPanel.Dock="Left" Text="Contracts" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Button Content="Create" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
-                                <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSelectionActionButtonStyle}"/>
-                                <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}" Style="{StaticResource ContractSelectionActionButtonStyle}"/>
+                                <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
+                                <Button Content="Print" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
                                 <Button Content="Delete"
                                         Width="120"
                                         Command="{Binding DeleteContractCommand}"
