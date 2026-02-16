@@ -109,8 +109,8 @@ public partial class AddContractViewModel : ObservableObject
         foreach (var e in enrollments)
         {
             var label = string.IsNullOrWhiteSpace(e.LevelOrClass)
-                ? e.ProgramType.ToString()
-                : $"{e.ProgramType} ({e.LevelOrClass})";
+                ? e.ProgramType.ToDisplayName()
+                : $"{e.ProgramType.ToDisplayName()} ({e.LevelOrClass})";
 
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, label, 0));
         }
@@ -168,7 +168,7 @@ public partial class AddContractViewModel : ObservableObject
                 StudentFirstName = firstName,
                 StudentLastName = lastName,
                 GuardianFullName = effectiveGuardianName,
-                ProgramNameUpper = enrollment.ProgramType.ToString().ToUpperInvariant(),
+                ProgramNameUpper = enrollment.ProgramType.ToDisplayName().ToUpperInvariant(),
                 ProgramTitleUpperWithExtras = ContractBookmarkBuilder.BuildProgramTitleUpperWithExtras(enrollment),
                 AgreementTotal = enrollment.AgreementTotal,
                 DownPayment = enrollment.DownPayment,

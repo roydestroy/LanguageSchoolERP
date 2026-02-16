@@ -506,7 +506,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     StudentEmail: student.Email ?? "",
                     Amount: enrollment.DownPayment,
                     PaymentMethod: "Enrollment Downpayment",
-                    ProgramLabel: enrollment.ProgramType.ToString(),
+                    ProgramLabel: enrollment.ProgramType.ToDisplayName(),
                     AcademicYear: academicYear,
                     Notes: "Enrollment downpayment"
                 );
@@ -654,13 +654,7 @@ public partial class StudentProfileViewModel : ObservableObject
             ActiveStatusText = hasAnyEnrollment ? "Active" : "Inactive";
 
             var enrollments = student.Enrollments.ToList();
-            static string ProgramLabel(ProgramType p) => p switch
-            {
-                ProgramType.LanguageSchool => "School",
-                ProgramType.StudyLab => "Study Lab",
-                ProgramType.EuroLab => "EUROLAB",
-                _ => p.ToString()
-            };
+            static string ProgramLabel(ProgramType p) => p.ToDisplayName();
 
             foreach (var e in enrollments.OrderBy(e => e.ProgramType).ThenBy(e => e.LevelOrClass))
             {
@@ -819,7 +813,7 @@ public partial class StudentProfileViewModel : ObservableObject
                 var programText = c.Enrollment is null
                     ? "—"
                     : string.IsNullOrWhiteSpace(c.Enrollment.LevelOrClass)
-                        ? c.Enrollment.ProgramType.ToString()
+                        ? c.Enrollment.ProgramType.ToDisplayName()
                         : $"{c.Enrollment.ProgramType} ({c.Enrollment.LevelOrClass})";
 
                 Contracts.Add(new ContractRowVm

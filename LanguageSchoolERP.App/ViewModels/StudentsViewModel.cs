@@ -202,7 +202,7 @@ public partial class StudentsViewModel : ObservableObject
 
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
-                        Title = en.ProgramType.ToString(),
+                        Title = en.ProgramType.ToDisplayName(),
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Level/Class: {en.LevelOrClass}",
                         AgreementText = $"Agreement: {en.AgreementTotal:0.00} €",
                         PaidText = $"Paid: {enPaid:0.00} €",

@@ -39,10 +39,8 @@
             <Border Background="#F2F2F2" Padding="10">
                 <StackPanel>
                     <Button x:Name="StudentsBtn" Content="Students" Height="40" Margin="0,0,0,8"/>
-                    <Button Content="Payments" Height="40" Margin="0,0,0,8"/>
-                    <Button Content="Receipts" Height="40" Margin="0,0,0,8"/>
-                    <Button Content="Contracts" Height="40" Margin="0,0,0,8"/>
-                    <Button Content="Overdue Alerts" Height="40" Margin="0,0,0,8"/>
+                    <Button x:Name="ProgramsBtn" Content="Programs" Height="40" Margin="0,0,0,8"/>
+                    <Button x:Name="AcademicYearsBtn" Content="Academic Years" Height="40" Margin="0,0,0,8"/>
                     <Separator Margin="0,10,0,10"/>
                     <Button Content="Import (Admin)" Height="40"/>
                 </StackPanel>

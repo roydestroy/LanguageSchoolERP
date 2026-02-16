@@ -18,8 +18,24 @@ public partial class NewStudentViewModel : ObservableObject
 
     public event EventHandler<bool>? RequestClose;
 
-    public IReadOnlyList<ProgramType> ProgramTypes { get; } =
-        new[] { ProgramType.LanguageSchool, ProgramType.StudyLab, ProgramType.EuroLab };
+    public IReadOnlyList<ProgramOptionVm> ProgramTypes { get; } =
+        new[]
+        {
+            new ProgramOptionVm(ProgramType.LanguageSchool, ProgramType.LanguageSchool.ToDisplayName()),
+            new ProgramOptionVm(ProgramType.StudyLab, ProgramType.StudyLab.ToDisplayName()),
+            new ProgramOptionVm(ProgramType.EuroLab, ProgramType.EuroLab.ToDisplayName())
+        };
+
+    public ProgramOptionVm? SelectedProgramOption
+    {
+        get => ProgramTypes.FirstOrDefault(x => x.Value == SelectedProgramType);
+        set
+        {
+            if (value is null) return;
+            SelectedProgramType = value.Value;
+            OnPropertyChanged();
+        }
+    }
 
     [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
 
@@ -67,6 +83,7 @@ public partial class NewStudentViewModel : ObservableObject
 
     partial void OnSelectedProgramTypeChanged(ProgramType value)
     {
+        OnPropertyChanged(nameof(SelectedProgramOption));
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
 
