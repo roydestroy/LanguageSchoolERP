@@ -90,7 +90,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button">
+        <Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
@@ -99,7 +99,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="ProgramSelectionActionButtonStyle" TargetType="Button">
+        <Style x:Key="ProgramSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
@@ -108,7 +108,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button">
+        <Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
             <Setter Property="Visibility" Value="Visible"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
