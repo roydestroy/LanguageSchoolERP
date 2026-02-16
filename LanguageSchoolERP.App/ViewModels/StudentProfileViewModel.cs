@@ -685,25 +685,42 @@ public partial class StudentProfileViewModel : ObservableObject
             decimal balance = agreementSum - paidTotal;
             if (balance < 0) balance = 0;
 
-            // Base summary (program types)
-            var programList = enrollments
-                .Select(e => ProgramLabel(e.ProgramType))
+            string BuildEnrollmentExtras(Enrollment e)
+            {
+                var extras = new List<string>();
+
+                if (e.IncludesStudyLab)
+                {
+                    extras.Add("Study Lab");
+                }
+
+                if (e.IncludesTransportation)
+                {
+                    extras.Add("Transportation");
+                }
+
+                return extras.Count == 0 ? string.Empty : $" ({string.Join(", ", extras)})";
+            }
+
+            var enrollmentProgramLabels = enrollments
+                .Select(e => $"{ProgramLabel(e.ProgramType)}{BuildEnrollmentExtras(e)}")
                 .Distinct()
                 .ToList();
 
             var baseSummary = enrollments.Count == 0
                 ? "No enrollments for this year."
-                : $"{enrollments.Count} enrollment(s): {string.Join(", ", programList)}";
+                : $"{enrollments.Count} enrollment(s): {string.Join(", ", enrollmentProgramLabels)}";
 
-            // Installment plan summary
+            // Installment plan summary (without repeating program names)
             var planParts = enrollments
                 .Where(e => e.InstallmentCount > 0 && e.InstallmentStartMonth != null)
-                .Select(e => $"{ProgramLabel(e.ProgramType)}: {BuildInstallmentPlanText(e)}")
+                .Select(BuildInstallmentPlanText)
+                .Distinct()
                 .ToList();
 
             var planText = planParts.Any()
                 ? $" | Plan: {string.Join(" · ", planParts)}"
-                : "";
+                : string.Empty;
 
             // Final line
             EnrollmentSummaryLine = baseSummary + planText;

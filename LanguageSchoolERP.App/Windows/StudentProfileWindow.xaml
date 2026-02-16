@@ -63,8 +63,8 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                <TextBlock Text="Academic Year:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Width="140"
+                <TextBlock Text="Academic Year:" VerticalAlignment="Center" Margin="0,0,8,0" LineHeight="20"/>
+                <ComboBox Width="140" VerticalAlignment="Center"
                           ItemsSource="{Binding AvailableAcademicYears}"
                           SelectedItem="{Binding LocalAcademicYear}"/>
             </StackPanel>
@@ -82,7 +82,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Enrollment Summary (Selected Year)" Foreground="#666666"/>
+                    <TextBlock Text="Enrollment Summary" Foreground="#666666"/>
                     <TextBlock Text="{Binding EnrollmentSummaryLine}" FontWeight="SemiBold" Margin="0,4,0,0"/>
                 </StackPanel>
 
@@ -212,8 +212,8 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <DockPanel>
-                        <TextBlock Text="Program Enrollments (Selected Year)" FontWeight="SemiBold" />
+                    <DockPanel LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left" Text="Program Enrollments" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <Button DockPanel.Dock="Right" Content="Add Program" Width="120" Command="{Binding AddProgramCommand}"/>
                     </DockPanel>
 
@@ -264,8 +264,8 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <DockPanel>
-                        <TextBlock Text="Payments (Selected Year, including Downpayment)" FontWeight="SemiBold" />
+                    <DockPanel LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left" Text="Payments" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <Button DockPanel.Dock="Right" Content="Add Payment" Width="120" Command="{Binding AddPaymentCommand}"/>
                     </DockPanel>
 
@@ -321,8 +321,8 @@
                     </Grid.RowDefinitions>
 
                     <StackPanel>
-                        <DockPanel>
-                            <TextBlock Text="Contracts (Selected Year)" FontWeight="SemiBold" />
+                        <DockPanel LastChildFill="False">
+                            <TextBlock DockPanel.Dock="Left" Text="Contracts" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Button Content="Create" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
                                 <Button Content="Edit" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}"/>
