@@ -10,11 +10,6 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public record AddContractInit(Guid StudentId, string AcademicYear, string BranchKey);
 
-public record ContractTemplateOption(Guid ContractTemplateId, string Name)
-{
-    public override string ToString() => Name;
-}
-
 public partial class AddContractViewModel : ObservableObject
 {
     private readonly DbContextFactory _dbFactory;
@@ -22,13 +17,12 @@ public partial class AddContractViewModel : ObservableObject
     private readonly ContractBookmarkBuilder _bookmarkBuilder;
 
     private AddContractInit? _init;
+    private ContractTemplate? _defaultTemplate;
 
     public event EventHandler<bool>? RequestClose;
 
-    public List<ContractTemplateOption> TemplateOptions { get; } = new();
     public List<EnrollmentOption> EnrollmentOptions { get; } = new();
 
-    [ObservableProperty] private ContractTemplateOption? selectedTemplate;
     [ObservableProperty] private EnrollmentOption? selectedEnrollment;
 
     [ObservableProperty] private DateTime createdAt = DateTime.Now;
@@ -58,7 +52,6 @@ public partial class AddContractViewModel : ObservableObject
         Notes = "";
         CreatedAt = DateTime.Now;
 
-        TemplateOptions.Clear();
         EnrollmentOptions.Clear();
 
         using var db = _dbFactory.Create();
@@ -90,14 +83,17 @@ public partial class AddContractViewModel : ObservableObject
         var defaultGuardian = string.IsNullOrWhiteSpace(student.FatherName) ? student.MotherName : student.FatherName;
         GuardianName = EnsureSurname(defaultGuardian, studentSurname);
 
-        var templates = await db.ContractTemplates
+        _defaultTemplate = await db.ContractTemplates
             .AsNoTracking()
             .Where(t => t.IsActive && t.BranchKey == init.BranchKey)
             .OrderBy(t => t.Name)
-            .ToListAsync();
+            .FirstOrDefaultAsync();
 
-        foreach (var t in templates)
-            TemplateOptions.Add(new ContractTemplateOption(t.ContractTemplateId, t.Name));
+        if (_defaultTemplate is null)
+        {
+            ErrorMessage = $"No active contract template found for branch '{init.BranchKey}'.";
+            return;
+        }
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
@@ -115,7 +111,6 @@ public partial class AddContractViewModel : ObservableObject
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, label, 0));
         }
 
-        SelectedTemplate = TemplateOptions.FirstOrDefault();
         SelectedEnrollment = EnrollmentOptions.FirstOrDefault();
     }
 
@@ -129,15 +124,15 @@ public partial class AddContractViewModel : ObservableObject
             return;
         }
 
-        if (SelectedTemplate is null)
-        {
-            ErrorMessage = "Please select a template.";
-            return;
-        }
-
         if (SelectedEnrollment is null)
         {
             ErrorMessage = "Please select an enrollment.";
+            return;
+        }
+
+        if (_defaultTemplate is null)
+        {
+            ErrorMessage = "No active contract template is configured for this branch.";
             return;
         }
 
@@ -148,7 +143,7 @@ public partial class AddContractViewModel : ObservableObject
 
             var student = await db.Students.AsNoTracking().FirstAsync(x => x.StudentId == _init.StudentId);
             var enrollment = await db.Enrollments.AsNoTracking().FirstAsync(x => x.EnrollmentId == SelectedEnrollment.EnrollmentId);
-            var template = await db.ContractTemplates.AsNoTracking().FirstAsync(x => x.ContractTemplateId == SelectedTemplate.ContractTemplateId);
+            var template = _defaultTemplate;
 
             var (_, studentSurname) = SplitName(student.FullName);
             var effectiveStudentName = EnsureSurname((StudentName ?? "").Trim(), studentSurname);
@@ -200,7 +195,7 @@ public partial class AddContractViewModel : ObservableObject
                 ContractId = contractId,
                 StudentId = _init.StudentId,
                 EnrollmentId = SelectedEnrollment.EnrollmentId,
-                ContractTemplateId = SelectedTemplate.ContractTemplateId,
+                ContractTemplateId = template.ContractTemplateId,
                 CreatedAt = CreatedAt,
                 DocxPath = docxPath,
                 PdfPath = null,
