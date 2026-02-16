@@ -437,13 +437,13 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedContract is null)
         {
-            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα σύμβαση.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
         {
-            System.Windows.MessageBox.Show("Το αρχείο DOCX της σύμβασης δεν βρέθηκε.");
+            System.Windows.MessageBox.Show("Το αρχείο DOCX του συμφωνητικού δεν βρέθηκε.");
             return;
         }
 
@@ -453,7 +453,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία ανοίγματος σύμβασης");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία ανοίγματος συμφωνητικού");
         }
     }
 
@@ -461,13 +461,13 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedContract is null)
         {
-            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα σύμβαση.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
         {
-            System.Windows.MessageBox.Show("Το αρχείο DOCX της σύμβασης δεν βρέθηκε.");
+            System.Windows.MessageBox.Show("Το αρχείο DOCX του συμφωνητικού δεν βρέθηκε.");
             return;
         }
 
@@ -479,7 +479,7 @@ public partial class StudentProfileViewModel : ObservableObject
             var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
             if (contract is null)
             {
-                System.Windows.MessageBox.Show("Η σύμβαση δεν βρέθηκε στη βάση δεδομένων.");
+                System.Windows.MessageBox.Show("Το συμφωνητικό δεν βρέθηκε στη βάση δεδομένων.");
                 return;
             }
 
@@ -499,7 +499,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία εξαγωγής PDF σύμβασης");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία εξαγωγής PDF συμφωνητικού");
         }
     }
 
@@ -508,13 +508,13 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedContract is null)
         {
-            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα σύμβαση.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
             return;
         }
 
         var confirm = System.Windows.MessageBox.Show(
-            "Να διαγραφεί η επιλεγμένη σύμβαση; Θα αφαιρεθεί από τη λίστα και θα διαγραφούν τα παραγόμενα αρχεία, αν υπάρχουν.",
-            "Διαγραφή σύμβασης",
+            "Να διαγραφεί το επιλεγμένο συμφωνητικό; Θα αφαιρεθεί από τη λίστα και θα διαγραφούν τα παραγόμενα αρχεία, αν υπάρχουν.",
+            "Διαγραφή συμφωνητικού",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -529,7 +529,7 @@ public partial class StudentProfileViewModel : ObservableObject
             var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
             if (contract is null)
             {
-                System.Windows.MessageBox.Show("Η σύμβαση δεν βρέθηκε στη βάση δεδομένων.");
+                System.Windows.MessageBox.Show("Το συμφωνητικό δεν βρέθηκε στη βάση δεδομένων.");
                 return;
             }
 
@@ -542,7 +542,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία διαγραφής σύμβασης");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία διαγραφής συμφωνητικού");
         }
     }
 
@@ -596,8 +596,8 @@ public partial class StudentProfileViewModel : ObservableObject
                     ReceiptNumber: 0,
                     IssueDate: issueDate,
                     StudentName: student.FullName,
-                    StudentΤηλέφωνο: student.Phone ?? "",
-                    StudentΗλ. ταχυδρομείο: student.Email ?? "",
+                    StudentPhone: student.Phone ?? "",
+                    StudentEmail: student.Email ?? "",
                     Amount: enrollment.DownPayment,
                     PaymentMethod: "Προκαταβολή εγγραφής",
                     ProgramLabel: enrollment.ProgramType.ToDisplayName(),
@@ -682,7 +682,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             if (period is null)
             {
-                PendingContractsText = "Δεν υπάρχουν εκκρεμείς συμβάσεις.";
+                PendingContractsText = "Δεν υπάρχουν εκκρεμή συμφωνητικά.";
                 return;
             }
 
@@ -787,7 +787,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
                 if (e.IncludesStudyLab)
                 {
-                    extras.Add("Αίθουσα μελέτης");
+                    extras.Add("Study Lab");
                 }
 
                 if (e.IncludesTransportation)
@@ -946,8 +946,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
             var pendingCount = Contracts.Count(c => c.IsPendingPrint);
             PendingContractsText = pendingCount > 0
-                ? $"⚠ Εκκρεμείς συμβάσεις: {pendingCount}"
-                : "Δεν υπάρχουν εκκρεμείς συμβάσεις.";
+                ? $"⚠ Εκκρεμή συμφωνητικά: {pendingCount}"
+                : "Δεν υπάρχουν εκκρεμή συμφωνητικά.";
 
         }
         catch (Exception ex)

@@ -20,7 +20,7 @@ public partial class StudentsViewModel : ObservableObject
     private const string AllStudentsFilter = "Όλοι οι μαθητές";
     private const string ActiveStudentsFilter = "Μόνο ενεργοί";
     private const string InactiveStudentsFilter = "Μόνο ανενεργοί";
-    private const string ContractPendingFilter = "Εκκρεμεί σύμβαση";
+    private const string ContractPendingFilter = "Εκκρεμεί συμφωνητικό";
     private const string OverdueFilter = "Ληξιπρόθεσμα";
 
     private const string SortByName = "Όνομα (Α-Ω)";

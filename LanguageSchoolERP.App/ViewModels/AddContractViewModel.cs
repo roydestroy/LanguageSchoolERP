@@ -91,7 +91,7 @@ public partial class AddContractViewModel : ObservableObject
 
         if (_defaultTemplate is null)
         {
-            ErrorMessage = $"Δεν βρέθηκε ενεργό πρότυπο σύμβασης για τον κλάδο '{init.BranchKey}'.";
+            ErrorMessage = $"Δεν βρέθηκε ενεργό πρότυπο συμφωνητικού για τον κλάδο '{init.BranchKey}'.";
             return;
         }
 
@@ -132,7 +132,7 @@ public partial class AddContractViewModel : ObservableObject
 
         if (_defaultTemplate is null)
         {
-            ErrorMessage = "Δεν έχει οριστεί ενεργό πρότυπο σύμβασης για αυτόν τον κλάδο.";
+            ErrorMessage = "Δεν έχει οριστεί ενεργό πρότυπο συμφωνητικού για αυτόν τον κλάδο.";
             return;
         }
 

@@ -467,7 +467,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Συμβάσεις">
+            <TabItem Header="Συμφωνητικά">
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -476,7 +476,7 @@
 
                     <StackPanel>
                         <DockPanel LastChildFill="False">
-                            <TextBlock DockPanel.Dock="Left" Text="Συμβάσεις" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Left" Text="Συμφωνητικά" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                 <Button Content="Δημιουργία" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
                                 <Button Content="Επεξεργασία" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>

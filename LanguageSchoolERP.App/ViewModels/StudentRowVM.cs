@@ -32,7 +32,7 @@ public partial class StudentRowVm : ObservableObject
     public Visibility OverdueBadgeVisibility => IsOverdue ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool hasPendingContract;
-    public string PendingContractBadgeText => "ΣΥΜΒΑΣΗ";
+    public string PendingContractBadgeText => "ΣΥΜΦΩΝΗΤΙΚΟ";
     public Brush PendingContractBadgeBackground => new SolidColorBrush(Color.FromRgb(255, 246, 229));
     public Brush PendingContractBadgeForeground => new SolidColorBrush(Color.FromRgb(166, 102, 0));
     public Brush PendingContractBadgeBorder => new SolidColorBrush(Color.FromRgb(255, 223, 163));
