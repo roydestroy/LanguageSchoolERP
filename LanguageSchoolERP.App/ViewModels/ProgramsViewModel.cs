@@ -10,12 +10,15 @@ public partial class ProgramsViewModel : ObservableObject
     public ObservableCollection<string> Programs { get; } = new();
 
     [ObservableProperty] private string newProgramName = "";
+    [ObservableProperty] private string? selectedProgram;
 
     public IRelayCommand AddProgramCommand { get; }
+    public IRelayCommand DeleteProgramCommand { get; }
 
     public ProgramsViewModel()
     {
         AddProgramCommand = new RelayCommand(AddProgram);
+        DeleteProgramCommand = new RelayCommand(DeleteProgram);
 
         Programs.Add(ProgramType.LanguageSchool.ToDisplayName());
         Programs.Add(ProgramType.StudyLab.ToDisplayName());
@@ -36,5 +39,16 @@ public partial class ProgramsViewModel : ObservableObject
         }
 
         NewProgramName = "";
+    }
+
+    private void DeleteProgram()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedProgram))
+        {
+            return;
+        }
+
+        Programs.Remove(SelectedProgram);
+        SelectedProgram = null;
     }
 }

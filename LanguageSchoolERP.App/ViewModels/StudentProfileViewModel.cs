@@ -46,6 +46,8 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<ContractRowVm> Contracts { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
     [ObservableProperty] private ContractRowVm? selectedContract;
+    [ObservableProperty] private ProgramEnrollmentRowVm? selectedProgram;
+    [ObservableProperty] private PaymentRowVm? selectedPayment;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
@@ -82,6 +84,8 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private double progressPercent = 0;
     [ObservableProperty] private string pendingContractsText = "";
     public IRelayCommand AddPaymentCommand { get; }
+    public IRelayCommand EditPaymentCommand { get; }
+    public IAsyncRelayCommand DeletePaymentCommand { get; }
     public IRelayCommand CreateContractCommand { get; }
     public IRelayCommand PrintReceiptCommand { get; }
     public IRelayCommand EditContractCommand { get; }
@@ -94,6 +98,8 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand AddProgramCommand { get; }
     public IRelayCommand<ProgramEnrollmentRowVm> EditProgramCommand { get; }
     public IAsyncRelayCommand<ProgramEnrollmentRowVm> RemoveProgramCommand { get; }
+    public IRelayCommand EditSelectedProgramCommand { get; }
+    public IAsyncRelayCommand RemoveSelectedProgramCommand { get; }
 
     public event Action? RequestClose;
     public StudentProfileViewModel(
@@ -108,6 +114,8 @@ public partial class StudentProfileViewModel : ObservableObject
         _contractDocumentService = contractDocumentService;
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
+        EditPaymentCommand = new RelayCommand(OpenEditPaymentDialog, CanModifySelectedPayment);
+        DeletePaymentCommand = new AsyncRelayCommand(DeleteSelectedPaymentAsync, CanModifySelectedPayment);
         CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
         PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
         EditContractCommand = new RelayCommand(EditSelectedContract, () => SelectedContract is not null);
@@ -120,6 +128,8 @@ public partial class StudentProfileViewModel : ObservableObject
         AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
         EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
         RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
+        EditSelectedProgramCommand = new RelayCommand(EditSelectedProgram, () => SelectedProgram is not null);
+        RemoveSelectedProgramCommand = new AsyncRelayCommand(RemoveSelectedProgramAsync, () => SelectedProgram is not null);
 
     }
 
@@ -129,6 +139,18 @@ public partial class StudentProfileViewModel : ObservableObject
         EditContractCommand.NotifyCanExecuteChanged();
         ExportContractPdfCommand.NotifyCanExecuteChanged();
         DeleteContractCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedProgramChanged(ProgramEnrollmentRowVm? value)
+    {
+        EditSelectedProgramCommand.NotifyCanExecuteChanged();
+        RemoveSelectedProgramCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedPaymentChanged(PaymentRowVm? value)
+    {
+        EditPaymentCommand.NotifyCanExecuteChanged();
+        DeletePaymentCommand.NotifyCanExecuteChanged();
     }
 
     private void StartEdit()
@@ -253,6 +275,16 @@ public partial class StudentProfileViewModel : ObservableObject
             _ = LoadAsync();
     }
 
+    private void EditSelectedProgram()
+    {
+        OpenEditProgramDialog(SelectedProgram);
+    }
+
+    private async Task RemoveSelectedProgramAsync()
+    {
+        await RemoveProgramAsync(SelectedProgram);
+    }
+
     private async Task RemoveProgramAsync(ProgramEnrollmentRowVm? row)
     {
         if (row is null) return;
@@ -312,6 +344,68 @@ public partial class StudentProfileViewModel : ObservableObject
         if (result == true)
         {
             _ = LoadAsync(); // refresh payments + balance
+        }
+    }
+
+    private bool CanModifySelectedPayment()
+    {
+        return SelectedPayment is not null && !SelectedPayment.IsSyntheticEntry && SelectedPayment.PaymentId.HasValue;
+    }
+
+    private void OpenEditPaymentDialog()
+    {
+        if (!CanModifySelectedPayment())
+            return;
+
+        var win = App.Services.GetRequiredService<AddPaymentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddPaymentInit(_studentId, LocalAcademicYear, SelectedPayment!.PaymentId));
+
+        var result = win.ShowDialog();
+        if (result == true)
+        {
+            _ = LoadAsync();
+        }
+    }
+
+    private async Task DeleteSelectedPaymentAsync()
+    {
+        if (!CanModifySelectedPayment())
+            return;
+
+        var result = System.Windows.MessageBox.Show(
+            "Delete the selected payment?",
+            "Confirm Delete Payment",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var payment = await db.Payments
+                .FirstOrDefaultAsync(p => p.PaymentId == SelectedPayment!.PaymentId!.Value);
+
+            if (payment is null)
+            {
+                System.Windows.MessageBox.Show("Payment not found.");
+                return;
+            }
+
+            var receipts = await db.Receipts.Where(r => r.PaymentId == payment.PaymentId).ToListAsync();
+            db.Receipts.RemoveRange(receipts);
+            db.Payments.Remove(payment);
+            await db.SaveChangesAsync();
+
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.ToString(), "Delete payment failed");
         }
     }
     private void OpenCreateContractDialog()
@@ -574,8 +668,10 @@ public partial class StudentProfileViewModel : ObservableObject
             DbSeeder.EnsureSeeded(db);
 
             Payments.Clear();
+            SelectedPayment = null;
             Receipts.Clear();
             Programs.Clear();
+            SelectedProgram = null;
             Contracts.Clear();
             SelectedContract = null;
             PendingContractsText = "";
@@ -685,25 +781,42 @@ public partial class StudentProfileViewModel : ObservableObject
             decimal balance = agreementSum - paidTotal;
             if (balance < 0) balance = 0;
 
-            // Base summary (program types)
-            var programList = enrollments
-                .Select(e => ProgramLabel(e.ProgramType))
+            string BuildEnrollmentExtras(Enrollment e)
+            {
+                var extras = new List<string>();
+
+                if (e.IncludesStudyLab)
+                {
+                    extras.Add("Study Lab");
+                }
+
+                if (e.IncludesTransportation)
+                {
+                    extras.Add("Transportation");
+                }
+
+                return extras.Count == 0 ? string.Empty : $" ({string.Join(", ", extras)})";
+            }
+
+            var enrollmentProgramLabels = enrollments
+                .Select(e => $"{ProgramLabel(e.ProgramType)}{BuildEnrollmentExtras(e)}")
                 .Distinct()
                 .ToList();
 
             var baseSummary = enrollments.Count == 0
                 ? "No enrollments for this year."
-                : $"{enrollments.Count} enrollment(s): {string.Join(", ", programList)}";
+                : $"{enrollments.Count} enrollment(s): {string.Join(", ", enrollmentProgramLabels)}";
 
-            // Installment plan summary
+            // Installment plan summary (without repeating program names)
             var planParts = enrollments
                 .Where(e => e.InstallmentCount > 0 && e.InstallmentStartMonth != null)
-                .Select(e => $"{ProgramLabel(e.ProgramType)}: {BuildInstallmentPlanText(e)}")
+                .Select(BuildInstallmentPlanText)
+                .Distinct()
                 .ToList();
 
             var planText = planParts.Any()
                 ? $" | Plan: {string.Join(" · ", planParts)}"
-                : "";
+                : string.Empty;
 
             // Final line
             EnrollmentSummaryLine = baseSummary + planText;
@@ -739,6 +852,8 @@ public partial class StudentProfileViewModel : ObservableObject
                 var downpaymentDate = ResolveDownpaymentDateText(enrollment, contractCreatedByEnrollment);
                 Payments.Add(new PaymentRowVm
                 {
+                    PaymentId = null,
+                    IsSyntheticEntry = true,
                     TypeText = "Downpayment",
                     DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
@@ -752,6 +867,8 @@ public partial class StudentProfileViewModel : ObservableObject
             {
                 Payments.Add(new PaymentRowVm
                 {
+                    PaymentId = row.Payment.PaymentId,
+                    IsSyntheticEntry = false,
                     TypeText = "Payment",
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{row.Payment.Amount:0.00} €",
@@ -829,7 +946,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             var pendingCount = Contracts.Count(c => c.IsPendingPrint);
             PendingContractsText = pendingCount > 0
-                ? $"⚠ Pending contracts: {pendingCount} (not printed/signed)"
+                ? $"⚠ Pending contracts: {pendingCount}"
                 : "No pending contracts.";
 
         }

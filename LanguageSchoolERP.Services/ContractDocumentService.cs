@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Microsoft.Office.Interop.Word;
+using Word = Microsoft.Office.Interop.Word;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Pdf.IO;
 using Application = Microsoft.Office.Interop.Word.Application;
@@ -23,12 +23,12 @@ public sealed class ContractDocumentService
         Directory.CreateDirectory(Path.GetDirectoryName(outputDocxPath)!);
 
         Application? app = null;
-        Document? doc = null;
+        Word.Document? doc = null;
         object missing = Type.Missing;
 
         try
         {
-            app = new Application { Visible = false, DisplayAlerts = WdAlertLevel.wdAlertsNone };
+            app = new Application { Visible = false, DisplayAlerts = Word.WdAlertLevel.wdAlertsNone };
             object readOnly = false;
             object isVisible = false;
             object templateObj = templatePath;
@@ -74,7 +74,7 @@ public sealed class ContractDocumentService
         {
             if (doc is not null)
             {
-                object saveChanges = WdSaveOptions.wdDoNotSaveChanges;
+                object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
                 doc.Close(ref saveChanges, ref missing, ref missing);
             }
 
@@ -121,12 +121,12 @@ public sealed class ContractDocumentService
     private static void ExportWordToPdf(string docxPath, string pdfPath)
     {
         Application? app = null;
-        Document? doc = null;
+        Word.Document? doc = null;
         object missing = Type.Missing;
 
         try
         {
-            app = new Application { Visible = false, DisplayAlerts = WdAlertLevel.wdAlertsNone };
+            app = new Application { Visible = false, DisplayAlerts = Word.WdAlertLevel.wdAlertsNone };
             object fileName = docxPath;
             object readOnly = true;
             object isVisible = false;
@@ -134,13 +134,13 @@ public sealed class ContractDocumentService
                 ref missing, ref missing, ref missing, ref missing, ref missing, ref isVisible, ref missing, ref missing,
                 ref missing, ref missing);
 
-            doc.ExportAsFixedFormat(pdfPath, WdExportFormat.wdExportFormatPDF);
+            doc.ExportAsFixedFormat(pdfPath, Word.WdExportFormat.wdExportFormatPDF);
         }
         finally
         {
             if (doc is not null)
             {
-                object saveChanges = WdSaveOptions.wdDoNotSaveChanges;
+                object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
                 doc.Close(ref saveChanges, ref missing, ref missing);
             }
 
@@ -149,7 +149,7 @@ public sealed class ContractDocumentService
         }
     }
 
-    private static void RemoveInstallmentsTable(Document doc)
+    private static void RemoveInstallmentsTable(Word.Document doc)
     {
         var table = FindInstallmentsTable(doc);
         table?.Delete();
@@ -163,7 +163,7 @@ public sealed class ContractDocumentService
         }
     }
 
-    private static void RemoveUnusedInstallmentRows(Document doc, int installmentCount)
+    private static void RemoveUnusedInstallmentRows(Word.Document doc, int installmentCount)
     {
         var table = FindInstallmentsTable(doc);
         if (table is null)
@@ -188,7 +188,7 @@ public sealed class ContractDocumentService
         }
     }
 
-    private static bool IsRowEffectivelyEmpty(Row row)
+    private static bool IsRowEffectivelyEmpty(Word.Row row)
     {
         for (var cellIndex = 1; cellIndex <= row.Cells.Count; cellIndex++)
         {
@@ -200,7 +200,7 @@ public sealed class ContractDocumentService
         return true;
     }
 
-    private static bool RowContainsInstallmentText(Row row)
+    private static bool RowContainsInstallmentText(Word.Row row)
     {
         for (var cellIndex = 1; cellIndex <= row.Cells.Count; cellIndex++)
         {
@@ -212,7 +212,7 @@ public sealed class ContractDocumentService
         return false;
     }
 
-    private static Table? FindInstallmentsTable(Document doc)
+    private static Word.Table? FindInstallmentsTable(Word.Document doc)
     {
         foreach (var marker in new[] { "aa1", "dat1", "dos1" })
         {
