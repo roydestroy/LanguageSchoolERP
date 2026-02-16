@@ -341,7 +341,7 @@
 							<DataGridTextColumn Header="Amount" Binding="{Binding AmountText}" Width="120"/>
 							<DataGridTextColumn Header="Method" Binding="{Binding MethodText}" Width="120"/>
 							<DataGridTextColumn Header="Reason" Binding="{Binding ReasonText}" Width="150"/>
-							<DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="150"/>
+							<DataGridTextColumn Header="Program" Binding="{Binding ProgramText}" Width="*"/>
 						</DataGrid.Columns>
                     </DataGrid>
                 </Grid>
