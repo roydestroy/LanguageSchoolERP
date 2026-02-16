@@ -6,7 +6,7 @@
 		UseLayoutRounding="True"
         SnapsToDevicePixels="True">
 
-    <Window.Resources>
+	<Window.Resources>
 		<Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
 			<Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
 			<Setter Property="Foreground" Value="White"/>
@@ -94,362 +94,361 @@
 		</Style>
 
 		<Style x:Key="EditableTextBoxStyle" TargetType="TextBox">
-            <Setter Property="IsReadOnly" Value="True"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                    <Setter Property="IsReadOnly" Value="False"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+			<Setter Property="IsReadOnly" Value="True"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding IsEditing}" Value="True">
+					<Setter Property="IsReadOnly" Value="False"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="EditButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="EditButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding IsEditing}" Value="True">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="EditModeButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Collapsed"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                    <Setter Property="Visibility" Value="Visible"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="EditModeButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Collapsed"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding IsEditing}" Value="True">
+					<Setter Property="Visibility" Value="Visible"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="EditableDatePickerStyle" TargetType="DatePicker">
-            <Setter Property="IsEnabled" Value="False"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsEditing}" Value="True">
-                    <Setter Property="IsEnabled" Value="True"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="EditableDatePickerStyle" TargetType="DatePicker">
+			<Setter Property="IsEnabled" Value="False"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding IsEditing}" Value="True">
+					<Setter Property="IsEnabled" Value="True"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
+		<Style x:Key="ContractSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="ContractSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="ContractSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedContract, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="ProgramSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="ProgramSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="ProgramSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="ProgramSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedProgram, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="PaymentSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
+		<Style x:Key="PaymentSecondarySelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
-        <Style x:Key="PaymentDangerSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DangerActionButtonStyle}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-    </Window.Resources>
+		<Style x:Key="PaymentDangerSelectionActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DangerActionButtonStyle}">
+			<Setter Property="Visibility" Value="Visible"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+					<Setter Property="Visibility" Value="Collapsed"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
+	</Window.Resources>
 
-    <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+	<Grid Margin="16">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+		<!-- Header -->
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
 
-            <StackPanel>
-                <TextBlock Text="{Binding FullName}" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="{Binding ContactLine}" Foreground="#666666" Margin="0,4,0,0"/>
-                <TextBlock Text="{Binding ActiveStatusText}" Foreground="#444444" FontWeight="SemiBold" Margin="0,4,0,0"/>
-            </StackPanel>
+			<StackPanel>
+				<TextBlock Text="{Binding FullName}" FontSize="22" FontWeight="SemiBold"/>
+				<TextBlock Text="{Binding ContactLine}" Foreground="#666666" Margin="0,4,0,0"/>
+				<TextBlock Text="{Binding ActiveStatusText}" Foreground="#444444" FontWeight="SemiBold" Margin="0,4,0,0"/>
+			</StackPanel>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                <TextBlock Text="Ακαδημαϊκό έτος:" VerticalAlignment="Center" Margin="0,0,8,0" LineHeight="20"/>
-                <ComboBox Width="140" VerticalAlignment="Center"
+			<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+				<TextBlock Text="Ακαδημαϊκό έτος:" VerticalAlignment="Center" Margin="0,0,8,0" LineHeight="20"/>
+				<ComboBox Width="140" VerticalAlignment="Center"
                           ItemsSource="{Binding AvailableAcademicYears}"
                           SelectedItem="{Binding LocalAcademicYear}"/>
-            </StackPanel>
-        </Grid>
+			</StackPanel>
+		</Grid>
 
-        <!-- Summary -->
-        <Border Grid.Row="1" Margin="0,14,0,14" Padding="12" CornerRadius="10" BorderBrush="#DDDDDD" BorderThickness="1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="260"/>
-                </Grid.ColumnDefinitions>
+		<!-- Summary -->
+		<Border Grid.Row="1" Margin="0,14,0,14" Padding="12" CornerRadius="10" BorderBrush="#DDDDDD" BorderThickness="1">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="Auto"/>
+					<ColumnDefinition Width="260"/>
+				</Grid.ColumnDefinitions>
 
-                <StackPanel>
-                    <TextBlock Text="Σύνοψη εγγραφής" Foreground="#666666"/>
-                    <TextBlock Text="{Binding EnrollmentSummaryLine}" FontWeight="SemiBold" Margin="0,4,0,0"/>
-                </StackPanel>
+				<StackPanel>
+					<TextBlock Text="Σύνοψη εγγραφής" Foreground="#666666"/>
+					<TextBlock Text="{Binding EnrollmentSummaryLine}" FontWeight="SemiBold" Margin="0,4,0,0"/>
+				</StackPanel>
 
-                <StackPanel Grid.Column="1" Margin="18,0,0,0">
-                    <TextBlock Text="Συμφωνία" Foreground="#666666" FontSize="12" HorizontalAlignment="Right"/>
-                    <TextBlock Text="{Binding AgreementText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                </StackPanel>
+				<StackPanel Grid.Column="1" Margin="18,0,0,0">
+					<TextBlock Text="Συμφωνία" Foreground="#666666" FontSize="12" HorizontalAlignment="Right"/>
+					<TextBlock Text="{Binding AgreementText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+				</StackPanel>
 
-                <StackPanel Grid.Column="2" Margin="18,0,0,0">
-                    <TextBlock Text="Πληρωμένο" Foreground="#666666" FontSize="12" HorizontalAlignment="Right"/>
-                    <TextBlock Text="{Binding PaidText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                </StackPanel>
+				<StackPanel Grid.Column="2" Margin="18,0,0,0">
+					<TextBlock Text="Πληρωμένο" Foreground="#666666" FontSize="12" HorizontalAlignment="Right"/>
+					<TextBlock Text="{Binding PaidText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+				</StackPanel>
 
-                <StackPanel Grid.Column="3" Margin="18,0,0,0">
-                    <TextBlock Text="Υπόλοιπο" Foreground="#666666" FontSize="12" HorizontalAlignment="Right"/>
-                    <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                </StackPanel>
+				<StackPanel Grid.Column="3" Margin="18,0,0,0">
+					<TextBlock Text="Υπόλοιπο" Foreground="#666666" FontSize="12" HorizontalAlignment="Right"/>
+					<TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+				</StackPanel>
 
-                <StackPanel Grid.Column="4" Margin="18,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding ProgressText}" Foreground="#666666" FontSize="12"/>
-                    <ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" />
-                </StackPanel>
-            </Grid>
-        </Border>
+				<StackPanel Grid.Column="4" Margin="18,0,0,0" VerticalAlignment="Center">
+					<TextBlock Text="{Binding ProgressText}" Foreground="#666666" FontSize="12"/>
+					<ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" />
+				</StackPanel>
+			</Grid>
+		</Border>
 
-        <!-- Tabs -->
-        <TabControl Grid.Row="2">
-            <TabItem Header="Προφίλ">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <Grid Margin="12">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+		<!-- Tabs -->
+		<TabControl Grid.Row="2">
+			<TabItem Header="Προφίλ">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<Grid Margin="12">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
 
-                        <DockPanel Grid.Row="0" Margin="0,0,0,12">
-                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                                <Button Content="Επεξεργασία"
+						<DockPanel Grid.Row="0" Margin="0,0,0,12">
+							<StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+								<Button Content="Επεξεργασία"
                                         Width="95"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource EditButtonStyle}"
                                         Command="{Binding EditProfileCommand}"/>
-                                <Button Content="Αποθήκευση"
+								<Button Content="Αποθήκευση"
                                         Width="95"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource EditModeButtonStyle}"
                                         Command="{Binding SaveProfileCommand}"/>
-                                <Button Content="Ακύρωση"
+								<Button Content="Ακύρωση"
                                         Width="90"
                                         Style="{StaticResource EditModeButtonStyle}"
                                         Command="{Binding CancelEditCommand}"/>
-                                <Button Content="Διαγραφή"
+								<Button Content="Διαγραφή"
                                         Width="120"
                                         Margin="10,0,0,0"
                                         Style="{StaticResource DangerActionButtonStyle}"
                                         Command="{Binding DeleteStudentCommand}"/>
-                            </StackPanel>
-                        </DockPanel>
+							</StackPanel>
+						</DockPanel>
 
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="20"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+						<Grid Grid.Row="1">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="20"/>
+								<ColumnDefinition Width="*"/>
+							</Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Μαθητής" FontWeight="SemiBold" Margin="0,0,0,10"/>
+							<StackPanel Grid.Column="0">
+								<TextBlock Text="Μαθητής" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="Όνομα μαθητή" Foreground="#666666" FontSize="12"/>
-                                <TextBox Text="{Binding EditableStudentName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Όνομα μαθητή" Foreground="#666666" FontSize="12"/>
+								<TextBox Text="{Binding EditableStudentName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Επώνυμο μαθητή" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableStudentSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Επώνυμο μαθητή" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableStudentSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Ημερομηνία γέννησης" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
+								<TextBlock Text="Ημερομηνία γέννησης" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
 
-                                <TextBlock Text="Τηλέφωνο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditablePhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Τηλέφωνο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditablePhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Ηλ. ταχυδρομείο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Ηλ. ταχυδρομείο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Σημειώσεις" FontWeight="SemiBold" Margin="0,16,0,6"/>
-                                <TextBox Text="{Binding EditableNotes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Style="{StaticResource EditableTextBoxStyle}"/>
-                            </StackPanel>
+								<TextBlock Text="Σημειώσεις" FontWeight="SemiBold" Margin="0,16,0,6"/>
+								<TextBox Text="{Binding EditableNotes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Style="{StaticResource EditableTextBoxStyle}"/>
+							</StackPanel>
 
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Γονείς" FontWeight="SemiBold" Margin="0,0,0,10"/>
+							<StackPanel Grid.Column="2">
+								<TextBlock Text="Γονείς" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-                                <TextBlock Text="Όνομα πατέρα" Foreground="#666666" FontSize="12"/>
-                                <TextBox Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Όνομα πατέρα" Foreground="#666666" FontSize="12"/>
+								<TextBox Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Επώνυμο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Επώνυμο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Τηλέφωνο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableFatherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Τηλέφωνο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableFatherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Όνομα μητέρας" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
-                                <TextBox Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Όνομα μητέρας" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
+								<TextBox Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Επώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Επώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Τηλέφωνο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableMotherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBlock Text="Τηλέφωνο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableMotherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-                                <TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-                                <TextBox Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Grid>
-                </ScrollViewer>
-            </TabItem>
+								<TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							</StackPanel>
+						</Grid>
+					</Grid>
+				</ScrollViewer>
+			</TabItem>
 
 
-            <TabItem Header="Προγράμματα">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+			<TabItem Header="Προγράμματα">
+				<Grid Margin="12">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-                    <DockPanel LastChildFill="False">
-                        <TextBlock DockPanel.Dock="Left" Text="Εγγραφές προγραμμάτων" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="Προσθήκη" Width="120" Margin="0,0,8,0" Command="{Binding AddProgramCommand}"/>
-                            <Button Content="Επεξεργασία" Width="110" Margin="0,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSecondarySelectionActionButtonStyle}"/>
-                            <Button Content="Αφαίρεση"
+					<DockPanel LastChildFill="False">
+						<TextBlock DockPanel.Dock="Left" Text="Εγγραφές προγραμμάτων" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+							<Button Content="Προσθήκη" Width="120" Command="{Binding AddProgramCommand}"/>
+							<Button Content="Επεξεργασία" Width="110" Margin="0,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSecondarySelectionActionButtonStyle}"/>
+							<Button Content="Αφαίρεση"
                                     Width="110"
                                     Command="{Binding RemoveSelectedProgramCommand}"
                                     Style="{StaticResource ProgramSelectionActionButtonStyle}"
                                     Background="#B00020"
                                     BorderBrush="#8C0019"
                                     Foreground="White"/>
-                        </StackPanel>
-                    </DockPanel>
+						</StackPanel>
+					</DockPanel>
 
-                    <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
-                        <DataGrid ItemsSource="{Binding Programs}"
+					<Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
+						<DataGrid ItemsSource="{Binding Programs}"
                                   SelectedItem="{Binding SelectedProgram}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   IsReadOnly="True">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="130"/>
-                                <DataGridTextColumn Header="Επίπεδο/Τάξη" Binding="{Binding LevelOrClassText}" Width="120"/>
-                                <DataGridTextColumn Header="Συμφωνία" Binding="{Binding AgreementTotalText}" Width="110"/>
-                                <DataGridTextColumn Header="Βιβλία" Binding="{Binding BooksText}" Width="100"/>
-                                <DataGridTextColumn Header="Προκαταβολή" Binding="{Binding DownPaymentText}" Width="120"/>
-                                <DataGridTextColumn Header="Δόσεις" Binding="{Binding InstallmentsText}" Width="150"/>
-                                <DataGridTextColumn Header="Ποσό δόσης" Binding="{Binding InstallmentAmountText}" Width="140"/>
-                                <DataGridTextColumn Header="Κατάσταση" Binding="{Binding StatusText}" Width="90"/>
-                                <DataGridTextColumn Header="Σχόλια" Binding="{Binding CommentsText}" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-                </Grid>
-            </TabItem>
+							<DataGrid.Columns>
+								<DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="130"/>
+								<DataGridTextColumn Header="Επίπεδο/Τάξη" Binding="{Binding LevelOrClassText}" Width="120"/>
+								<DataGridTextColumn Header="Συμφωνία" Binding="{Binding AgreementTotalText}" Width="110"/>
+								<DataGridTextColumn Header="Βιβλία" Binding="{Binding BooksText}" Width="100"/>
+								<DataGridTextColumn Header="Προκαταβολή" Binding="{Binding DownPaymentText}" Width="120"/>
+								<DataGridTextColumn Header="Δόσεις" Binding="{Binding InstallmentsText}" Width="150"/>
+								<DataGridTextColumn Header="Ποσό δόσης" Binding="{Binding InstallmentAmountText}" Width="140"/>
+								<DataGridTextColumn Header="Κατάσταση" Binding="{Binding StatusText}" Width="90"/>
+								<DataGridTextColumn Header="Σχόλια" Binding="{Binding CommentsText}" Width="*"/>
+							</DataGrid.Columns>
+						</DataGrid>
+					</Border>
+				</Grid>
+			</TabItem>
 
-            <TabItem Header="Πληρωμές">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+			<TabItem Header="Πληρωμές">
+				<Grid Margin="12">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-                    <DockPanel LastChildFill="False">
-                        <TextBlock DockPanel.Dock="Left" Text="Πληρωμές" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="Προσθήκη" Width="120" Margin="0,0,8,0" Command="{Binding AddPaymentCommand}"/>
-                            <Button Content="Επεξεργασία" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
-                            <Button Content="Διαγραφή" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
-                        </StackPanel>
-                    </DockPanel>
+					<DockPanel LastChildFill="False">
+						<TextBlock DockPanel.Dock="Left" Text="Πληρωμές" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+							<Button Content="Προσθήκη" Width="120" Command="{Binding AddPaymentCommand}"/>
+							<Button Content="Επεξεργασία" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
+							<Button Content="Διαγραφή" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
+						</StackPanel>
+					</DockPanel>
 
-                    <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
-                        <DataGrid ItemsSource="{Binding Payments}"
+					<DataGrid Grid.Row="1"
+							      ItemsSource="{Binding Payments}"
                                   SelectedItem="{Binding SelectedPayment}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
-                                  CanUserAddRows="False">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Τύπος" Binding="{Binding TypeText}" Width="140"/>
-                                <DataGridTextColumn Header="Ημερομηνία" Binding="{Binding DateText}" Width="140"/>
-                                <DataGridTextColumn Header="Ποσό" Binding="{Binding AmountText}" Width="140"/>
-                                <DataGridTextColumn Header="Τρόπος" Binding="{Binding Method}" Width="120"/>
-                                <DataGridTextColumn Header="Αιτιολογία" Binding="{Binding ReasonText}" Width="150"/>
-                                <DataGridTextColumn Header="Σημειώσεις" Binding="{Binding Notes}" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-                </Grid>
-            </TabItem>
+                                  CanUserAddRows="False" Margin="0,10,0,-10">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="Τύπος" Binding="{Binding TypeText}" Width="140"/>
+							<DataGridTextColumn Header="Ημερομηνία" Binding="{Binding DateText}" Width="140"/>
+							<DataGridTextColumn Header="Ποσό" Binding="{Binding AmountText}" Width="140"/>
+							<DataGridTextColumn Header="Τρόπος" Binding="{Binding Method}" Width="120"/>
+							<DataGridTextColumn Header="Αιτιολογία" Binding="{Binding ReasonText}" Width="150"/>
+							<DataGridTextColumn Header="Σημειώσεις" Binding="{Binding Notes}" Width="*"/>
+						</DataGrid.Columns>
+					</DataGrid>
+				</Grid>
+			</TabItem>
 
-            <TabItem Header="Αποδείξεις">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+			<TabItem Header="Αποδείξεις">
+				<Grid Margin="12">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-                    <DockPanel LastChildFill="False">
-                        <TextBlock DockPanel.Dock="Left" Text="Αποδείξεις" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <Button DockPanel.Dock="Right"
+					<DockPanel LastChildFill="False">
+						<TextBlock DockPanel.Dock="Left" Text="Αποδείξεις" FontWeight="SemiBold" VerticalAlignment="Center"/>
+						<Button DockPanel.Dock="Right"
                                 Content="Εκτύπωση"
                                 Width="120"
                                 Command="{Binding PrintReceiptCommand}"/>
-                    </DockPanel>
+					</DockPanel>
 
-                    <DataGrid Grid.Row="1"
+					<DataGrid Grid.Row="1"
                               Margin="0,10,0,0"
                               ItemsSource="{Binding Receipts}"
                               SelectedItem="{Binding SelectedReceipt}"
@@ -463,52 +462,52 @@
 							<DataGridTextColumn Header="Αιτιολογία" Binding="{Binding ReasonText}" Width="150"/>
 							<DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="*"/>
 						</DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-            </TabItem>
+					</DataGrid>
+				</Grid>
+			</TabItem>
 
-            <TabItem Header="Συμφωνητικά">
-                <Grid Margin="12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+			<TabItem Header="Συμφωνητικά">
+				<Grid Margin="12">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
 
-                    <StackPanel>
-                        <DockPanel LastChildFill="False">
-                            <TextBlock DockPanel.Dock="Left" Text="Συμφωνητικά" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button Content="Δημιουργία" Width="120" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
-                                <Button Content="Επεξεργασία" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
-                                <Button Content="Εκτύπωση" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
-                                <Button Content="Διαγραφή"
+					<StackPanel>
+						<DockPanel LastChildFill="False">
+							<TextBlock DockPanel.Dock="Left" Text="Συμφωνητικά" FontWeight="SemiBold" VerticalAlignment="Center"/>
+							<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+								<Button Content="Δημιουργία" Width="120" Command="{Binding CreateContractCommand}"/>
+								<Button Content="Επεξεργασία" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
+								<Button Content="Εκτύπωση" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
+								<Button Content="Διαγραφή"
                                         Width="120"
                                         Command="{Binding DeleteContractCommand}"
                                         Style="{StaticResource ContractSelectionActionButtonStyle}"
                                         Background="#C0392B"
                                         BorderBrush="#A93226"
                                         Foreground="White"/>
-                            </StackPanel>
-                        </DockPanel>
-                        <TextBlock Margin="0,8,0,0" Foreground="#C0392B" FontWeight="SemiBold" Text="{Binding PendingContractsText}"/>
-                    </StackPanel>
+							</StackPanel>
+						</DockPanel>
+						<TextBlock Margin="0,8,0,0" Foreground="#C0392B" FontWeight="SemiBold" Text="{Binding PendingContractsText}"/>
+					</StackPanel>
 
-                    <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
-                        <DataGrid ItemsSource="{Binding Contracts}"
+					<Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
+						<DataGrid ItemsSource="{Binding Contracts}"
                                   SelectedItem="{Binding SelectedContract}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
                                   CanUserAddRows="False">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Ημ/νία δημιουργίας" Binding="{Binding CreatedAtText}" Width="180"/>
-                                <DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="*"/>
-                                <DataGridTextColumn Header="Εκκρεμής" Binding="{Binding IsPendingPrint}" Width="90"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Border>
-                </Grid>
-            </TabItem>
-        </TabControl>
-    </Grid>
+							<DataGrid.Columns>
+								<DataGridTextColumn Header="Ημ/νία δημιουργίας" Binding="{Binding CreatedAtText}" Width="180"/>
+								<DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="*"/>
+								<DataGridTextColumn Header="Εκκρεμής" Binding="{Binding IsPendingPrint}" Width="90"/>
+							</DataGrid.Columns>
+						</DataGrid>
+					</Border>
+				</Grid>
+			</TabItem>
+		</TabControl>
+	</Grid>
 </Window>
