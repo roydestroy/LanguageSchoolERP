@@ -23,9 +23,9 @@
             <TextBlock Text="Created At" VerticalAlignment="Center"/>
             <DatePicker x:Name="CreatedAtDatePicker" Margin="0,4,0,12" Height="34" VerticalContentAlignment="Center" SelectedDate="{Binding CreatedAt}" PreviewMouseLeftButtonDown="CreatedAtDatePicker_OnPreviewMouseLeftButtonDown">
                 <DatePicker.Resources>
-                    <Style TargetType="{x:Type DatePickerTextBox}">
+                    <Style TargetType="{x:Type DatePickerTextBox}" BasedOn="{StaticResource {x:Type DatePickerTextBox}}">
                         <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="Padding" Value="10,6"/>
+                        <Setter Property="Padding" Value="8,0"/>
                     </Style>
                 </DatePicker.Resources>
             </DatePicker>

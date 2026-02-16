@@ -29,7 +29,7 @@ public partial class AddContractWindow : Window
         if (sender is not DatePicker datePicker)
             return;
 
-        datePicker.IsDropDownOpen = true;
-        e.Handled = true;
+        if (!datePicker.IsDropDownOpen)
+            datePicker.IsDropDownOpen = true;
     }
 }
