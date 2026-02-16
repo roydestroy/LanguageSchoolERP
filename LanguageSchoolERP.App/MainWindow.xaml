@@ -8,14 +8,22 @@
         <Border DockPanel.Dock="Top" Padding="18,14" Background="{StaticResource Brush.AccentDark}">
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="240" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Language School ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="Language School ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
 
-                <Grid Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock x:Name="YearProgressText" Text="Year progress: 0%" Foreground="#DCE7F4" FontSize="12"/>
+                    <ProgressBar x:Name="YearProgressBar" Height="8" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0"/>
+                </StackPanel>
+
+                <Grid Grid.Column="4" Margin="0,0,16,0" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="8"/>
@@ -25,7 +33,7 @@
                     <ComboBox Grid.Column="2" x:Name="DbCombo" Width="230" Height="34" VerticalAlignment="Center"/>
                 </Grid>
 
-                <Grid Grid.Column="2" VerticalAlignment="Center">
+                <Grid Grid.Column="5" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="8"/>
