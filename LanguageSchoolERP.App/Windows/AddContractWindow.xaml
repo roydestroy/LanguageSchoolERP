@@ -1,7 +1,7 @@
 <Window x:Class="LanguageSchoolERP.App.Windows.AddContractWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Create Contract" Height="560" Width="520"
+        Title="Create Contract" Height="623" Width="518"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
 
