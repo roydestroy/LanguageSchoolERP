@@ -19,8 +19,8 @@ public sealed class ContractBookmarkBuilder
             ["tou"] = InferFemale(payload.StudentFullName) ? "της" : "του",
             ["on_up"] = NormalizeNameForContract(payload.GuardianFullName),
             ["on_sp"] = NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
-            ["per_prg"] = payload.ProgramNameUpper,
-            ["tit_prg"] = payload.ProgramTitleUpperWithExtras,
+            ["per_prg"] = NormalizeProgramTextForContractBookmark(payload.ProgramNameUpper),
+            ["tit_prg"] = NormalizeProgramTextForContractBookmark(payload.ProgramTitleUpperWithExtras),
             ["sun_pos"] = FormatPlainAmount(payload.AgreementTotal),
             ["prok_pos"] = FormatPlainAmount(payload.DownPayment),
             ["up_pos"] = FormatPlainAmount(payload.AgreementTotal - payload.DownPayment)
@@ -149,6 +149,12 @@ public sealed class ContractBookmarkBuilder
     }
 
     private static string NormalizeNameForContract(string value)
+    {
+        var noTonos = RemoveGreekTonos(value ?? "");
+        return noTonos.Trim().ToUpper(GreekCulture);
+    }
+
+    private static string NormalizeProgramTextForContractBookmark(string value)
     {
         var noTonos = RemoveGreekTonos(value ?? "");
         return noTonos.Trim().ToUpper(GreekCulture);
