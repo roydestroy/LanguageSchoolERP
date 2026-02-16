@@ -155,6 +155,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
@@ -166,14 +167,20 @@
                                             </StackPanel>
                                         </StackPanel>
 
+                                        <!-- Total payment progress -->
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Width="170">
+                                            <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
+                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
+                                        </StackPanel>
+
                                         <!-- Balance -->
-                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
                                             <TextBlock Text="Balance" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
                                         <!-- Overdue badge -->
-                                        <Border Grid.Column="2" Margin="12,0,0,0"
+                                        <Border Grid.Column="3" Margin="12,0,0,0"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding OverdueBadgeBackground}"
                                                 BorderBrush="{Binding OverdueBadgeBorder}"
@@ -184,7 +191,7 @@
                                         </Border>
 
                                         <!-- Pending contract badge -->
-                                        <Border Grid.Column="3" Margin="12,0,0,0"
+                                        <Border Grid.Column="4" Margin="12,0,0,0"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
                                                 BorderBrush="{Binding PendingContractBadgeBorder}"
@@ -194,7 +201,7 @@
                                                        Foreground="{Binding PendingContractBadgeForeground}"/>
                                         </Border>
 
-                                        <Button Grid.Column="4"
+                                        <Button Grid.Column="5"
                                                 Margin="12,0,0,0"
                                                 Width="90" Height="32"
                                                 Content="Open"
@@ -203,7 +210,7 @@
                                                 CommandParameter="{Binding StudentId}"
                                                 VerticalAlignment="Center"/>
 
-                                        <ToggleButton Grid.Column="5" Margin="12,0,0,0"
+                                        <ToggleButton Grid.Column="6" Margin="12,0,0,0"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                                       Style="{StaticResource ExpandCaretButtonStyle}"
                                                       VerticalAlignment="Center"/>
@@ -232,6 +239,8 @@
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                                 <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
+                                                                <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" Margin="0,4,0,0"/>
+                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
                                                             </StackPanel>
 
                                                             <TextBlock Grid.Column="1" Margin="12,0,0,0"

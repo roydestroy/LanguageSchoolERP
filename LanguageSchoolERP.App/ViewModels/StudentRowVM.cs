@@ -19,6 +19,9 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private decimal balance;
     public string BalanceText => $"{Balance:0.00} €";
 
+    [ObservableProperty] private string progressText = "0%";
+    [ObservableProperty] private double progressPercent;
+
     [ObservableProperty] private bool isOverdue;
     public string OverdueBadgeText => "OVERDUE";
     public Brush OverdueBadgeBackground => new SolidColorBrush(Color.FromRgb(253, 237, 237));

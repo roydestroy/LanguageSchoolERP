@@ -168,6 +168,10 @@ public partial class StudentsViewModel : ObservableObject
                 var balance = agreementSum - (downSum + paidSum);
                 if (balance < 0) balance = 0;
 
+                var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
+                if (totalProgress > 100) totalProgress = 100;
+                if (totalProgress < 0) totalProgress = 0;
+
                 var today = DateTime.Today;
 
                 // Overdue if ANY enrollment is overdue based on installment plan
@@ -188,6 +192,8 @@ public partial class StudentsViewModel : ObservableObject
                     ContactLine = $"{s.Phone}  |  {s.Email}".Trim(' ', '|'),
                     YearLabel = $"Year: {year}",
                     Balance = balance,
+                    ProgressPercent = totalProgress,
+                    ProgressText = $"{totalProgress:0}%",
                     IsOverdue = overdue,
                     HasPendingContract = hasPendingContract,
                     IsActive = yearEnrollments.Count > 0,
@@ -200,13 +206,19 @@ public partial class StudentsViewModel : ObservableObject
                     var enBalance = en.AgreementTotal - enPaid;
                     if (enBalance < 0) enBalance = 0;
 
+                    var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
+                    if (enrollmentProgress > 100) enrollmentProgress = 100;
+                    if (enrollmentProgress < 0) enrollmentProgress = 0;
+
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
                         Title = en.ProgramType.ToDisplayName(),
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Level/Class: {en.LevelOrClass}",
                         AgreementText = $"Agreement: {en.AgreementTotal:0.00} €",
                         PaidText = $"Paid: {enPaid:0.00} €",
-                        BalanceText = $"Balance: {enBalance:0.00} €"
+                        BalanceText = $"Balance: {enBalance:0.00} €",
+                        ProgressPercent = enrollmentProgress,
+                        ProgressText = $"{enrollmentProgress:0}%"
                     });
                 }
 
