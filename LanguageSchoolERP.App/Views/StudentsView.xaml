@@ -173,11 +173,11 @@
                          Height="32"
                          VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Search by name, phone, email"/>
-                <Button Grid.Column="6" Content="&#xE710;" ToolTip="New Student"
+                         ToolTip="Αναζήτηση με όνομα, τηλέφωνο, ηλ. ταχυδρομείο"/>
+                <Button Grid.Column="6" Content="&#xE710;" ToolTip="Νέος μαθητής"
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
-                <Button Grid.Column="8" Content="&#xE72C;" ToolTip="Refresh"
+                <Button Grid.Column="8" Content="&#xE72C;" ToolTip="Ανανέωση"
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
             </Grid>
@@ -221,7 +221,7 @@
 
                                         <!-- Balance -->
                                         <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="Balance" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="Υπόλοιπο" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
@@ -250,7 +250,7 @@
                                         <Button Grid.Column="5"
                                                 Margin="12,0,0,0"
                                                 Width="90" Height="32"
-                                                Content="Open"
+                                                Content="Άνοιγμα"
                                                 Style="{StaticResource PrimaryActionButtonStyle}"
                                                 Command="{Binding DataContext.OpenStudentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding StudentId}"
@@ -269,7 +269,7 @@
                                             Padding="10"
                                             Visibility="{Binding ExpandedVisibility}">
                                         <StackPanel>
-                                            <TextBlock Text="Enrollments" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Εγγραφές" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
 
                                             <ItemsControl ItemsSource="{Binding Enrollments}">
                                                 <ItemsControl.ItemTemplate>
