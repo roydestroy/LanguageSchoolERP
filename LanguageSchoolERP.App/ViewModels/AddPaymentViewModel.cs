@@ -234,9 +234,9 @@ public partial class AddPaymentViewModel : ObservableObject
                     .Where(r => r.PaymentId == payment.PaymentId)
                     .ToListAsync();
 
-                foreach (var receipt in receipts)
+                foreach (var r in receipts)
                 {
-                    receipt.IssueDate = payment.PaymentDate;
+                    r.IssueDate = payment.PaymentDate;
                 }
 
                 await db.SaveChangesAsync();
