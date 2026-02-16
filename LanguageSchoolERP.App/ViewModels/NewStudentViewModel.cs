@@ -114,28 +114,28 @@ public partial class NewStudentViewModel : ObservableObject
         var fullName = JoinName(StudentName, StudentSurname);
         if (string.IsNullOrWhiteSpace(fullName))
         {
-            ErrorMessage = "Student name is required.";
+            ErrorMessage = "Το όνομα μαθητή είναι υποχρεωτικό.";
             return;
         }
 
         if (!TryParseMoney(AgreementTotalText, out var agreementTotal) || agreementTotal < 0)
         {
-            ErrorMessage = "Agreement total must be a valid number (>= 0).";
+            ErrorMessage = "Το σύνολο συμφωνίας πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
         if (!TryParseMoney(BooksAmountText, out var books) || books < 0)
         {
-            ErrorMessage = "Books amount must be a valid number (>= 0).";
+            ErrorMessage = "Το ποσό βιβλίων πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
         if (!TryParseMoney(DownPaymentText, out var down) || down < 0)
         {
-            ErrorMessage = "Downpayment must be a valid number (>= 0).";
+            ErrorMessage = "Η προκαταβολή πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
         if (!int.TryParse(installmentCountText.Trim(), out var installmentCount) || installmentCount < 0 || installmentCount > 12)
         {
-            ErrorMessage = "Installments count must be a number between 0 and 12.";
+            ErrorMessage = "Ο αριθμός δόσεων πρέπει να είναι μεταξύ 0 και 12.";
             return;
         }
 
@@ -144,7 +144,7 @@ public partial class NewStudentViewModel : ObservableObject
         {
             if (!TryParseMoney(StudyLabMonthlyPriceText, out var parsedStudyLabPrice) || parsedStudyLabPrice < 0)
             {
-                ErrorMessage = "Study Lab monthly price must be a valid number (>= 0).";
+                ErrorMessage = "Η μηνιαία τιμή αίθουσας μελέτης πρέπει να είναι έγκυρος αριθμός (>= 0).";
                 return;
             }
 
@@ -156,7 +156,7 @@ public partial class NewStudentViewModel : ObservableObject
         {
             if (!TryParseMoney(TransportationMonthlyPriceText, out var parsedTransportationPrice) || parsedTransportationPrice < 0)
             {
-                ErrorMessage = "Transportation monthly price must be a valid number (>= 0).";
+                ErrorMessage = "Η μηνιαία τιμή μεταφοράς πρέπει να είναι έγκυρος αριθμός (>= 0).";
                 return;
             }
 
@@ -168,7 +168,7 @@ public partial class NewStudentViewModel : ObservableObject
         {
             if (installmentStartMonth is null)
             {
-                ErrorMessage = "Please select the installment start month.";
+                ErrorMessage = "Παρακαλώ επιλέξτε μήνα έναρξης δόσεων.";
                 return;
             }
 
@@ -187,7 +187,7 @@ public partial class NewStudentViewModel : ObservableObject
 
             if (period is null)
             {
-                ErrorMessage = $"Academic year '{_state.SelectedAcademicYear}' not found.";
+                ErrorMessage = $"Το ακαδημαϊκό έτος '{_state.SelectedAcademicYear}' δεν βρέθηκε.";
                 return;
             }
 
@@ -213,7 +213,7 @@ public partial class NewStudentViewModel : ObservableObject
                 BooksAmount = books,
                 DownPayment = down,
                 Comments = EnrollmentComments.Trim(),
-                Status = "Active",
+                Status = "Ενεργός",
                 InstallmentCount = installmentCount,
                 InstallmentStartMonth = startMonth,
                 IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab,

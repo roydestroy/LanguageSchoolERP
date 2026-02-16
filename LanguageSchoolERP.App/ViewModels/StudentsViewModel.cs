@@ -17,15 +17,15 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class StudentsViewModel : ObservableObject
 {
-    private const string AllStudentsFilter = "All students";
-    private const string ActiveStudentsFilter = "Active only";
-    private const string InactiveStudentsFilter = "Inactive only";
-    private const string ContractPendingFilter = "Contract pending";
-    private const string OverdueFilter = "Overdue";
+    private const string AllStudentsFilter = "Όλοι οι μαθητές";
+    private const string ActiveStudentsFilter = "Μόνο ενεργοί";
+    private const string InactiveStudentsFilter = "Μόνο ανενεργοί";
+    private const string ContractPendingFilter = "Εκκρεμεί σύμβαση";
+    private const string OverdueFilter = "Ληξιπρόθεσμα";
 
-    private const string SortByName = "Name (A-Z)";
-    private const string SortByBalance = "Balance (highest first)";
-    private const string SortByOverdueAmount = "Overdue amount (highest first)";
+    private const string SortByName = "Όνομα (Α-Ω)";
+    private const string SortByBalance = "Υπόλοιπο (φθίνουσα)";
+    private const string SortByOverdueAmount = "Ληξιπρόθεσμο ποσό (φθίνουσα)";
 
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
@@ -219,7 +219,7 @@ public partial class StudentsViewModel : ObservableObject
                     StudentId = s.StudentId,
                     FullName = s.FullName,
                     ContactLine = $"{s.Phone}  |  {s.Email}".Trim(' ', '|'),
-                    YearLabel = $"Year: {year}",
+                    YearLabel = $"Έτος: {year}",
                     Balance = balance,
                     OverdueAmount = overdueAmount,
                     ProgressPercent = totalProgress,
@@ -243,10 +243,10 @@ public partial class StudentsViewModel : ObservableObject
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
                         Title = en.ProgramType.ToDisplayName(),
-                        Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Level/Class: {en.LevelOrClass}",
-                        AgreementText = $"Agreement: {en.AgreementTotal:0.00} €",
-                        PaidText = $"Paid: {enPaid:0.00} €",
-                        BalanceText = $"Balance: {enBalance:0.00} €",
+                        Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
+                        AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
+                        PaidText = $"Πληρωμένα: {enPaid:0.00} €",
+                        BalanceText = $"Υπόλοιπο: {enBalance:0.00} €",
                         ProgressPercent = enrollmentProgress,
                         ProgressText = $"{enrollmentProgress:0}%"
                     });
@@ -269,7 +269,7 @@ public partial class StudentsViewModel : ObservableObject
         {
             var msg = ex.InnerException?.Message ?? ex.Message;
             System.Diagnostics.Debug.WriteLine(ex.ToString());
-            System.Windows.MessageBox.Show(msg, "Load students failed");
+            System.Windows.MessageBox.Show(msg, "Αποτυχία φόρτωσης μαθητών");
         }
 
     }

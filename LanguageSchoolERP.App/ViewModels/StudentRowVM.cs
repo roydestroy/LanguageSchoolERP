@@ -14,7 +14,7 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private string yearLabel = "";
 
     [ObservableProperty] private bool isActive;
-    public string ActiveStatusText => IsActive ? "Active" : "Inactive";
+    public string ActiveStatusText => IsActive ? "Ενεργός" : "Ανενεργός";
 
     [ObservableProperty] private decimal balance;
     public string BalanceText => $"{Balance:0.00} €";
@@ -25,14 +25,14 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private double progressPercent;
 
     [ObservableProperty] private bool isOverdue;
-    public string OverdueBadgeText => "OVERDUE";
+    public string OverdueBadgeText => "ΛΗΞΙΠΡΟΘΕΣΜΟ";
     public Brush OverdueBadgeBackground => new SolidColorBrush(Color.FromRgb(253, 237, 237));
     public Brush OverdueBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
     public Brush OverdueBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
     public Visibility OverdueBadgeVisibility => IsOverdue ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool hasPendingContract;
-    public string PendingContractBadgeText => "CONTRACT";
+    public string PendingContractBadgeText => "ΣΥΜΒΑΣΗ";
     public Brush PendingContractBadgeBackground => new SolidColorBrush(Color.FromRgb(255, 246, 229));
     public Brush PendingContractBadgeForeground => new SolidColorBrush(Color.FromRgb(166, 102, 0));
     public Brush PendingContractBadgeBorder => new SolidColorBrush(Color.FromRgb(255, 223, 163));

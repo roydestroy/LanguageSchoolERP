@@ -63,7 +63,7 @@ public partial class AddContractViewModel : ObservableObject
 
         if (period is null)
         {
-            ErrorMessage = $"Academic year '{init.AcademicYear}' not found.";
+            ErrorMessage = $"Το ακαδημαϊκό έτος '{init.AcademicYear}' δεν βρέθηκε.";
             return;
         }
 
@@ -73,7 +73,7 @@ public partial class AddContractViewModel : ObservableObject
 
         if (student is null)
         {
-            ErrorMessage = "Student not found.";
+            ErrorMessage = "Ο μαθητής δεν βρέθηκε.";
             return;
         }
 
@@ -91,7 +91,7 @@ public partial class AddContractViewModel : ObservableObject
 
         if (_defaultTemplate is null)
         {
-            ErrorMessage = $"No active contract template found for branch '{init.BranchKey}'.";
+            ErrorMessage = $"Δεν βρέθηκε ενεργό πρότυπο σύμβασης για τον κλάδο '{init.BranchKey}'.";
             return;
         }
 
@@ -120,19 +120,19 @@ public partial class AddContractViewModel : ObservableObject
 
         if (_init is null)
         {
-            ErrorMessage = "Dialog not initialized.";
+            ErrorMessage = "Ο διάλογος δεν αρχικοποιήθηκε.";
             return;
         }
 
         if (SelectedEnrollment is null)
         {
-            ErrorMessage = "Please select an enrollment.";
+            ErrorMessage = "Παρακαλώ επιλέξτε εγγραφή.";
             return;
         }
 
         if (_defaultTemplate is null)
         {
-            ErrorMessage = "No active contract template is configured for this branch.";
+            ErrorMessage = "Δεν έχει οριστεί ενεργό πρότυπο σύμβασης για αυτόν τον κλάδο.";
             return;
         }
 
@@ -209,7 +209,7 @@ public partial class AddContractViewModel : ObservableObject
         }
         catch (DbUpdateException ex)
         {
-            var inner = ex.InnerException?.Message ?? "(no inner exception)";
+            var inner = ex.InnerException?.Message ?? "(χωρίς εσωτερική εξαίρεση)";
             ErrorMessage = $"DbUpdateException: {ex.Message}\nInner: {inner}";
         }
         catch (Exception ex)

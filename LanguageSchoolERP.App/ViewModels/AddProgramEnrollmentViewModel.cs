@@ -65,8 +65,8 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
 
     [ObservableProperty] private string errorMessage = "";
-    [ObservableProperty] private string dialogTitle = "Add Program Enrollment";
-    [ObservableProperty] private string saveButtonText = "Add Program";
+    [ObservableProperty] private string dialogTitle = "Προσθήκη εγγραφής προγράμματος";
+    [ObservableProperty] private string saveButtonText = "Προσθήκη προγράμματος";
 
     public IAsyncRelayCommand SaveCommand { get; }
 
@@ -117,8 +117,8 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
         if (_editingEnrollmentId.HasValue)
         {
-            DialogTitle = "Edit Program Enrollment";
-            SaveButtonText = "Save Changes";
+            DialogTitle = "Επεξεργασία εγγραφής προγράμματος";
+            SaveButtonText = "Αποθήκευση αλλαγών";
 
             try
             {
@@ -131,7 +131,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
                 if (enrollment is null)
                 {
-                    ErrorMessage = "Enrollment not found.";
+                    ErrorMessage = "Η εγγραφή δεν βρέθηκε.";
                     return;
                 }
 
@@ -155,8 +155,8 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         }
         else
         {
-            DialogTitle = "Add Program Enrollment";
-            SaveButtonText = "Add Program";
+            DialogTitle = "Προσθήκη εγγραφής προγράμματος";
+            SaveButtonText = "Προσθήκη προγράμματος";
         }
     }
 
@@ -166,22 +166,22 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
         if (!TryParseMoney(AgreementTotalText, out var agreementTotal) || agreementTotal < 0)
         {
-            ErrorMessage = "Agreement total must be a valid number (>= 0).";
+            ErrorMessage = "Το σύνολο συμφωνίας πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
         if (!TryParseMoney(BooksAmountText, out var books) || books < 0)
         {
-            ErrorMessage = "Books amount must be a valid number (>= 0).";
+            ErrorMessage = "Το ποσό βιβλίων πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
         if (!TryParseMoney(DownPaymentText, out var down) || down < 0)
         {
-            ErrorMessage = "Downpayment must be a valid number (>= 0).";
+            ErrorMessage = "Η προκαταβολή πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
         if (!int.TryParse(InstallmentCountText.Trim(), out var installmentCount) || installmentCount < 0 || installmentCount > 12)
         {
-            ErrorMessage = "Installments count must be a number between 0 and 12.";
+            ErrorMessage = "Ο αριθμός δόσεων πρέπει να είναι μεταξύ 0 και 12.";
             return;
         }
 
@@ -190,7 +190,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         {
             if (!TryParseMoney(StudyLabMonthlyPriceText, out var parsedStudyLabPrice) || parsedStudyLabPrice < 0)
             {
-                ErrorMessage = "Study Lab monthly price must be a valid number (>= 0).";
+                ErrorMessage = "Η μηνιαία τιμή αίθουσας μελέτης πρέπει να είναι έγκυρος αριθμός (>= 0).";
                 return;
             }
 
@@ -202,7 +202,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         {
             if (!TryParseMoney(TransportationMonthlyPriceText, out var parsedTransportationPrice) || parsedTransportationPrice < 0)
             {
-                ErrorMessage = "Transportation monthly price must be a valid number (>= 0).";
+                ErrorMessage = "Η μηνιαία τιμή μεταφοράς πρέπει να είναι έγκυρος αριθμός (>= 0).";
                 return;
             }
 
@@ -214,7 +214,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         {
             if (InstallmentStartMonth is null)
             {
-                ErrorMessage = "Please select the installment start month.";
+                ErrorMessage = "Παρακαλώ επιλέξτε μήνα έναρξης δόσεων.";
                 return;
             }
 
@@ -232,14 +232,14 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
             if (period is null)
             {
-                ErrorMessage = $"Academic year '{_academicYear}' not found.";
+                ErrorMessage = $"Το ακαδημαϊκό έτος '{_academicYear}' δεν βρέθηκε.";
                 return;
             }
 
             var studentExists = await db.Students.AnyAsync(s => s.StudentId == _studentId);
             if (!studentExists)
             {
-                ErrorMessage = "Student not found.";
+                ErrorMessage = "Ο μαθητής δεν βρέθηκε.";
                 return;
             }
 
@@ -250,7 +250,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
                 if (enrollment is null)
                 {
-                    ErrorMessage = "Enrollment not found.";
+                    ErrorMessage = "Η εγγραφή δεν βρέθηκε.";
                     return;
                 }
 
@@ -279,7 +279,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                     BooksAmount = books,
                     DownPayment = down,
                     Comments = EnrollmentComments.Trim(),
-                    Status = "Active",
+                    Status = "Ενεργός",
                     InstallmentCount = installmentCount,
                     InstallmentStartMonth = startMonth,
                     IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab,
