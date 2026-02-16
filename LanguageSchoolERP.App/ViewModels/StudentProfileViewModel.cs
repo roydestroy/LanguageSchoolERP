@@ -477,22 +477,28 @@ public partial class StudentProfileViewModel : ObservableObject
             using var db = _dbFactory.Create();
             DbSeeder.EnsureSeeded(db);
 
-            var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
-            if (contract is null)
+            var contractExists = await db.Contracts.AnyAsync(c => c.ContractId == SelectedContract.ContractId);
+            if (!contractExists)
             {
                 System.Windows.MessageBox.Show("Το συμφωνητικό δεν βρέθηκε στη βάση δεδομένων.");
                 return;
             }
 
             var pdfPath = ContractPathService.GetContractPdfPathFromDocxPath(SelectedContract.DocxPath);
-            _contractDocumentService.ExportPdfWithPageDuplication(SelectedContract.DocxPath, pdfPath);
+            var generatedPdfPath = _contractDocumentService.ExportPdfWithPageDuplication(SelectedContract.DocxPath, pdfPath);
 
-            contract.PdfPath = pdfPath;
-            await db.SaveChangesAsync();
+            await db.Contracts
+                .Where(c => c.ContractId == SelectedContract.ContractId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(c => c.PdfPath, generatedPdfPath));
+
+            // Refresh selected row immediately (LoadAsync also rehydrates the list from DB).
+            SelectedContract.PdfPath = generatedPdfPath;
+            SelectedContract.IsPendingPrint = false;
 
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = pdfPath,
+                FileName = generatedPdfPath,
                 UseShellExecute = true
             });
 
