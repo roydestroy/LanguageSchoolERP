@@ -50,10 +50,10 @@ public sealed class ContractBookmarkBuilder
     {
         var baseTitle = enrollment.ProgramType switch
         {
-            ProgramType.LanguageSchool => $"{enrollment.ProgramType} {enrollment.LevelOrClass}".Trim(),
+            ProgramType.LanguageSchool => $"{enrollment.ProgramType.ToDisplayName()} {enrollment.LevelOrClass}".Trim(),
             _ => string.IsNullOrWhiteSpace(enrollment.LevelOrClass)
-                ? enrollment.ProgramType.ToString()
-                : $"{enrollment.ProgramType} {enrollment.LevelOrClass}".Trim()
+                ? enrollment.ProgramType.ToDisplayName()
+                : $"{enrollment.ProgramType.ToDisplayName()} {enrollment.LevelOrClass}".Trim()
         };
 
         if (enrollment.IncludesTransportation)

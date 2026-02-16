@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -22,8 +23,28 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     public event EventHandler<bool>? RequestClose;
 
-    public IReadOnlyList<ProgramType> ProgramTypes { get; } =
-        new[] { ProgramType.LanguageSchool, ProgramType.StudyLab, ProgramType.EuroLab };
+    public IReadOnlyList<ProgramOptionVm> ProgramTypes { get; } =
+        new[]
+        {
+            new ProgramOptionVm(ProgramType.LanguageSchool, ProgramType.LanguageSchool.ToDisplayName()),
+            new ProgramOptionVm(ProgramType.StudyLab, ProgramType.StudyLab.ToDisplayName()),
+            new ProgramOptionVm(ProgramType.EuroLab, ProgramType.EuroLab.ToDisplayName())
+        };
+
+    public ProgramOptionVm? SelectedProgramOption
+    {
+        get => ProgramTypes.FirstOrDefault(x => x.Value == SelectedProgramType);
+        set
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            SelectedProgramType = value.Value;
+            OnPropertyChanged();
+        }
+    }
 
     [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
     [ObservableProperty] private string levelOrClass = "";
@@ -51,6 +72,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     partial void OnSelectedProgramTypeChanged(ProgramType value)
     {
+        OnPropertyChanged(nameof(SelectedProgramOption));
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
 
@@ -292,3 +314,4 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         return false;
     }
 }
+

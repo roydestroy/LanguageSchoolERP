@@ -124,8 +124,8 @@ public partial class AddPaymentViewModel : ObservableObject
         foreach (var e in enrollments)
         {
             var label = string.IsNullOrWhiteSpace(e.LevelOrClass)
-                ? $"{e.ProgramType}"
-                : $"{e.ProgramType} ({e.LevelOrClass})";
+                ? $"{e.ProgramType.ToDisplayName()}"
+                : $"{e.ProgramType.ToDisplayName()} ({e.LevelOrClass})";
 
             var suggested = InstallmentPlanHelper.GetNextInstallmentAmount(e);
             _suggestedAmountsByEnrollment[e.EnrollmentId] = suggested;
@@ -234,7 +234,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 StudentEmail: student.Email ?? "",
                 Amount: payment.Amount,
                 PaymentMethod: payment.Method.ToString(),
-                ProgramLabel: enrollment.ProgramType.ToString(),
+                ProgramLabel: enrollment.ProgramType.ToDisplayName(),
                 AcademicYear: academicYear,
                 Notes: payment.Notes ?? ""
             );

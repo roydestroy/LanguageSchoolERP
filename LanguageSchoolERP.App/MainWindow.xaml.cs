@@ -42,11 +42,25 @@ public partial class MainWindow : Window
         NavigateToStudents();
 
         StudentsBtn.Click += (_, __) => NavigateToStudents();
+        ProgramsBtn.Click += (_, __) => NavigateToPrograms();
+        AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
     }
 
     private void NavigateToStudents()
     {
         var view = App.Services.GetRequiredService<StudentsView>();
+        MainContent.Content = view;
+    }
+
+    private void NavigateToPrograms()
+    {
+        var view = App.Services.GetRequiredService<ProgramsView>();
+        MainContent.Content = view;
+    }
+
+    private void NavigateToAcademicYears()
+    {
+        var view = App.Services.GetRequiredService<AcademicYearsView>();
         MainContent.Content = view;
     }
 }

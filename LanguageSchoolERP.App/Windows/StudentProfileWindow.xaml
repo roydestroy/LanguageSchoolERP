@@ -330,12 +330,10 @@
                                 <Button Content="Delete" Width="120" Command="{Binding DeleteContractCommand}">
                                     <Button.Style>
                                         <Style TargetType="Button">
-                                            <Setter Property="Foreground" Value="White"/>
-                                            <Setter Property="Background" Value="#C0392B"/>
                                             <Style.Triggers>
-                                                <Trigger Property="IsEnabled" Value="False">
-                                                    <Setter Property="Foreground" Value="#444444"/>
-                                                    <Setter Property="Background" Value="#DDDDDD"/>
+                                                <Trigger Property="IsEnabled" Value="True">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Background" Value="#C0392B"/>
                                                 </Trigger>
                                             </Style.Triggers>
                                         </Style>
