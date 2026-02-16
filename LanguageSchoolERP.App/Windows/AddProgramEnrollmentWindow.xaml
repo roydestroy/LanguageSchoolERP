@@ -17,55 +17,55 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock Text="Program Enrollment" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBlock Text="Εγγραφή προγράμματος" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
 
-                <TextBlock Text="Program"/>
+                <TextBlock Text="Πρόγραμμα"/>
                 <ComboBox Margin="0,4,0,10"
                           ItemsSource="{Binding ProgramTypes}"
-                          DisplayMemberPath="Name"
+                          DisplayMemberPath="Όνομα"
                           SelectedItem="{Binding SelectedProgramOption}"/>
 
-                <TextBlock Text="Level / Class"/>
+                <TextBlock Text="Επίπεδο / Τάξη"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding LevelOrClass}"/>
 
-                <TextBlock Text="Agreement total (€)"/>
+                <TextBlock Text="Σύνολο συμφωνίας (€)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding AgreementTotalText}"/>
 
-                <TextBlock Text="Books (€)"/>
+                <TextBlock Text="Βιβλία (€)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding BooksAmountText}"/>
 
-                <TextBlock Text="Downpayment (€)"/>
+                <TextBlock Text="Προκαταβολή (€)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding DownPaymentText}"/>
 
                 <CheckBox Margin="0,0,0,10"
-                          Content="Add Study Lab"
+                          Content="Προσθήκη αίθουσας μελέτης"
                           IsChecked="{Binding IncludesStudyLab}"
                           Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <StackPanel Margin="0,0,0,10"
                             Visibility="{Binding IncludesStudyLab, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Study Lab monthly price (€)"/>
+                    <TextBlock Text="Μηνιαία τιμή αίθουσας μελέτης (€)"/>
                     <TextBox Margin="0,4,0,0" Text="{Binding StudyLabMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
                 <CheckBox Margin="0,0,0,10"
-                          Content="Add Transportation"
+                          Content="Προσθήκη μεταφοράς"
                           IsChecked="{Binding IncludesTransportation}"
                           Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <StackPanel Margin="0,0,0,10"
                             Visibility="{Binding IncludesTransportation, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Transportation monthly price (€)"/>
+                    <TextBlock Text="Μηνιαία τιμή μεταφοράς (€)"/>
                     <TextBox Margin="0,4,0,0" Text="{Binding TransportationMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <TextBlock Text="Installments count (0-12)"/>
+                <TextBlock Text="Αριθμός δόσεων (0-12)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding InstallmentCountText}"/>
 
-                <TextBlock Text="Installments start month"/>
+                <TextBlock Text="Μήνας έναρξης δόσεων"/>
                 <DatePicker Margin="0,4,0,12" SelectedDate="{Binding InstallmentStartMonth}"/>
 
-                <TextBlock Text="Enrollment comments"/>
+                <TextBlock Text="Σχόλια εγγραφής"/>
                 <TextBox Margin="0,4,0,0" Text="{Binding EnrollmentComments}" AcceptsReturn="True" Height="90" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
             </StackPanel>
         </ScrollViewer>
@@ -74,8 +74,8 @@
             <TextBlock Text="{Binding ErrorMessage}" Foreground="IndianRed" VerticalAlignment="Center"/>
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button Content="Cancel" Width="100" Margin="0,0,8,0" IsCancel="True"/>
-                <Button Content="Save" Width="120" Command="{Binding SaveCommand}"/>
+                <Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
+                <Button Content="Αποθήκευση" Width="120" Command="{Binding SaveCommand}"/>
             </StackPanel>
         </DockPanel>
     </Grid>

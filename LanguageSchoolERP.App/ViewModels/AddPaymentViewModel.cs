@@ -31,7 +31,7 @@ public partial class AddPaymentViewModel : ObservableObject
     public List<EnrollmentOption> EnrollmentOptions { get; } = new();
 
     [ObservableProperty] private EnrollmentOption? selectedEnrollmentOption;
-    [ObservableProperty] private string dialogTitle = "Add Payment";
+    [ObservableProperty] private string dialogTitle = "Προσθήκη πληρωμής";
 
     public IReadOnlyList<PaymentMethod> PaymentMethods { get; } =
         new[] { PaymentMethod.Cash, PaymentMethod.Card, PaymentMethod.BankTransfer, PaymentMethod.IRIS, PaymentMethod.Other };
@@ -93,7 +93,7 @@ public partial class AddPaymentViewModel : ObservableObject
     {
         _init = init;
         _isEditMode = init.PaymentId.HasValue;
-        DialogTitle = _isEditMode ? "Edit Payment" : "Add Payment";
+        DialogTitle = _isEditMode ? "Επεξεργασία πληρωμής" : "Προσθήκη πληρωμής";
 
         ErrorMessage = "";
         Notes = "";
@@ -114,7 +114,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
         if (period is null)
         {
-            ErrorMessage = $"Academic year '{init.AcademicYear}' not found.";
+            ErrorMessage = $"Το ακαδημαϊκό έτος '{init.AcademicYear}' δεν βρέθηκε.";
             return;
         }
 
@@ -135,7 +135,7 @@ public partial class AddPaymentViewModel : ObservableObject
             _suggestedAmountsByEnrollment[e.EnrollmentId] = suggested;
 
             var optionLabel = suggested > 0
-                ? $"{label} - next: {suggested:0} €"
+                ? $"{label} - επόμενη: {suggested:0} €"
                 : label;
 
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, optionLabel, suggested));
@@ -149,7 +149,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
             if (payment is null)
             {
-                ErrorMessage = "Payment not found.";
+                ErrorMessage = "Η πληρωμή δεν βρέθηκε.";
                 return;
             }
 
@@ -186,25 +186,25 @@ public partial class AddPaymentViewModel : ObservableObject
 
         if (_init is null)
         {
-            ErrorMessage = "Dialog not initialized.";
+            ErrorMessage = "Ο διάλογος δεν αρχικοποιήθηκε.";
             return;
         }
 
         if (SelectedEnrollmentOption is null)
         {
-            ErrorMessage = "Please select an enrollment.";
+            ErrorMessage = "Παρακαλώ επιλέξτε εγγραφή.";
             return;
         }
 
         if (!TryParseMoney(AmountText, out var amount) || amount <= 0)
         {
-            ErrorMessage = "Amount must be a valid number (> 0).";
+            ErrorMessage = "Το ποσό πρέπει να είναι έγκυρος αριθμός (> 0).";
             return;
         }
 
         if (PaymentDate is null)
         {
-            ErrorMessage = "Please select a payment date.";
+            ErrorMessage = "Παρακαλώ επιλέξτε ημερομηνία πληρωμής.";
             return;
         }
 
@@ -220,7 +220,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
                 if (payment is null)
                 {
-                    ErrorMessage = "Payment not found.";
+                    ErrorMessage = "Η πληρωμή δεν βρέθηκε.";
                     return;
                 }
 

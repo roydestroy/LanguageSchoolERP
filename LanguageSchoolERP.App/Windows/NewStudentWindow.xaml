@@ -1,7 +1,7 @@
 <Window x:Class="LanguageSchoolERP.App.Windows.NewStudentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="New Student" Height="800" Width="1120"
+        Title="Νέος μαθητής" Height="800" Width="1120"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
 
@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Create Student"
+        <TextBlock Text="Δημιουργία μαθητή"
                    FontSize="20"
                    FontWeight="SemiBold"
                    Margin="0,0,0,10"/>
@@ -33,24 +33,24 @@
             <!-- Student -->
             <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
                 <StackPanel>
-                    <TextBlock Text="Student Details" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Στοιχεία μαθητή" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Student name"/>
+                    <TextBlock Text="Όνομα μαθητή"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding StudentName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Student surname"/>
+                    <TextBlock Text="Επώνυμο μαθητή"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding StudentSurname, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Date of birth (optional)"/>
+                    <TextBlock Text="Ημερομηνία γέννησης (προαιρετικό)"/>
                     <DatePicker Margin="0,2,0,6" SelectedDate="{Binding DateOfBirth}"/>
 
-                    <TextBlock Text="Phone"/>
+                    <TextBlock Text="Τηλέφωνο"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding Phone}"/>
 
-                    <TextBlock Text="Email"/>
+                    <TextBlock Text="Ηλ. ταχυδρομείο"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding Email}"/>
 
-                    <TextBlock Text="Notes"/>
+                    <TextBlock Text="Σημειώσεις"/>
                     <TextBox Margin="0,2,0,0" Text="{Binding Notes}" AcceptsReturn="True" Height="78" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
@@ -58,30 +58,30 @@
             <!-- Parents -->
             <Border Grid.Column="2" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
                 <StackPanel>
-                    <TextBlock Text="Parent Details" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Στοιχεία γονέων" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Father name"/>
+                    <TextBlock Text="Όνομα πατέρα"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding FatherName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Father surname"/>
+                    <TextBlock Text="Επώνυμο πατέρα"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding FatherSurname, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Father phone"/>
+                    <TextBlock Text="Τηλέφωνο πατέρα"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding FatherPhone, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Father email"/>
+                    <TextBlock Text="Ηλ. ταχυδρομείο πατέρα"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding FatherEmail, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Mother name"/>
+                    <TextBlock Text="Όνομα μητέρας"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding MotherName, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Mother surname"/>
+                    <TextBlock Text="Επώνυμο μητέρας"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding MotherSurname, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Mother phone"/>
+                    <TextBlock Text="Τηλέφωνο μητέρας"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding MotherPhone, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Mother email"/>
+                    <TextBlock Text="Ηλ. ταχυδρομείο μητέρας"/>
                     <TextBox Margin="0,2,0,0" Text="{Binding MotherEmail, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
             </Border>
@@ -89,55 +89,55 @@
             <!-- Enrollment -->
             <Border Grid.Column="4" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
                 <StackPanel>
-                    <TextBlock Text="Enrollment" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Εγγραφή" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                    <TextBlock Text="Program"/>
+                    <TextBlock Text="Πρόγραμμα"/>
                     <ComboBox Margin="0,2,0,6"
                               ItemsSource="{Binding ProgramTypes}"
-                              DisplayMemberPath="Name"
+                              DisplayMemberPath="Όνομα"
                               SelectedItem="{Binding SelectedProgramOption}"/>
 
-                    <TextBlock Text="Level / Class"/>
+                    <TextBlock Text="Επίπεδο / Τάξη"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding LevelOrClass}"/>
 
-                    <TextBlock Text="Agreement total (€)"/>
+                    <TextBlock Text="Σύνολο συμφωνίας (€)"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding AgreementTotalText}"/>
 
-                    <TextBlock Text="Books (€)"/>
+                    <TextBlock Text="Βιβλία (€)"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding BooksAmountText}"/>
 
-                    <TextBlock Text="Downpayment (€)"/>
+                    <TextBlock Text="Προκαταβολή (€)"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding DownPaymentText}"/>
 
-                    <TextBlock Text="Installments count"/>
+                    <TextBlock Text="Αριθμός δόσεων"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding InstallmentCountText}"/>
 
-                    <TextBlock Text="Installments start month"/>
+                    <TextBlock Text="Μήνας έναρξης δόσεων"/>
                     <DatePicker Margin="0,2,0,6" SelectedDate="{Binding InstallmentStartMonth}"/>
 
                     <CheckBox Margin="0,0,0,6"
-                              Content="Add Study Lab"
+                              Content="Προσθήκη αίθουσας μελέτης"
                               IsChecked="{Binding IncludesStudyLab}"
                               Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                     <StackPanel Margin="0,0,0,6"
                                 Visibility="{Binding IncludesStudyLab, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Study Lab monthly price (€)"/>
+                        <TextBlock Text="Μηνιαία τιμή αίθουσας μελέτης (€)"/>
                         <TextBox Margin="0,2,0,0" Text="{Binding StudyLabMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
 
                     <CheckBox Margin="0,0,0,6"
-                              Content="Add Transportation"
+                              Content="Προσθήκη μεταφοράς"
                               IsChecked="{Binding IncludesTransportation}"
                               Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                     <StackPanel Margin="0,0,0,6"
                                 Visibility="{Binding IncludesTransportation, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <TextBlock Text="Transportation monthly price (€)"/>
+                        <TextBlock Text="Μηνιαία τιμή μεταφοράς (€)"/>
                         <TextBox Margin="0,2,0,0" Text="{Binding TransportationMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
 
-                    <TextBlock Text="Enrollment comments"/>
+                    <TextBlock Text="Σχόλια εγγραφής"/>
                     <TextBox Margin="0,2,0,0" Text="{Binding EnrollmentComments}" AcceptsReturn="True" Height="60" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
@@ -147,8 +147,8 @@
             <TextBlock Text="{Binding ErrorMessage}" Foreground="IndianRed" VerticalAlignment="Center"/>
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button Content="Cancel" Width="100" Margin="0,0,8,0" IsCancel="True"/>
-                <Button Content="Create" Width="120" Command="{Binding CreateCommand}"/>
+                <Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
+                <Button Content="Δημιουργία" Width="120" Command="{Binding CreateCommand}"/>
             </StackPanel>
         </DockPanel>
     </Grid>
