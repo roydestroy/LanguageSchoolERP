@@ -93,7 +93,7 @@ public partial class AddPaymentViewModel : ObservableObject
     {
         _init = init;
         _isEditMode = init.PaymentId.HasValue;
-        DialogTitle = _isEditMode ? "Επεξεργασία πληρωμής" : "Προσθήκη πληρωμής";
+        DialogTitle = _isEditMode ? "Επεξεργασία" : "Προσθήκη";
 
         ErrorMessage = "";
         Notes = "";

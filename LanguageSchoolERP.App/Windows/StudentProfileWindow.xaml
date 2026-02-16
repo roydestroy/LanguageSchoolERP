@@ -271,12 +271,12 @@
                         <DockPanel Grid.Row="0" Margin="0,0,0,12">
                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                 <Button Content="Επεξεργασία"
-                                        Width="90"
+                                        Width="95"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource EditButtonStyle}"
                                         Command="{Binding EditProfileCommand}"/>
                                 <Button Content="Αποθήκευση"
-                                        Width="90"
+                                        Width="95"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource EditModeButtonStyle}"
                                         Command="{Binding SaveProfileCommand}"/>
@@ -284,7 +284,7 @@
                                         Width="90"
                                         Style="{StaticResource EditModeButtonStyle}"
                                         Command="{Binding CancelEditCommand}"/>
-                                <Button Content="Διαγραφή μαθητή"
+                                <Button Content="Διαγραφή"
                                         Width="120"
                                         Margin="10,0,0,0"
                                         Style="{StaticResource DangerActionButtonStyle}"
@@ -364,7 +364,7 @@
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" Text="Εγγραφές προγραμμάτων" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="Προσθήκη προγράμματος" Width="120" Margin="0,0,8,0" Command="{Binding AddProgramCommand}"/>
+                            <Button Content="Προσθήκη" Width="120" Margin="0,0,8,0" Command="{Binding AddProgramCommand}"/>
                             <Button Content="Επεξεργασία" Width="110" Margin="0,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSecondarySelectionActionButtonStyle}"/>
                             <Button Content="Αφαίρεση"
                                     Width="110"
@@ -408,7 +408,7 @@
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" Text="Πληρωμές" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="Προσθήκη πληρωμής" Width="120" Margin="0,0,8,0" Command="{Binding AddPaymentCommand}"/>
+                            <Button Content="Προσθήκη" Width="120" Margin="0,0,8,0" Command="{Binding AddPaymentCommand}"/>
                             <Button Content="Επεξεργασία" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
                             <Button Content="Διαγραφή" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
                         </StackPanel>
@@ -444,8 +444,8 @@
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" Text="Αποδείξεις" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <Button DockPanel.Dock="Right"
-                                Content="Εκτύπωση απόδειξης"
-                                Width="140"
+                                Content="Εκτύπωση"
+                                Width="120"
                                 Command="{Binding PrintReceiptCommand}"/>
                     </DockPanel>
 
@@ -478,7 +478,7 @@
                         <DockPanel LastChildFill="False">
                             <TextBlock DockPanel.Dock="Left" Text="Συμφωνητικά" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <Button Content="Δημιουργία" Width="140" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
+                                <Button Content="Δημιουργία" Width="120" Margin="0,0,8,0" Command="{Binding CreateContractCommand}"/>
                                 <Button Content="Επεξεργασία" Width="120" Margin="0,0,8,0" Command="{Binding EditContractCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
                                 <Button Content="Εκτύπωση" Width="120" Margin="0,0,8,0" Command="{Binding ExportContractPdfCommand}" Style="{StaticResource ContractSecondarySelectionActionButtonStyle}"/>
                                 <Button Content="Διαγραφή"

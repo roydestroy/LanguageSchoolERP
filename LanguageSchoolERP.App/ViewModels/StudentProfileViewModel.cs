@@ -514,7 +514,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
         var confirm = System.Windows.MessageBox.Show(
             "Να διαγραφεί το επιλεγμένο συμφωνητικό; Θα αφαιρεθεί από τη λίστα και θα διαγραφούν τα παραγόμενα αρχεία, αν υπάρχουν.",
-            "Διαγραφή συμφωνητικού",
+            "Διαγραφή",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
