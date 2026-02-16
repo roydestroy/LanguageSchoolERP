@@ -17,7 +17,7 @@ public record EnrollmentOption(Guid EnrollmentId, string Label, decimal Suggeste
     public override string ToString() => Label;
 }
 
-public record AddPaymentInit(Guid StudentId, string AcademicYear);
+public record AddPaymentInit(Guid StudentId, string AcademicYear, Guid? PaymentId = null);
 
 public partial class AddPaymentViewModel : ObservableObject
 {
@@ -31,6 +31,7 @@ public partial class AddPaymentViewModel : ObservableObject
     public List<EnrollmentOption> EnrollmentOptions { get; } = new();
 
     [ObservableProperty] private EnrollmentOption? selectedEnrollmentOption;
+    [ObservableProperty] private string dialogTitle = "Add Payment";
 
     public IReadOnlyList<PaymentMethod> PaymentMethods { get; } =
         new[] { PaymentMethod.Cash, PaymentMethod.Card, PaymentMethod.BankTransfer, PaymentMethod.IRIS, PaymentMethod.Other };
@@ -72,6 +73,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
     private AddPaymentInit? _init;
     private readonly Dictionary<Guid, decimal> _suggestedAmountsByEnrollment = new();
+    private bool _isEditMode;
 
     public AddPaymentViewModel(
         DbContextFactory dbFactory,
@@ -90,6 +92,9 @@ public partial class AddPaymentViewModel : ObservableObject
     public async void Initialize(AddPaymentInit init)
     {
         _init = init;
+        _isEditMode = init.PaymentId.HasValue;
+        DialogTitle = _isEditMode ? "Edit Payment" : "Add Payment";
+
         ErrorMessage = "";
         Notes = "";
         AmountText = "";
@@ -112,7 +117,6 @@ public partial class AddPaymentViewModel : ObservableObject
             ErrorMessage = $"Academic year '{init.AcademicYear}' not found.";
             return;
         }
-
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
@@ -137,13 +141,38 @@ public partial class AddPaymentViewModel : ObservableObject
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, optionLabel, suggested));
         }
 
-        SelectedEnrollmentOption = EnrollmentOptions.FirstOrDefault();
-    }
+        if (_isEditMode)
+        {
+            var payment = await db.Payments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.PaymentId == init.PaymentId.Value);
 
+            if (payment is null)
+            {
+                ErrorMessage = "Payment not found.";
+                return;
+            }
+
+            SelectedEnrollmentOption = EnrollmentOptions.FirstOrDefault(o => o.EnrollmentId == payment.EnrollmentId)
+                                      ?? EnrollmentOptions.FirstOrDefault();
+            AmountText = payment.Amount.ToString("0.##", CultureInfo.InvariantCulture);
+            PaymentDate = payment.PaymentDate.Date;
+            SelectedPaymentMethod = payment.Method;
+            SelectedReason = ParseReason(payment.Notes);
+            Notes = ParseAdditionalNotes(payment.Notes);
+        }
+        else
+        {
+            SelectedEnrollmentOption = EnrollmentOptions.FirstOrDefault();
+        }
+    }
 
     partial void OnSelectedEnrollmentOptionChanged(EnrollmentOption? value)
     {
-        if (value is null) return;
+        if (_isEditMode || value is null)
+        {
+            return;
+        }
 
         if (_suggestedAmountsByEnrollment.TryGetValue(value.EnrollmentId, out var suggested) && suggested > 0)
         {
@@ -181,14 +210,44 @@ public partial class AddPaymentViewModel : ObservableObject
 
         try
         {
-            // 1) Get receipt number first (atomic per student per academic year)
-            var receiptNumber = await _receiptNumberService.GetNextReceiptNumberAsync(SelectedEnrollmentOption.EnrollmentId);
-
             using var db = _dbFactory.Create();
             DbSeeder.EnsureSeeded(db);
 
-            // 2) Create payment
-            var payment = new Payment
+            if (_isEditMode && _init.PaymentId.HasValue)
+            {
+                var payment = await db.Payments
+                    .FirstOrDefaultAsync(p => p.PaymentId == _init.PaymentId.Value);
+
+                if (payment is null)
+                {
+                    ErrorMessage = "Payment not found.";
+                    return;
+                }
+
+                payment.EnrollmentId = SelectedEnrollmentOption.EnrollmentId;
+                payment.PaymentDate = PaymentDate.Value.Date;
+                payment.Amount = amount;
+                payment.Method = SelectedPaymentMethod;
+                payment.Notes = BuildStoredNotes(SelectedReason, Notes);
+
+                var receipts = await db.Receipts
+                    .Where(r => r.PaymentId == payment.PaymentId)
+                    .ToListAsync();
+
+                foreach (var receipt in receipts)
+                {
+                    receipt.IssueDate = payment.PaymentDate;
+                }
+
+                await db.SaveChangesAsync();
+                RequestClose?.Invoke(this, true);
+                return;
+            }
+
+            // Create mode: generate payment + receipt
+            var receiptNumber = await _receiptNumberService.GetNextReceiptNumberAsync(SelectedEnrollmentOption.EnrollmentId);
+
+            var newPayment = new Payment
             {
                 EnrollmentId = SelectedEnrollmentOption.EnrollmentId,
                 PaymentDate = PaymentDate.Value.Date,
@@ -197,10 +256,9 @@ public partial class AddPaymentViewModel : ObservableObject
                 Notes = BuildStoredNotes(SelectedReason, Notes)
             };
 
-            db.Payments.Add(payment);
+            db.Payments.Add(newPayment);
             await db.SaveChangesAsync();
 
-            // 3) Load needed data for PDF path + print info
             var enrollment = await db.Enrollments
                 .AsNoTracking()
                 .Include(e => e.Student)
@@ -210,7 +268,6 @@ public partial class AddPaymentViewModel : ObservableObject
             var student = enrollment.Student;
             var academicYear = enrollment.AcademicPeriod.Name;
 
-            // 4) Build PDF path
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
             var receiptsRoot = Path.Combine(baseDir, "Receipts");
 
@@ -222,31 +279,28 @@ public partial class AddPaymentViewModel : ObservableObject
             );
 
             var pdfPath = ReceiptPathService.GetReceiptPdfPath(studentFolder, receiptNumber);
-
-            // 5) Generate PDF from Excel template
             var templatePath = ReceiptTemplateResolver.GetTemplatePath(_state.SelectedDatabaseName);
 
             var data = new ReceiptPrintData(
                 ReceiptNumber: receiptNumber,
-                IssueDate: payment.PaymentDate,
+                IssueDate: newPayment.PaymentDate,
                 StudentName: student.FullName,
                 StudentPhone: student.Phone ?? "",
                 StudentEmail: student.Email ?? "",
-                Amount: payment.Amount,
-                PaymentMethod: payment.Method.ToString(),
+                Amount: newPayment.Amount,
+                PaymentMethod: newPayment.Method.ToString(),
                 ProgramLabel: enrollment.ProgramType.ToDisplayName(),
                 AcademicYear: academicYear,
-                Notes: payment.Notes ?? ""
+                Notes: newPayment.Notes ?? ""
             );
 
             _excelReceiptGenerator.GenerateReceiptPdf(templatePath, pdfPath, data);
 
-            // 6) Create receipt row
             var receipt = new Receipt
             {
-                PaymentId = payment.PaymentId,
+                PaymentId = newPayment.PaymentId,
                 ReceiptNumber = receiptNumber,
-                IssueDate = payment.PaymentDate,
+                IssueDate = newPayment.PaymentDate,
                 PdfPath = pdfPath,
                 Voided = false,
                 VoidReason = ""
@@ -261,6 +315,32 @@ public partial class AddPaymentViewModel : ObservableObject
         {
             ErrorMessage = ex.Message;
         }
+    }
+
+    private static string ParseReason(string? notes)
+    {
+        var raw = (notes ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "ΔΙΔΑΚΤΡΑ";
+
+        var pipe = raw.IndexOf('|');
+        if (pipe < 0)
+            return raw;
+
+        return raw[..pipe].Trim();
+    }
+
+    private static string ParseAdditionalNotes(string? notes)
+    {
+        var raw = (notes ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "";
+
+        var pipe = raw.IndexOf('|');
+        if (pipe < 0)
+            return "";
+
+        return raw[(pipe + 1)..].Trim();
     }
 
     private static string BuildStoredNotes(string reason, string? notes)

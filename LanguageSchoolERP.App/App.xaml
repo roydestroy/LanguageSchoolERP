@@ -109,7 +109,13 @@
 
         <Style TargetType="DataGridCell">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="8,4"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
     </Application.Resources>
 </Application>

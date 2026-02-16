@@ -57,6 +57,18 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="PaymentSelectionActionButtonStyle" TargetType="Button">
+            <Setter Property="Visibility" Value="Visible"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.SelectedPayment, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding DataContext.SelectedPayment.IsSyntheticEntry, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="16">
@@ -275,11 +287,16 @@
 
                     <DockPanel LastChildFill="False">
                         <TextBlock DockPanel.Dock="Left" Text="Payments" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        <Button DockPanel.Dock="Right" Content="Add Payment" Width="120" Command="{Binding AddPaymentCommand}"/>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Content="Add Payment" Width="120" Margin="0,0,8,0" Command="{Binding AddPaymentCommand}"/>
+                            <Button Content="Edit" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSelectionActionButtonStyle}"/>
+                            <Button Content="Delete" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentSelectionActionButtonStyle}" Background="#B00020" BorderBrush="#8C0019" Foreground="White"/>
+                        </StackPanel>
                     </DockPanel>
 
                     <Border Grid.Row="1" Margin="0,10,0,0" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8">
                         <DataGrid ItemsSource="{Binding Payments}"
+                                  SelectedItem="{Binding SelectedPayment}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
