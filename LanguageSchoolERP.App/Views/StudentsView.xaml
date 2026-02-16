@@ -4,15 +4,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
-    <Grid>
+    <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <DockPanel Margin="0,0,0,12">
-            <TextBlock Text="Students" FontSize="22" FontWeight="SemiBold" DockPanel.Dock="Left"/>
+        <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
+            <DockPanel>
+            <TextBlock Text="Students" FontSize="24" FontWeight="SemiBold" DockPanel.Dock="Left"/>
 
 			<StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
 				<Button Content="New Student" Width="120" Margin="0,0,8,0" Command="{Binding NewStudentCommand}"/>
@@ -33,14 +34,15 @@
 			</StackPanel>
 
 		</DockPanel>
+        </Border>
 
         <!-- List -->
-        <Border Grid.Row="1" BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="8" Padding="10">
+        <Border Grid.Row="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Students}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderBrush="#E6E6E6" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10">
+                            <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12" Background="#FBFDFF">
                                 <StackPanel>
 
                                     <!-- Student summary row -->
@@ -58,15 +60,15 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                <TextBlock Text="{Binding ContactLine}" Foreground="#666666"/>
+                                                <TextBlock Text="{Binding ContactLine}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                                 <TextBlock Text="  •  " Foreground="#999999"/>
-                                                <TextBlock Text="{Binding YearLabel}" Foreground="#666666"/>
+                                                <TextBlock Text="{Binding YearLabel}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
                                         </StackPanel>
 
                                         <!-- Balance -->
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="Balance" Foreground="#777777" FontSize="12" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="Balance" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
@@ -114,12 +116,12 @@
 
                                     <!-- Expand enrollments -->
                                     <Border Margin="0,10,0,0"
-                                            BorderBrush="#EEEEEE" BorderThickness="1"
-                                            CornerRadius="8"
+                                            BorderBrush="{StaticResource Brush.Border}" BorderThickness="1"
+                                            CornerRadius="10"
                                             Padding="10"
                                             Visibility="{Binding ExpandedVisibility}">
                                         <StackPanel>
-                                            <TextBlock Text="Enrollments (this academic year)" Foreground="#666666" Margin="0,0,0,8"/>
+                                            <TextBlock Text="Enrollments (this academic year)" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
 
                                             <ItemsControl ItemsSource="{Binding Enrollments}">
                                                 <ItemsControl.ItemTemplate>
@@ -134,7 +136,7 @@
 
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
-                                                                <TextBlock Text="{Binding Details}" Foreground="#666666" FontSize="12"/>
+                                                                <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
                                                             </StackPanel>
 
                                                             <TextBlock Grid.Column="1" Margin="12,0,0,0"
