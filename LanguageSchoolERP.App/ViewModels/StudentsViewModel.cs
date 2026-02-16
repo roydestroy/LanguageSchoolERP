@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -22,6 +23,10 @@ public partial class StudentsViewModel : ObservableObject
     private const string ContractPendingFilter = "Contract pending";
     private const string OverdueFilter = "Overdue";
 
+    private const string SortByName = "Name (A-Z)";
+    private const string SortByBalance = "Balance (highest first)";
+    private const string SortByOverdueAmount = "Overdue amount (highest first)";
+
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
 
@@ -35,8 +40,16 @@ public partial class StudentsViewModel : ObservableObject
         OverdueFilter
     ];
 
+    public ObservableCollection<string> StudentSortOptions { get; } =
+    [
+        SortByName,
+        SortByBalance,
+        SortByOverdueAmount
+    ];
+
     [ObservableProperty] private string searchText = "";
     [ObservableProperty] private string selectedStudentStatusFilter = AllStudentsFilter;
+    [ObservableProperty] private string selectedStudentSortOption = SortByName;
 
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand NewStudentCommand { get; }
@@ -74,6 +87,11 @@ public partial class StudentsViewModel : ObservableObject
     }
 
     partial void OnSelectedStudentStatusFilterChanged(string value)
+    {
+        _ = LoadAsync();
+    }
+
+    partial void OnSelectedStudentSortOptionChanged(string value)
     {
         _ = LoadAsync();
     }
@@ -156,6 +174,8 @@ public partial class StudentsViewModel : ObservableObject
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
 
+            var rows = new List<StudentRowVm>();
+
             foreach (var s in students)
             {
                 // Aggregate across enrollments in selected year
@@ -178,6 +198,15 @@ public partial class StudentsViewModel : ObservableObject
                 bool overdue = yearEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
                 bool hasPendingContract = s.Contracts.Any(c => string.IsNullOrWhiteSpace(c.PdfPath));
 
+                var overdueAmount = yearEnrollments
+                    .Where(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today))
+                    .Sum(en =>
+                    {
+                        var paid = en.DownPayment + en.Payments.Sum(p => p.Amount);
+                        var enrollmentBalance = en.AgreementTotal - paid;
+                        return enrollmentBalance > 0 ? enrollmentBalance : 0;
+                    });
+
                 if (SelectedStudentStatusFilter == OverdueFilter && !overdue)
                     continue;
 
@@ -192,6 +221,7 @@ public partial class StudentsViewModel : ObservableObject
                     ContactLine = $"{s.Phone}  |  {s.Email}".Trim(' ', '|'),
                     YearLabel = $"Year: {year}",
                     Balance = balance,
+                    OverdueAmount = overdueAmount,
                     ProgressPercent = totalProgress,
                     ProgressText = $"{totalProgress:0}%",
                     IsOverdue = overdue,
@@ -222,8 +252,18 @@ public partial class StudentsViewModel : ObservableObject
                     });
                 }
 
-                Students.Add(row);
+                rows.Add(row);
             }
+
+            var sortedRows = SelectedStudentSortOption switch
+            {
+                SortByBalance => rows.OrderByDescending(r => r.Balance).ThenBy(r => r.FullName),
+                SortByOverdueAmount => rows.OrderByDescending(r => r.OverdueAmount).ThenBy(r => r.FullName),
+                _ => rows.OrderBy(r => r.FullName)
+            };
+
+            foreach (var row in sortedRows)
+                Students.Add(row);
         }
         catch (Exception ex)
         {

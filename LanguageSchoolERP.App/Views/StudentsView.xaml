@@ -116,6 +116,8 @@
                     <ColumnDefinition Width="18"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="Auto"/>
@@ -128,12 +130,16 @@
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentStatusFilters}"
                           SelectedItem="{Binding SelectedStudentStatusFilter, Mode=TwoWay}"/>
-                <TextBox Grid.Column="4"
+                <ComboBox Grid.Column="4" Width="220"
+                          VerticalAlignment="Center"
+                          ItemsSource="{Binding StudentSortOptions}"
+                          SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
+                <TextBox Grid.Column="6"
                          VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Search by name, phone, email"/>
-                <Button Grid.Column="6" Content="New Student" Width="128" Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
-                <Button Grid.Column="8" Content="Refresh" Width="92" Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
+                <Button Grid.Column="8" Content="New Student" Width="128" Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
+                <Button Grid.Column="10" Content="Refresh" Width="92" Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
