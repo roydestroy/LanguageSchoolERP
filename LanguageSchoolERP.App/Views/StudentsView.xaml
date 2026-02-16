@@ -70,32 +70,36 @@
 
 
         <Style x:Key="RoundIconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="34"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="Background" Value="#F4F7FB"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.AccentDark}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="RoundBorder"
-                                CornerRadius="17"
+                                CornerRadius="18"
+                                SnapsToDevicePixels="True"
+                                UseLayoutRounding="True"
                                 Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RoundBorder" Property="Background" Value="#E8EEF7"/>
+                                <Setter TargetName="RoundBorder" Property="Background" Value="#3A78AE"/>
+                                <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#316A99"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="RoundBorder" Property="Background" Value="#DFE9F7"/>
-                                <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#BFD0E6"/>
+                                <Setter TargetName="RoundBorder" Property="Background" Value="#2C6290"/>
+                                <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#26537A"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -159,11 +163,11 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <ComboBox Grid.Column="0" Width="150"
+                <ComboBox Grid.Column="0" Width="128"
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentStatusFilters}"
                           SelectedItem="{Binding SelectedStudentStatusFilter, Mode=TwoWay}"/>
-                <ComboBox Grid.Column="2" Width="220"
+                <ComboBox Grid.Column="2" Width="176"
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentSortOptions}"
                           SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
@@ -171,10 +175,10 @@
                          VerticalAlignment="Center"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="Search by name, phone, email"/>
-                <Button Grid.Column="6" Content="+" ToolTip="New Student"
+                <Button Grid.Column="6" Content="&#xE710;" ToolTip="New Student"
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
-                <Button Grid.Column="8" Content="↻" ToolTip="Refresh"
+                <Button Grid.Column="8" Content="&#xE72C;" ToolTip="Refresh"
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
             </Grid>
