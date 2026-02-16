@@ -46,6 +46,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public ObservableCollection<ContractRowVm> Contracts { get; } = new();
     [ObservableProperty] private ReceiptRowVm? selectedReceipt;
     [ObservableProperty] private ContractRowVm? selectedContract;
+    [ObservableProperty] private ProgramEnrollmentRowVm? selectedProgram;
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
@@ -94,6 +95,8 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand AddProgramCommand { get; }
     public IRelayCommand<ProgramEnrollmentRowVm> EditProgramCommand { get; }
     public IAsyncRelayCommand<ProgramEnrollmentRowVm> RemoveProgramCommand { get; }
+    public IRelayCommand EditSelectedProgramCommand { get; }
+    public IAsyncRelayCommand RemoveSelectedProgramCommand { get; }
 
     public event Action? RequestClose;
     public StudentProfileViewModel(
@@ -120,6 +123,8 @@ public partial class StudentProfileViewModel : ObservableObject
         AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
         EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
         RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
+        EditSelectedProgramCommand = new RelayCommand(EditSelectedProgram, () => SelectedProgram is not null);
+        RemoveSelectedProgramCommand = new AsyncRelayCommand(RemoveSelectedProgramAsync, () => SelectedProgram is not null);
 
     }
 
@@ -129,6 +134,12 @@ public partial class StudentProfileViewModel : ObservableObject
         EditContractCommand.NotifyCanExecuteChanged();
         ExportContractPdfCommand.NotifyCanExecuteChanged();
         DeleteContractCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedProgramChanged(ProgramEnrollmentRowVm? value)
+    {
+        EditSelectedProgramCommand.NotifyCanExecuteChanged();
+        RemoveSelectedProgramCommand.NotifyCanExecuteChanged();
     }
 
     private void StartEdit()
@@ -251,6 +262,16 @@ public partial class StudentProfileViewModel : ObservableObject
         var result = win.ShowDialog();
         if (result == true)
             _ = LoadAsync();
+    }
+
+    private void EditSelectedProgram()
+    {
+        OpenEditProgramDialog(SelectedProgram);
+    }
+
+    private async Task RemoveSelectedProgramAsync()
+    {
+        await RemoveProgramAsync(SelectedProgram);
     }
 
     private async Task RemoveProgramAsync(ProgramEnrollmentRowVm? row)
@@ -576,6 +597,7 @@ public partial class StudentProfileViewModel : ObservableObject
             Payments.Clear();
             Receipts.Clear();
             Programs.Clear();
+            SelectedProgram = null;
             Contracts.Clear();
             SelectedContract = null;
             PendingContractsText = "";
