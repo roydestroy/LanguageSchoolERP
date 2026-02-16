@@ -94,7 +94,7 @@
                     <TextBlock Text="Πρόγραμμα"/>
                     <ComboBox Margin="0,2,0,6"
                               ItemsSource="{Binding ProgramTypes}"
-                              DisplayMemberPath="Όνομα"
+                              DisplayMemberPath="Name"
                               SelectedItem="{Binding SelectedProgramOption}"/>
 
                     <TextBlock Text="Επίπεδο / Τάξη"/>
