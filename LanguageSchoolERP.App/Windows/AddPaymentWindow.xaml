@@ -16,28 +16,28 @@
 
 		<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
 			<StackPanel>
-				<TextBlock Text="Enrollment (required)"/>
+				<TextBlock Text="Εγγραφή (υποχρεωτικό)"/>
 				<ComboBox Margin="0,4,0,12"
                           ItemsSource="{Binding EnrollmentOptions}"
                           SelectedItem="{Binding SelectedEnrollmentOption}"/>
 
-				<TextBlock Text="Amount (€)"/>
+				<TextBlock Text="Ποσό (€)"/>
 				<TextBox Margin="0,4,0,12" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}"/>
 
-				<TextBlock Text="Date"/>
+				<TextBlock Text="Ημερομηνία"/>
 				<DatePicker Margin="0,4,0,12" SelectedDate="{Binding PaymentDate}"/>
 
-				<TextBlock Text="Method"/>
+				<TextBlock Text="Τρόπος"/>
 				<ComboBox Margin="0,4,0,12"
                           ItemsSource="{Binding PaymentMethods}"
                           SelectedItem="{Binding SelectedPaymentMethod}"/>
 
-				<TextBlock Text="Reason"/>
+				<TextBlock Text="Αιτιολογία"/>
 				<ComboBox Margin="0,4,0,12"
                           ItemsSource="{Binding PaymentReasons}"
                           SelectedItem="{Binding SelectedReason}"/>
 
-				<TextBlock Text="Notes"/>
+				<TextBlock Text="Σημειώσεις"/>
 				<TextBox Margin="0,4,0,0" Height="150"
                          AcceptsReturn="True" TextWrapping="Wrap"
                          VerticalScrollBarVisibility="Auto"
@@ -49,8 +49,8 @@
 			<TextBlock Text="{Binding ErrorMessage}" Foreground="IndianRed" VerticalAlignment="Center"/>
 
 			<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-				<Button Content="Cancel" Width="100" Margin="0,0,8,0" IsCancel="True"/>
-				<Button Content="Save" Width="120" Command="{Binding SaveCommand}"/>
+				<Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
+				<Button Content="Αποθήκευση" Width="120" Command="{Binding SaveCommand}"/>
 			</StackPanel>
 		</DockPanel>
 	</Grid>

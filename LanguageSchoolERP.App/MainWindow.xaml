@@ -1,7 +1,7 @@
 <Window x:Class="LanguageSchoolERP.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Language School ERP" Height="720" Width="1240"
+        Title="Σύστημα Σχολής Ξένων Γλωσσών" Height="720" Width="1240"
         WindowStartupLocation="CenterScreen">
 
     <DockPanel Background="{StaticResource Brush.PageBackground}">
@@ -16,10 +16,10 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="Language School ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="Σύστημα Σχολής Ξένων Γλωσσών" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock x:Name="YearProgressText" Text="Year progress: 0%" Foreground="#DCE7F4" FontSize="12"/>
+                    <TextBlock x:Name="YearProgressText" Text="Πρόοδος έτους: 0%" Foreground="#DCE7F4" FontSize="12"/>
                     <ProgressBar x:Name="YearProgressBar" Height="8" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0"/>
                 </StackPanel>
 
@@ -29,7 +29,7 @@
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Database" Foreground="#DCE7F4" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="Βάση δεδομένων" Foreground="#DCE7F4" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="2" x:Name="DbCombo" Width="230" Height="34" VerticalAlignment="Center"/>
                 </Grid>
 
@@ -39,7 +39,7 @@
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Academic Year" Foreground="#DCE7F4" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="Ακαδημαϊκό έτος" Foreground="#DCE7F4" VerticalAlignment="Center"/>
                     <ComboBox Grid.Column="2" x:Name="YearCombo" Width="150" Height="34" VerticalAlignment="Center"/>
                 </Grid>
             </Grid>
@@ -54,12 +54,12 @@
 
             <Border Background="{StaticResource Brush.SurfaceAlt}" Padding="14" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="Navigation" FontWeight="SemiBold" FontSize="15" Margin="4,2,0,14" Foreground="{StaticResource Brush.TextSecondary}"/>
-                    <Button x:Name="StudentsBtn" Content="Students" Height="40" Margin="0,0,0,10"/>
-                    <Button x:Name="ProgramsBtn" Content="Programs" Height="40" Margin="0,0,0,10"/>
-                    <Button x:Name="AcademicYearsBtn" Content="Academic Years" Height="40" Margin="0,0,0,10"/>
+                    <TextBlock Text="Πλοήγηση" FontWeight="SemiBold" FontSize="15" Margin="4,2,0,14" Foreground="{StaticResource Brush.TextSecondary}"/>
+                    <Button x:Name="StudentsBtn" Content="Μαθητές" Height="40" Margin="0,0,0,10"/>
+                    <Button x:Name="ProgramsBtn" Content="Προγράμματα" Height="40" Margin="0,0,0,10"/>
+                    <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά έτη" Height="40" Margin="0,0,0,10"/>
                     <Separator Margin="0,10,0,10"/>
-                    <Button Content="Import (Admin)" Height="40"/>
+                    <Button Content="Εισαγωγή (Διαχειριστής)" Height="40"/>
                 </StackPanel>
             </Border>
 

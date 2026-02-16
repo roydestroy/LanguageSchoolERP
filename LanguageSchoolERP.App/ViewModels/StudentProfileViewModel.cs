@@ -51,7 +51,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string localAcademicYear = "";
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
-    [ObservableProperty] private string activeStatusText = "Inactive";
+    [ObservableProperty] private string activeStatusText = "Ανενεργός";
     [ObservableProperty] private string notes = "";
     [ObservableProperty] private bool isEditing;
 
@@ -189,7 +189,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             if (student is null)
             {
-                System.Windows.MessageBox.Show("Student not found.");
+                System.Windows.MessageBox.Show("Ο μαθητής δεν βρέθηκε.");
                 return;
             }
 
@@ -209,15 +209,15 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Save profile failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία αποθήκευσης προφίλ");
         }
     }
 
     private async Task DeleteStudentAsync()
     {
         var result = System.Windows.MessageBox.Show(
-            "Are you sure you want to delete this student? This action cannot be undone.",
-            "Confirm Delete",
+            "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον μαθητή; Η ενέργεια δεν αναιρείται.",
+            "Επιβεβαίωση διαγραφής",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -234,19 +234,19 @@ public partial class StudentProfileViewModel : ObservableObject
 
             if (student is null)
             {
-                System.Windows.MessageBox.Show("Student not found.");
+                System.Windows.MessageBox.Show("Ο μαθητής δεν βρέθηκε.");
                 return;
             }
 
             db.Students.Remove(student);
             await db.SaveChangesAsync();
 
-            System.Windows.MessageBox.Show("Student deleted successfully.");
+            System.Windows.MessageBox.Show("Ο μαθητής διαγράφηκε επιτυχώς.");
             RequestClose?.Invoke();
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Delete student failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία διαγραφής μαθητή");
         }
     }
 
@@ -290,8 +290,8 @@ public partial class StudentProfileViewModel : ObservableObject
         if (row is null) return;
 
         var result = System.Windows.MessageBox.Show(
-            "Remove this program enrollment from the student?",
-            "Confirm Remove Program",
+            "Να αφαιρεθεί αυτή η εγγραφή προγράμματος από τον μαθητή;",
+            "Επιβεβαίωση αφαίρεσης προγράμματος",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -308,7 +308,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             if (enrollment is null)
             {
-                System.Windows.MessageBox.Show("Enrollment not found.");
+                System.Windows.MessageBox.Show("Η εγγραφή δεν βρέθηκε.");
                 return;
             }
 
@@ -318,7 +318,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Remove program failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία αφαίρεσης προγράμματος");
         }
     }
 
@@ -374,8 +374,8 @@ public partial class StudentProfileViewModel : ObservableObject
             return;
 
         var result = System.Windows.MessageBox.Show(
-            "Delete the selected payment?",
-            "Confirm Delete Payment",
+            "Να διαγραφεί η επιλεγμένη πληρωμή;",
+            "Επιβεβαίωση διαγραφής πληρωμής",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -392,7 +392,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             if (payment is null)
             {
-                System.Windows.MessageBox.Show("Payment not found.");
+                System.Windows.MessageBox.Show("Η πληρωμή δεν βρέθηκε.");
                 return;
             }
 
@@ -405,7 +405,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Delete payment failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία διαγραφής πληρωμής");
         }
     }
     private void OpenCreateContractDialog()
@@ -437,13 +437,13 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedContract is null)
         {
-            System.Windows.MessageBox.Show("Please select a contract first.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
         {
-            System.Windows.MessageBox.Show("The contract DOCX file was not found.");
+            System.Windows.MessageBox.Show("Το αρχείο DOCX του συμφωνητικού δεν βρέθηκε.");
             return;
         }
 
@@ -453,7 +453,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Open contract failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία ανοίγματος συμφωνητικού");
         }
     }
 
@@ -461,13 +461,13 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedContract is null)
         {
-            System.Windows.MessageBox.Show("Please select a contract first.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(SelectedContract.DocxPath) || !File.Exists(SelectedContract.DocxPath))
         {
-            System.Windows.MessageBox.Show("The contract DOCX file was not found.");
+            System.Windows.MessageBox.Show("Το αρχείο DOCX του συμφωνητικού δεν βρέθηκε.");
             return;
         }
 
@@ -479,7 +479,7 @@ public partial class StudentProfileViewModel : ObservableObject
             var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
             if (contract is null)
             {
-                System.Windows.MessageBox.Show("Contract not found in database.");
+                System.Windows.MessageBox.Show("Το συμφωνητικό δεν βρέθηκε στη βάση δεδομένων.");
                 return;
             }
 
@@ -499,7 +499,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Export contract PDF failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία εξαγωγής PDF συμφωνητικού");
         }
     }
 
@@ -508,13 +508,13 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedContract is null)
         {
-            System.Windows.MessageBox.Show("Please select a contract first.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
             return;
         }
 
         var confirm = System.Windows.MessageBox.Show(
-            "Delete selected contract? This will remove it from the list and delete generated files if they exist.",
-            "Delete Contract",
+            "Να διαγραφεί το επιλεγμένο συμφωνητικό; Θα αφαιρεθεί από τη λίστα και θα διαγραφούν τα παραγόμενα αρχεία, αν υπάρχουν.",
+            "Διαγραφή συμφωνητικού",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -529,7 +529,7 @@ public partial class StudentProfileViewModel : ObservableObject
             var contract = await db.Contracts.FirstOrDefaultAsync(c => c.ContractId == SelectedContract.ContractId);
             if (contract is null)
             {
-                System.Windows.MessageBox.Show("Contract not found in database.");
+                System.Windows.MessageBox.Show("Το συμφωνητικό δεν βρέθηκε στη βάση δεδομένων.");
                 return;
             }
 
@@ -542,7 +542,7 @@ public partial class StudentProfileViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Delete contract failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία διαγραφής συμφωνητικού");
         }
     }
 
@@ -550,7 +550,7 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         if (SelectedReceipt is null)
         {
-            System.Windows.MessageBox.Show("Please select a receipt first.");
+            System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα απόδειξη.");
             return;
         }
 
@@ -569,7 +569,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
                 if (enrollment is null)
                 {
-                    System.Windows.MessageBox.Show("Enrollment not found for downpayment receipt.");
+                    System.Windows.MessageBox.Show("Δεν βρέθηκε εγγραφή για απόδειξη προκαταβολής.");
                     return;
                 }
 
@@ -599,10 +599,10 @@ public partial class StudentProfileViewModel : ObservableObject
                     StudentPhone: student.Phone ?? "",
                     StudentEmail: student.Email ?? "",
                     Amount: enrollment.DownPayment,
-                    PaymentMethod: "Enrollment Downpayment",
+                    PaymentMethod: "Προκαταβολή εγγραφής",
                     ProgramLabel: enrollment.ProgramType.ToDisplayName(),
                     AcademicYear: academicYear,
-                    Notes: "Enrollment downpayment"
+                    Notes: "Προκαταβολή εγγραφής"
                 );
 
                 _excelReceiptGenerator.GenerateReceiptPdf(templatePath, pdfPath, data);
@@ -614,14 +614,14 @@ public partial class StudentProfileViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show(ex.ToString(), "Downpayment receipt generation failed");
+                System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία δημιουργίας απόδειξης προκαταβολής");
                 return;
             }
         }
 
         if (!SelectedReceipt.HasPdf || string.IsNullOrWhiteSpace(SelectedReceipt.PdfPath))
         {
-            System.Windows.MessageBox.Show("This receipt has no PDF yet. Generate PDF first (next step).");
+            System.Windows.MessageBox.Show("Αυτή η απόδειξη δεν έχει ακόμη PDF. Δημιουργήστε πρώτα PDF (επόμενο βήμα).");
             return;
         }
 
@@ -682,7 +682,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             if (period is null)
             {
-                PendingContractsText = "No pending contracts.";
+                PendingContractsText = "Δεν υπάρχουν εκκρεμή συμφωνητικά.";
                 return;
             }
 
@@ -738,16 +738,16 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableMotherEmail = _originalMotherEmail;
             EditableNotes = _originalNotes;
 
-            DobLine = student.DateOfBirth.HasValue ? $"DOB: {student.DateOfBirth:dd/MM/yyyy}" : "DOB: —";
-            PhoneLine = string.IsNullOrWhiteSpace(student.Phone) ? "Phone: —" : $"Phone: {student.Phone}";
-            EmailLine = string.IsNullOrWhiteSpace(student.Email) ? "Email: —" : $"Email: {student.Email}";
-            FatherLine = $"Father: {student.FatherName}".Trim();
-            MotherLine = $"Mother: {student.MotherName}".Trim();
+            DobLine = student.DateOfBirth.HasValue ? $"Ημ. γέννησης: {student.DateOfBirth:dd/MM/yyyy}" : "Ημ. γέννησης: —";
+            PhoneLine = string.IsNullOrWhiteSpace(student.Phone) ? "Τηλέφωνο: —" : $"Τηλέφωνο: {student.Phone}";
+            EmailLine = string.IsNullOrWhiteSpace(student.Email) ? "Ηλ. ταχυδρομείο: —" : $"Ηλ. ταχυδρομείο: {student.Email}";
+            FatherLine = $"Πατέρας: {student.FatherName}".Trim();
+            MotherLine = $"Μητέρα: {student.MotherName}".Trim();
 
             var hasAnyEnrollment = await db.Enrollments
                 .AsNoTracking()
                 .AnyAsync(e => e.StudentId == _studentId);
-            ActiveStatusText = hasAnyEnrollment ? "Active" : "Inactive";
+            ActiveStatusText = hasAnyEnrollment ? "Ενεργός" : "Ανενεργός";
 
             var enrollments = student.Enrollments.ToList();
             static string ProgramLabel(ProgramType p) => p.ToDisplayName();
@@ -768,7 +768,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     InstallmentAmountText = e.InstallmentCount > 0
                         ? BuildInstallmentAmountText(e)
                         : "—",
-                    StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Active" : e.Status,
+                    StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Ενεργός" : e.Status,
                     CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
                 });
             }
@@ -792,7 +792,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
                 if (e.IncludesTransportation)
                 {
-                    extras.Add("Transportation");
+                    extras.Add("Μεταφορά");
                 }
 
                 return extras.Count == 0 ? string.Empty : $" ({string.Join(", ", extras)})";
@@ -804,8 +804,8 @@ public partial class StudentProfileViewModel : ObservableObject
                 .ToList();
 
             var baseSummary = enrollments.Count == 0
-                ? "No enrollments for this year."
-                : $"{enrollments.Count} enrollment(s): {string.Join(", ", enrollmentProgramLabels)}";
+                ? "Δεν υπάρχουν εγγραφές για αυτό το έτος."
+                : $"{enrollments.Count} εγγραφή(-ές): {string.Join(", ", enrollmentProgramLabels)}";
 
             // Installment plan summary (without repeating program names)
             var planParts = enrollments
@@ -815,7 +815,7 @@ public partial class StudentProfileViewModel : ObservableObject
                 .ToList();
 
             var planText = planParts.Any()
-                ? $" | Plan: {string.Join(" · ", planParts)}"
+                ? $" | Πλάνο: {string.Join(" · ", planParts)}"
                 : string.Empty;
 
             // Final line
@@ -854,12 +854,12 @@ public partial class StudentProfileViewModel : ObservableObject
                 {
                     PaymentId = null,
                     IsSyntheticEntry = true,
-                    TypeText = "Downpayment",
+                    TypeText = "Προκαταβολή",
                     DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
-                    Method = "Enrollment",
+                    Method = "Εγγραφή",
                     ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
-                    Notes = "Enrollment downpayment"
+                    Notes = "Προκαταβολή εγγραφής"
                 });
             }
 
@@ -869,7 +869,7 @@ public partial class StudentProfileViewModel : ObservableObject
                 {
                     PaymentId = row.Payment.PaymentId,
                     IsSyntheticEntry = false,
-                    TypeText = "Payment",
+                    TypeText = "Πληρωμή",
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{row.Payment.Amount:0.00} €",
                     Method = row.Payment.Method.ToString(),
@@ -909,7 +909,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     NumberText = "DP",
                     DateText = downpaymentDate,
                     AmountText = $"{enrollment.DownPayment:0.00} €",
-                    MethodText = "Enrollment",
+                    MethodText = "Εγγραφή",
                     ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     ProgramText = ProgramLabel(enrollment.ProgramType),
                     HasPdf = false,
@@ -946,13 +946,13 @@ public partial class StudentProfileViewModel : ObservableObject
 
             var pendingCount = Contracts.Count(c => c.IsPendingPrint);
             PendingContractsText = pendingCount > 0
-                ? $"⚠ Pending contracts: {pendingCount}"
-                : "No pending contracts.";
+                ? $"⚠ Εκκρεμή συμφωνητικά: {pendingCount}"
+                : "Δεν υπάρχουν εκκρεμή συμφωνητικά.";
 
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "LoadAsync failed");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία φόρτωσης");
         }
         finally
         {
@@ -971,7 +971,7 @@ public partial class StudentProfileViewModel : ObservableObject
         if (first == last)
             return $"{first:0} €";
 
-        return $"{first:0} € (last {last:0} €)";
+        return $"{first:0} € (τελευταία {last:0} €)";
     }
 
 
@@ -984,7 +984,7 @@ public partial class StudentProfileViewModel : ObservableObject
         var start = new DateTime(e.InstallmentStartMonth.Value.Year, e.InstallmentStartMonth.Value.Month, 1);
         var day = e.InstallmentDayOfMonth <= 0 ? 1 : Math.Min(e.InstallmentDayOfMonth, DateTime.DaysInMonth(start.Year, start.Month));
         var startDate = new DateTime(start.Year, start.Month, day);
-        return $"{e.InstallmentCount} from {startDate:dd/MM/yyyy}";
+        return $"{e.InstallmentCount} από {startDate:dd/MM/yyyy}";
     }
 
     private static string ResolveDownpaymentDateText(Enrollment enrollment, IReadOnlyDictionary<Guid, DateTime> contractCreatedByEnrollment)
