@@ -51,6 +51,22 @@
             </Setter>
         </Style>
 
+
+
+        <Style x:Key="StatusBadgeStyle" TargetType="Border">
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="StatusBadgeTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
         <Style x:Key="ExpandCaretButtonStyle" TargetType="ToggleButton">
             <Setter Property="Width" Value="34"/>
             <Setter Property="Height" Value="34"/>
@@ -158,28 +174,34 @@
                                         </StackPanel>
 
                                         <!-- Active badge -->
-                                        <Border Grid.Column="2" Margin="12,0,0,0" Padding="8,3"
-                                                CornerRadius="999"
+                                        <Border Grid.Column="2" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding ActiveBadgeBackground}"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding ActiveBadgeText}" Foreground="White" FontSize="12"/>
+                                                BorderBrush="{Binding ActiveBadgeBorder}">
+                                            <TextBlock Text="{Binding ActiveBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding ActiveBadgeForeground}"/>
                                         </Border>
 
                                         <!-- Overdue badge -->
-                                        <Border Grid.Column="3" Margin="12,0,0,0" Padding="8,3"
-                                                CornerRadius="999"
+                                        <Border Grid.Column="3" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding OverdueBadgeBackground}"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding OverdueBadgeText}" Foreground="White" FontSize="12"/>
+                                                BorderBrush="{Binding OverdueBadgeBorder}">
+                                            <TextBlock Text="{Binding OverdueBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding OverdueBadgeForeground}"/>
                                         </Border>
 
                                         <!-- Pending contract badge -->
-                                        <Border Grid.Column="4" Margin="12,0,0,0" Padding="8,3"
-                                                CornerRadius="999"
+                                        <Border Grid.Column="4" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
-                                                VerticalAlignment="Center"
+                                                BorderBrush="{Binding PendingContractBadgeBorder}"
                                                 Visibility="{Binding PendingContractVisibility}">
-                                            <TextBlock Text="{Binding PendingContractBadgeText}" Foreground="White" FontSize="12"/>
+                                            <TextBlock Text="{Binding PendingContractBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding PendingContractBadgeForeground}"/>
                                         </Border>
 
                                         <Button Grid.Column="5"
