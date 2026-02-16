@@ -155,7 +155,6 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
@@ -163,7 +162,7 @@
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                                 <TextBlock Text="{Binding ContactLine}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                                 <TextBlock Text="  •  " Foreground="#999999"/>
-                                                <TextBlock Text="{Binding YearLabel}" Foreground="{StaticResource Brush.TextSecondary}"/>
+                                                <TextBlock Text="{Binding ActiveStatusText}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
                                         </StackPanel>
 
@@ -173,28 +172,19 @@
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
-                                        <!-- Active badge -->
+                                        <!-- Overdue badge -->
                                         <Border Grid.Column="2" Margin="12,0,0,0"
                                                 Style="{StaticResource StatusBadgeStyle}"
-                                                Background="{Binding ActiveBadgeBackground}"
-                                                BorderBrush="{Binding ActiveBadgeBorder}">
-                                            <TextBlock Text="{Binding ActiveBadgeText}"
-                                                       Style="{StaticResource StatusBadgeTextStyle}"
-                                                       Foreground="{Binding ActiveBadgeForeground}"/>
-                                        </Border>
-
-                                        <!-- Overdue badge -->
-                                        <Border Grid.Column="3" Margin="12,0,0,0"
-                                                Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding OverdueBadgeBackground}"
-                                                BorderBrush="{Binding OverdueBadgeBorder}">
+                                                BorderBrush="{Binding OverdueBadgeBorder}"
+                                                Visibility="{Binding OverdueBadgeVisibility}">
                                             <TextBlock Text="{Binding OverdueBadgeText}"
                                                        Style="{StaticResource StatusBadgeTextStyle}"
                                                        Foreground="{Binding OverdueBadgeForeground}"/>
                                         </Border>
 
                                         <!-- Pending contract badge -->
-                                        <Border Grid.Column="4" Margin="12,0,0,0"
+                                        <Border Grid.Column="3" Margin="12,0,0,0"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
                                                 BorderBrush="{Binding PendingContractBadgeBorder}"
@@ -204,7 +194,7 @@
                                                        Foreground="{Binding PendingContractBadgeForeground}"/>
                                         </Border>
 
-                                        <Button Grid.Column="5"
+                                        <Button Grid.Column="4"
                                                 Margin="12,0,0,0"
                                                 Width="90" Height="32"
                                                 Content="Open"
@@ -213,7 +203,7 @@
                                                 CommandParameter="{Binding StudentId}"
                                                 VerticalAlignment="Center"/>
 
-                                        <ToggleButton Grid.Column="6" Margin="12,0,0,0"
+                                        <ToggleButton Grid.Column="5" Margin="12,0,0,0"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                                       Style="{StaticResource ExpandCaretButtonStyle}"
                                                       VerticalAlignment="Center"/>

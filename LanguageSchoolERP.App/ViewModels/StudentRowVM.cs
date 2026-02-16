@@ -14,22 +14,20 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private string yearLabel = "";
 
     [ObservableProperty] private bool isActive;
-    public string ActiveBadgeText => IsActive ? "ACTIVE" : "INACTIVE";
-    public Brush ActiveBadgeBackground => IsActive ? new SolidColorBrush(Color.FromRgb(232, 248, 238)) : new SolidColorBrush(Color.FromRgb(243, 245, 247));
-    public Brush ActiveBadgeForeground => IsActive ? new SolidColorBrush(Color.FromRgb(23, 111, 61)) : new SolidColorBrush(Color.FromRgb(92, 107, 121));
-    public Brush ActiveBadgeBorder => IsActive ? new SolidColorBrush(Color.FromRgb(179, 229, 199)) : new SolidColorBrush(Color.FromRgb(219, 226, 234));
+    public string ActiveStatusText => IsActive ? "Active" : "Inactive";
 
     [ObservableProperty] private decimal balance;
     public string BalanceText => $"{Balance:0.00} €";
 
     [ObservableProperty] private bool isOverdue;
-    public string OverdueBadgeText => IsOverdue ? "OVERDUE" : "OK";
-    public Brush OverdueBadgeBackground => IsOverdue ? new SolidColorBrush(Color.FromRgb(253, 237, 237)) : new SolidColorBrush(Color.FromRgb(232, 248, 238));
-    public Brush OverdueBadgeForeground => IsOverdue ? new SolidColorBrush(Color.FromRgb(177, 38, 38)) : new SolidColorBrush(Color.FromRgb(23, 111, 61));
-    public Brush OverdueBadgeBorder => IsOverdue ? new SolidColorBrush(Color.FromRgb(244, 198, 198)) : new SolidColorBrush(Color.FromRgb(179, 229, 199));
+    public string OverdueBadgeText => "OVERDUE";
+    public Brush OverdueBadgeBackground => new SolidColorBrush(Color.FromRgb(253, 237, 237));
+    public Brush OverdueBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
+    public Brush OverdueBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
+    public Visibility OverdueBadgeVisibility => IsOverdue ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool hasPendingContract;
-    public string PendingContractBadgeText => "CONTRACT PENDING";
+    public string PendingContractBadgeText => "CONTRACT";
     public Brush PendingContractBadgeBackground => new SolidColorBrush(Color.FromRgb(255, 246, 229));
     public Brush PendingContractBadgeForeground => new SolidColorBrush(Color.FromRgb(166, 102, 0));
     public Brush PendingContractBadgeBorder => new SolidColorBrush(Color.FromRgb(255, 223, 163));
@@ -44,20 +42,10 @@ public partial class StudentRowVm : ObservableObject
         => OnPropertyChanged(nameof(ExpandedVisibility));
 
     partial void OnIsActiveChanged(bool value)
-    {
-        OnPropertyChanged(nameof(ActiveBadgeText));
-        OnPropertyChanged(nameof(ActiveBadgeBackground));
-        OnPropertyChanged(nameof(ActiveBadgeForeground));
-        OnPropertyChanged(nameof(ActiveBadgeBorder));
-    }
+        => OnPropertyChanged(nameof(ActiveStatusText));
 
     partial void OnIsOverdueChanged(bool value)
-    {
-        OnPropertyChanged(nameof(OverdueBadgeText));
-        OnPropertyChanged(nameof(OverdueBadgeBackground));
-        OnPropertyChanged(nameof(OverdueBadgeForeground));
-        OnPropertyChanged(nameof(OverdueBadgeBorder));
-    }
+        => OnPropertyChanged(nameof(OverdueBadgeVisibility));
 
     partial void OnHasPendingContractChanged(bool value)
     {
