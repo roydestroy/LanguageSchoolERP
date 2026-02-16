@@ -20,21 +20,14 @@
                       ItemsSource="{Binding EnrollmentOptions}"
                       SelectedItem="{Binding SelectedEnrollment}"/>
 
-            <TextBlock Text="Created At" VerticalAlignment="Center"/>
-            <DatePicker x:Name="CreatedAtDatePicker" Margin="0,4,0,12" Height="34" VerticalContentAlignment="Center" SelectedDate="{Binding CreatedAt}" PreviewMouseLeftButtonDown="CreatedAtDatePicker_OnPreviewMouseLeftButtonDown">
-                <DatePicker.Resources>
-                    <Style TargetType="{x:Type DatePickerTextBox}" BasedOn="{StaticResource {x:Type DatePickerTextBox}}">
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="Padding" Value="8,0"/>
-                    </Style>
-                </DatePicker.Resources>
-            </DatePicker>
+            <TextBlock Text="Created At"/>
+            <DatePicker Margin="0,4,0,12" SelectedDate="{Binding CreatedAt}"/>
 
             <TextBlock Text="Student Name"/>
-            <TextBox Margin="0,4,0,12" Height="34" Text="{Binding StudentName, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox Margin="0,4,0,12" Text="{Binding StudentName, UpdateSourceTrigger=PropertyChanged}"/>
 
             <TextBlock Text="Guardian Name"/>
-            <TextBox Margin="0,4,0,12" Height="34" Text="{Binding GuardianName, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBox Margin="0,4,0,12" Text="{Binding GuardianName, UpdateSourceTrigger=PropertyChanged}"/>
 
             <TextBlock Text="Notes"/>
             <TextBox Margin="0,4,0,0" Height="100"
