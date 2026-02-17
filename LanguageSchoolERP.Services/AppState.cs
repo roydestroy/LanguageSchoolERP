@@ -118,6 +118,18 @@ public class AppState : INotifyPropertyChanged
         }
     }
 
+    public string StartupLocalDatabaseName => _settingsProvider.Settings.Startup.LocalDatabase;
+
+    public void SaveStartupLocalDatabase(string databaseName)
+    {
+        if (string.IsNullOrWhiteSpace(databaseName))
+            return;
+
+        _settingsProvider.Settings.Startup.Mode = DatabaseMode.Local;
+        _settingsProvider.Settings.Startup.LocalDatabase = databaseName;
+        _settingsProvider.Save();
+    }
+
     public void SaveCurrentSelectionAsStartupDefault()
     {
         _settingsProvider.Settings.Startup.Mode = SelectedDatabaseMode;

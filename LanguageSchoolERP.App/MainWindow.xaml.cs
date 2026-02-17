@@ -82,7 +82,7 @@ public partial class MainWindow : Window
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
-        SetStartupDbBtn.Click += (_, __) => SaveStartupDefault();
+        StartupDefaultDbMenuItem.Click += (_, __) => OpenStartupOptions();
 
         _ = RefreshAcademicYearProgressAsync();
     }
@@ -152,9 +152,16 @@ public partial class MainWindow : Window
         YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
     }
 
-    private void SaveStartupDefault()
+    private void OpenStartupOptions()
     {
-        _state.SaveCurrentSelectionAsStartupDefault();
+        var win = App.Services.GetRequiredService<Windows.StartupDatabaseOptionsWindow>();
+        win.Owner = this;
+        win.Initialize(_state.StartupLocalDatabaseName);
+
+        if (win.ShowDialog() != true)
+            return;
+
+        _state.SaveStartupLocalDatabase(win.SelectedDatabaseName);
         MessageBox.Show(
             "Η προεπιλεγμένη βάση εκκίνησης αποθηκεύτηκε.",
             "Επιτυχία",
