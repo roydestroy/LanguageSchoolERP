@@ -244,6 +244,7 @@
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding OverdueBadgeBackground}"
                                                 BorderBrush="{Binding OverdueBadgeBorder}"
+                                                VerticalAlignment="Center"
                                                 Visibility="{Binding OverdueBadgeVisibility}">
                                             <TextBlock Text="{Binding OverdueBadgeText}"
                                                        Style="{StaticResource StatusBadgeTextStyle}"
@@ -256,6 +257,7 @@
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding StoppedBadgeBackground}"
                                                 BorderBrush="{Binding StoppedBadgeBorder}"
+                                                VerticalAlignment="Center"
                                                 Visibility="{Binding StoppedBadgeVisibility}">
                                             <TextBlock Text="{Binding StoppedBadgeText}"
                                                        Style="{StaticResource StatusBadgeTextStyle}"
@@ -266,6 +268,7 @@
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
                                                 BorderBrush="{Binding PendingContractBadgeBorder}"
+                                                VerticalAlignment="Center"
                                                 Visibility="{Binding PendingContractVisibility}">
                                             <TextBlock Text="{Binding PendingContractBadgeText}"
                                                        Style="{StaticResource StatusBadgeTextStyle}"
@@ -331,7 +334,7 @@
                                                                         Background="#FDEDED"
                                                                         BorderBrush="#F4C6C6"
                                                                         HorizontalAlignment="Right"
-                                                                        VerticalAlignment="Top"
+                                                                        VerticalAlignment="Center"
                                                                         Visibility="{Binding StoppedBadgeVisibility}">
                                                                     <TextBlock Text="ΔΙΑΚΟΠΗ"
                                                                                Style="{StaticResource StatusBadgeTextStyle}"
