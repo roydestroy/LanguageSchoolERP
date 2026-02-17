@@ -30,6 +30,10 @@ public class Enrollment
 
     public string Comments { get; set; } = "";
     public string Status { get; set; } = "Active";
+    public bool IsStopped { get; set; }
+    public DateTime? StoppedOn { get; set; }
+    public string StopReason { get; set; } = "";
+    public decimal StoppedAmountWaived { get; set; }
     public bool HasTransportation { get; set; }
     public decimal TransportationMonthlyFee { get; set; }   // decimal(18,2)
 

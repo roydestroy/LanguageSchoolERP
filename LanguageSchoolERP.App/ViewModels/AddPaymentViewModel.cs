@@ -128,7 +128,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
-             .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId)
+             .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId && !e.IsStopped)
             .Include(e => e.Program)
             .Include(e => e.Payments)
             .OrderBy(e => e.Program.Name)

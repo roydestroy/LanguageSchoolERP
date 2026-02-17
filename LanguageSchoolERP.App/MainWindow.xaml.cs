@@ -101,6 +101,7 @@ public partial class MainWindow : Window
         {
             YearProgressBar.Value = 0;
             YearProgressText.Text = "Πρόοδος Έτους: 0%";
+            YearLostRevenueText.Text = "Απώλειες διακοπών: 0,00 €";
             return;
         }
 
@@ -110,8 +111,9 @@ public partial class MainWindow : Window
             .Where(e => e.AcademicPeriodId == period.AcademicPeriodId)
             .ToListAsync();
 
-        decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
+        decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
         decimal paidSum = enrollments.Sum(e => e.DownPayment + e.Payments.Sum(p => p.Amount));
+        decimal lostRevenue = enrollments.Sum(InstallmentPlanHelper.GetLostAmount);
 
         var progress = agreementSum <= 0 ? 0d : (double)(paidSum / agreementSum * 100m);
         if (progress > 100) progress = 100;
@@ -119,6 +121,7 @@ public partial class MainWindow : Window
 
         YearProgressBar.Value = progress;
         YearProgressText.Text = $"Πρόοδος Έτους: {progress:0}%";
+        YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
     }
 
     private void NavigateToStudents()

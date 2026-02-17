@@ -166,7 +166,7 @@ public partial class StudentsViewModel : ObservableObject
                     : baseQuery.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
                 OverdueFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
                 _ => baseQuery
             };
 
@@ -195,11 +195,11 @@ public partial class StudentsViewModel : ObservableObject
                 // Aggregate across enrollments in selected year
                 var yearEnrollments = s.Enrollments.ToList();
 
-                decimal agreementSum = yearEnrollments.Sum(en => en.AgreementTotal);
+                decimal agreementSum = yearEnrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
                 decimal downSum = yearEnrollments.Sum(en => en.DownPayment);
                 decimal paidSum = yearEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
 
-                var balance = agreementSum - (downSum + paidSum);
+                var balance = yearEnrollments.Sum(InstallmentPlanHelper.GetOutstandingAmount);
                 if (balance < 0) balance = 0;
 
                 var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
@@ -216,9 +216,7 @@ public partial class StudentsViewModel : ObservableObject
                     .Where(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today))
                     .Sum(en =>
                     {
-                        var paid = en.DownPayment + en.Payments.Sum(p => p.Amount);
-                        var enrollmentBalance = en.AgreementTotal - paid;
-                        return enrollmentBalance > 0 ? enrollmentBalance : 0;
+                        return InstallmentPlanHelper.GetOutstandingAmount(en);
                     });
 
                 if (SelectedStudentStatusFilter == OverdueFilter && !overdue)
@@ -247,10 +245,10 @@ public partial class StudentsViewModel : ObservableObject
                 foreach (var en in yearEnrollments.OrderBy(x => x.Program.Name))
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
-                    var enBalance = en.AgreementTotal - enPaid;
-                    if (enBalance < 0) enBalance = 0;
+                    var effectiveAgreement = InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
+                    var enBalance = InstallmentPlanHelper.GetOutstandingAmount(en);
 
-                    var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
+                    var enrollmentProgress = effectiveAgreement <= 0 ? 0d : (double)(enPaid / effectiveAgreement * 100m);
                     if (enrollmentProgress > 100) enrollmentProgress = 100;
                     if (enrollmentProgress < 0) enrollmentProgress = 0;
 
@@ -258,7 +256,7 @@ public partial class StudentsViewModel : ObservableObject
                     {
                         Title = en.Program?.Name ?? "—",
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
-                        AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
+                        AgreementText = $"Συμφωνία: {effectiveAgreement:0.00} €",
                         PaidText = $"Πληρωμένα: {enPaid:0.00} €",
                         BalanceText = $"Υπόλοιπο: {enBalance:0.00} €",
                         ProgressPercent = enrollmentProgress,

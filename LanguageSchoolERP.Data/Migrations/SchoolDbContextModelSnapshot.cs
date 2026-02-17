@@ -155,10 +155,23 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsStopped")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ProgramId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("StoppedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("StoppedAmountWaived")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("StopReason")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

@@ -62,6 +62,19 @@
                     <TextBox Margin="0,4,0,0" Text="{Binding TransportationMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
+
+                <CheckBox Margin="0,0,0,10"
+                          Content="Διακοπή προγράμματος"
+                          IsChecked="{Binding IsStopped}"/>
+
+                <StackPanel Margin="0,0,0,10"
+                            Visibility="{Binding IsStopped, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="Ημερομηνία διακοπής"/>
+                    <DatePicker Margin="0,4,0,10" SelectedDate="{Binding StoppedOn}"/>
+                    <TextBlock Text="Αιτιολογία διακοπής"/>
+                    <TextBox Margin="0,4,0,0" Text="{Binding StopReason}"/>
+                </StackPanel>
+
                 <TextBlock Text="Αριθμός δόσεων (0-12)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding InstallmentCountText}"/>
 

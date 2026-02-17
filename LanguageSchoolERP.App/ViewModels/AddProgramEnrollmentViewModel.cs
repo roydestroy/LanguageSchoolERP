@@ -38,6 +38,10 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private string installmentCountText = "0";
     [ObservableProperty] private DateTime? installmentStartMonth;
 
+    [ObservableProperty] private bool isStopped;
+    [ObservableProperty] private DateTime? stoppedOn;
+    [ObservableProperty] private string stopReason = "";
+
     [ObservableProperty] private bool includesStudyLab;
     [ObservableProperty] private string studyLabMonthlyPriceText = "";
 
@@ -125,6 +129,9 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         EnrollmentComments = "";
         InstallmentCountText = "0";
         InstallmentStartMonth = null;
+        IsStopped = false;
+        StoppedOn = null;
+        StopReason = "";
         IncludesStudyLab = false;
         StudyLabMonthlyPriceText = "";
         IncludesTransportation = false;
@@ -160,6 +167,9 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                 EnrollmentComments = enrollment.Comments ?? "";
                 InstallmentCountText = enrollment.InstallmentCount.ToString(CultureInfo.InvariantCulture);
                 InstallmentStartMonth = enrollment.InstallmentStartMonth;
+                IsStopped = enrollment.IsStopped;
+                StoppedOn = enrollment.StoppedOn;
+                StopReason = enrollment.StopReason ?? "";
                 IncludesStudyLab = enrollment.IncludesStudyLab;
                 StudyLabMonthlyPriceText = enrollment.StudyLabMonthlyPrice?.ToString("0.00", CultureInfo.InvariantCulture) ?? "";
                 IncludesTransportation = enrollment.IncludesTransportation;
@@ -255,6 +265,18 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
             startMonth = new DateTime(d.Year, d.Month, 1);
         }
 
+        DateTime? stoppedOn = null;
+        if (IsStopped)
+        {
+            if (StoppedOn is null)
+            {
+                ErrorMessage = "Παρακαλώ επιλέξτε ημερομηνία διακοπής.";
+                return;
+            }
+
+            stoppedOn = StoppedOn.Value.Date;
+        }
+
         try
         {
             using var db = _dbFactory.Create();
@@ -279,6 +301,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
             if (_editingEnrollmentId.HasValue)
             {
                 var enrollment = await db.Enrollments
+                    .Include(e => e.Payments)
                     .FirstOrDefaultAsync(e => e.EnrollmentId == _editingEnrollmentId.Value && e.StudentId == _studentId);
 
                 if (enrollment is null)
@@ -295,6 +318,12 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                 enrollment.Comments = EnrollmentComments.Trim();
                 enrollment.InstallmentCount = installmentCount;
                 enrollment.InstallmentStartMonth = startMonth;
+                enrollment.IsStopped = IsStopped;
+                enrollment.StoppedOn = stoppedOn;
+                enrollment.StopReason = IsStopped ? StopReason.Trim() : "";
+                enrollment.StoppedAmountWaived = IsStopped
+                    ? InstallmentPlanHelper.GetOutstandingAmount(enrollment)
+                    : 0m;
                 enrollment.IncludesStudyLab = HasStudyLabOption && IncludesStudyLab;
                 enrollment.StudyLabMonthlyPrice = HasStudyLabOption && IncludesStudyLab ? studyLabPrice : null;
                 enrollment.IncludesTransportation = HasTransportOption && IncludesTransportation;
@@ -313,6 +342,10 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                     DownPayment = down,
                     Comments = EnrollmentComments.Trim(),
                     Status = "Ενεργός",
+                    IsStopped = IsStopped,
+                    StoppedOn = stoppedOn,
+                    StopReason = IsStopped ? StopReason.Trim() : "",
+                    StoppedAmountWaived = IsStopped ? Math.Max(0m, agreementTotal - down) : 0m,
                     InstallmentCount = installmentCount,
                     InstallmentStartMonth = startMonth,
                     IncludesStudyLab = HasStudyLabOption && IncludesStudyLab,

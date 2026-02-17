@@ -889,7 +889,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     EnrollmentId = e.EnrollmentId,
                     ProgramText = ProgramLabel(e),
                     LevelOrClassText = string.IsNullOrWhiteSpace(e.LevelOrClass) ? "—" : e.LevelOrClass,
-                    AgreementTotalText = $"{e.AgreementTotal:0.00} €",
+                    AgreementTotalText = $"{InstallmentPlanHelper.GetEffectiveAgreementTotal(e):0.00} €",
                     BooksText = $"{e.BooksAmount:0.00} €",
                     DownPaymentText = $"{e.DownPayment:0.00} €",
                     InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
@@ -898,18 +898,19 @@ public partial class StudentProfileViewModel : ObservableObject
                     InstallmentAmountText = e.InstallmentCount > 0
                         ? BuildInstallmentAmountText(e)
                         : "—",
-                    StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Ενεργός" : e.Status,
+                    StatusText = e.IsStopped
+                        ? $"Διακοπή ({(e.StoppedOn.HasValue ? e.StoppedOn.Value.ToString("dd/MM/yyyy") : "—")})"
+                        : (string.IsNullOrWhiteSpace(e.Status) ? "Ενεργός" : e.Status),
                     CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
                 });
             }
 
             // Summary across enrollments (grouped by caret in list; here we aggregate)
-            decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
+            decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
             decimal downSum = enrollments.Sum(e => e.DownPayment);
             decimal paidSum = enrollments.Sum(e => e.Payments.Sum(p => p.Amount));
             decimal paidTotal = downSum + paidSum;
-            decimal balance = agreementSum - paidTotal;
-            if (balance < 0) balance = 0;
+            decimal balance = enrollments.Sum(InstallmentPlanHelper.GetOutstandingAmount);
 
             string BuildEnrollmentExtras(Enrollment e)
             {

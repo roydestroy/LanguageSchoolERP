@@ -95,6 +95,10 @@ public class SchoolDbContext : DbContext
             .HasColumnType("decimal(18,2)");
 
         modelBuilder.Entity<Enrollment>()
+            .Property(x => x.StoppedAmountWaived)
+            .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<Enrollment>()
             .HasOne(e => e.Program)
             .WithMany()
             .HasForeignKey(e => e.ProgramId)

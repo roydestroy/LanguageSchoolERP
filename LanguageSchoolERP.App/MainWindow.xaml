@@ -21,6 +21,7 @@
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock x:Name="YearProgressText" Text="Πρόοδος έτους: 0%" Foreground="#DCE7F4" FontSize="12"/>
+                    <TextBlock x:Name="YearLostRevenueText" Text="Απώλειες διακοπών: 0,00 €" Foreground="#DCE7F4" FontSize="12" Margin="0,2,0,0"/>
                     <ProgressBar x:Name="YearProgressBar" Height="8" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0"/>
                 </StackPanel>
 
