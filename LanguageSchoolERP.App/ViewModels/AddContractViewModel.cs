@@ -160,7 +160,9 @@ public partial class AddContractViewModel : ObservableObject
             DbSeeder.EnsureSeeded(db);
 
             var student = await db.Students.AsNoTracking().FirstAsync(x => x.StudentId == _init.StudentId);
-            var enrollment = await db.Enrollments.AsNoTracking().FirstAsync(x => x.EnrollmentId == SelectedEnrollment.EnrollmentId);
+            var enrollment = await db.Enrollments.AsNoTracking()
+                .Include(x => x.Program)
+                .FirstAsync(x => x.EnrollmentId == SelectedEnrollment.EnrollmentId);
             var template = _defaultTemplate;
 
             var (_, studentSurname) = SplitName(student.FullName);

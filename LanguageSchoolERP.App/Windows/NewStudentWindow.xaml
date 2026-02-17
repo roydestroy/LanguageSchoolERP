@@ -121,7 +121,7 @@
                     <CheckBox Margin="0,0,0,6"
                               Content="Study Lab"
                               IsChecked="{Binding IncludesStudyLab}"
-                              Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                              Visibility="{Binding HasStudyLabOption, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                     <StackPanel Margin="0,0,0,6"
                                 Visibility="{Binding IncludesStudyLab, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -132,7 +132,7 @@
                     <CheckBox Margin="0,0,0,6"
                               Content="Μεταφορά"
                               IsChecked="{Binding IncludesTransportation}"
-                              Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                              Visibility="{Binding HasTransportOption, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                     <StackPanel Margin="0,0,0,6"
                                 Visibility="{Binding IncludesTransportation, Converter={StaticResource BoolToVisibilityConverter}}">

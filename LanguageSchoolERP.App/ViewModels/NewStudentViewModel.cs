@@ -62,26 +62,26 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private bool includesTransportation;
     [ObservableProperty] private string transportationMonthlyPriceText = "";
 
-    public bool IsLanguageSchoolProgram => SelectedStudyProgram?.HasBooks == true;
-    public bool IsStudyLabProgram => SelectedStudyProgram?.HasTransport == true;
+    public bool HasStudyLabOption => SelectedStudyProgram?.HasStudyLab == true;
+    public bool HasTransportOption => SelectedStudyProgram?.HasTransport == true;
     public bool HasBooksOption => SelectedStudyProgram?.HasBooks == true;
 
     public IRelayCommand CreateCommand { get; }
 
     partial void OnSelectedStudyProgramChanged(StudyProgram? value)
     {
-        OnPropertyChanged(nameof(IsLanguageSchoolProgram));
-        OnPropertyChanged(nameof(IsStudyLabProgram));
+        OnPropertyChanged(nameof(HasStudyLabOption));
+        OnPropertyChanged(nameof(HasTransportOption));
         OnPropertyChanged(nameof(HasBooksOption));
 
-        if (!IsLanguageSchoolProgram)
+        if (!HasStudyLabOption)
         {
             IncludesStudyLab = false;
             StudyLabMonthlyPriceText = "";
             BooksAmountText = "0";
         }
 
-        if (!IsStudyLabProgram)
+        if (!HasTransportOption)
         {
             IncludesTransportation = false;
             TransportationMonthlyPriceText = "";
@@ -172,7 +172,7 @@ public partial class NewStudentViewModel : ObservableObject
         }
 
         decimal? studyLabPrice = null;
-        if (IsLanguageSchoolProgram && IncludesStudyLab)
+        if (HasStudyLabOption && IncludesStudyLab)
         {
             if (!TryParseMoney(StudyLabMonthlyPriceText, out var parsedStudyLabPrice) || parsedStudyLabPrice < 0)
             {
@@ -184,7 +184,7 @@ public partial class NewStudentViewModel : ObservableObject
         }
 
         decimal? transportationPrice = null;
-        if (IsStudyLabProgram && IncludesTransportation)
+        if (HasTransportOption && IncludesTransportation)
         {
             if (!TryParseMoney(TransportationMonthlyPriceText, out var parsedTransportationPrice) || parsedTransportationPrice < 0)
             {
@@ -248,10 +248,10 @@ public partial class NewStudentViewModel : ObservableObject
                 Status = "Ενεργός",
                 InstallmentCount = installmentCount,
                 InstallmentStartMonth = startMonth,
-                IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab,
-                StudyLabMonthlyPrice = IsLanguageSchoolProgram && IncludesStudyLab ? studyLabPrice : null,
-                IncludesTransportation = IsStudyLabProgram && IncludesTransportation,
-                TransportationMonthlyPrice = IsStudyLabProgram && IncludesTransportation ? transportationPrice : null
+                IncludesStudyLab = HasStudyLabOption && IncludesStudyLab,
+                StudyLabMonthlyPrice = HasStudyLabOption && IncludesStudyLab ? studyLabPrice : null,
+                IncludesTransportation = HasTransportOption && IncludesTransportation,
+                TransportationMonthlyPrice = HasTransportOption && IncludesTransportation ? transportationPrice : null
             };
 
             student.Enrollments.Add(enrollment);
