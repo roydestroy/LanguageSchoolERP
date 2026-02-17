@@ -63,6 +63,7 @@ public partial class StudentsViewModel : ObservableObject
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand NewStudentCommand { get; }
     public IRelayCommand<Guid> OpenStudentCommand { get; }
+    public IRelayCommand<Guid> QuickAddPaymentCommand { get; }
 
     public StudentsViewModel(AppState state, DbContextFactory dbFactory)
     {
@@ -72,6 +73,7 @@ public partial class StudentsViewModel : ObservableObject
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
         OpenStudentCommand = new RelayCommand<Guid>(OpenStudent);
+        QuickAddPaymentCommand = new RelayCommand<Guid>(OpenQuickPaymentDialog, CanOpenQuickPayment);
 
         // Refresh automatically when DB/year changes
         _state.PropertyChanged += OnAppStateChanged;
@@ -91,6 +93,7 @@ public partial class StudentsViewModel : ObservableObject
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
         {
             NewStudentCommand.NotifyCanExecuteChanged();
+            QuickAddPaymentCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -111,6 +114,53 @@ public partial class StudentsViewModel : ObservableObject
     }
 
     private bool CanCreateStudent() => !_state.IsReadOnlyMode;
+
+
+    private bool CanOpenQuickPayment(Guid enrollmentId)
+    {
+        return !_state.IsReadOnlyMode && enrollmentId != Guid.Empty;
+    }
+
+    private void OpenQuickPaymentDialog(Guid enrollmentId)
+    {
+        if (_state.IsReadOnlyMode)
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
+        if (enrollmentId == Guid.Empty)
+            return;
+
+        _ = OpenQuickPaymentDialogAsync(enrollmentId);
+    }
+
+    private async Task OpenQuickPaymentDialogAsync(Guid enrollmentId)
+    {
+        using var db = _dbFactory.Create();
+        DbSeeder.EnsureSeeded(db);
+
+        var enrollment = await db.Enrollments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.EnrollmentId == enrollmentId);
+
+        if (enrollment is null)
+            return;
+
+        var period = await db.AcademicPeriods
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.AcademicPeriodId == enrollment.AcademicPeriodId);
+
+        var yearName = period?.Name ?? _state.SelectedAcademicYear;
+
+        var win = App.Services.GetRequiredService<AddPaymentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddPaymentInit(enrollment.StudentId, yearName, PaymentId: null, EnrollmentId: enrollment.EnrollmentId, IsQuickPrintFlow: true));
+
+        var result = win.ShowDialog();
+        if (result == true)
+            await LoadAsync();
+    }
 
     private void OpenNewStudentDialog()
     {
@@ -301,6 +351,7 @@ public partial class StudentsViewModel : ObservableObject
 
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
+                        EnrollmentId = en.EnrollmentId,
                         Title = en.Program?.Name ?? "—",
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
                         AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
@@ -309,7 +360,8 @@ public partial class StudentsViewModel : ObservableObject
                         ProgressPercent = enrollmentProgress,
                         ProgressText = $"{enrollmentProgress:0}%",
                         ProgressBrush = enrollmentProgressBrush,
-                        IsStopped = en.IsStopped
+                        IsStopped = en.IsStopped,
+                        CanIssuePayment = !en.IsStopped
                     });
                 }
 

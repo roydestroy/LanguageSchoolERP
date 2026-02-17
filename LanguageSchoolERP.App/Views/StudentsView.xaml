@@ -299,6 +299,7 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                                 <ColumnDefinition Width="Auto"/>
                                                                 <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel>
@@ -327,6 +328,16 @@
                                                                                Foreground="#B12626"/>
                                                                 </Border>
                                                             </StackPanel>
+
+                                                            <Button Grid.Column="4"
+                                                                    Margin="12,0,0,0"
+                                                                    Width="120" Height="30"
+                                                                    Content="Πληρωμή"
+                                                                    Style="{StaticResource PrimaryActionButtonStyle}"
+                                                                    Command="{Binding DataContext.QuickAddPaymentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding EnrollmentId}"
+                                                                    IsEnabled="{Binding CanIssuePayment}"
+                                                                    VerticalAlignment="Center"/>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

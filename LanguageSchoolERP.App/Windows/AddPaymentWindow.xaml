@@ -50,7 +50,7 @@
 
 			<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
 				<Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
-				<Button Content="Αποθήκευση" Width="120" Command="{Binding SaveCommand}"/>
+				<Button Content="{Binding SaveButtonText}" Width="120" Command="{Binding SaveCommand}"/>
 			</StackPanel>
 		</DockPanel>
 	</Grid>

@@ -5,6 +5,7 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,7 +18,7 @@ public record EnrollmentOption(Guid EnrollmentId, string Label, decimal Suggeste
     public override string ToString() => Label;
 }
 
-public record AddPaymentInit(Guid StudentId, string AcademicYear, Guid? PaymentId = null);
+public record AddPaymentInit(Guid StudentId, string AcademicYear, Guid? PaymentId = null, Guid? EnrollmentId = null, bool IsQuickPrintFlow = false);
 
 public partial class AddPaymentViewModel : ObservableObject
 {
@@ -68,12 +69,15 @@ public partial class AddPaymentViewModel : ObservableObject
     [ObservableProperty] private string notes = "";
 
     [ObservableProperty] private string errorMessage = "";
+    [ObservableProperty] private string saveButtonText = "Αποθήκευση";
+    [ObservableProperty] private bool isSaving;
 
-    public IRelayCommand SaveCommand { get; }
+    public IAsyncRelayCommand SaveCommand { get; }
 
     private AddPaymentInit? _init;
     private readonly Dictionary<Guid, decimal> _suggestedAmountsByEnrollment = new();
     private bool _isEditMode;
+    private bool _isQuickPrintFlow;
 
     public AddPaymentViewModel(
         DbContextFactory dbFactory,
@@ -95,13 +99,15 @@ public partial class AddPaymentViewModel : ObservableObject
         };
     }
 
-    private bool CanWrite() => !_state.IsReadOnlyMode;
+    private bool CanWrite() => !_state.IsReadOnlyMode && !IsSaving;
 
     public async void Initialize(AddPaymentInit init)
     {
         _init = init;
         _isEditMode = init.PaymentId.HasValue;
-        DialogTitle = _isEditMode ? "Επεξεργασία" : "Προσθήκη";
+        _isQuickPrintFlow = init.IsQuickPrintFlow && !_isEditMode;
+        DialogTitle = _isEditMode ? "Επεξεργασία" : (_isQuickPrintFlow ? "Προσθήκη και εκτύπωση" : "Προσθήκη");
+        SaveButtonText = _isQuickPrintFlow ? "Εκτύπωση" : "Αποθήκευση";
 
         ErrorMessage = "";
         Notes = "";
@@ -172,7 +178,9 @@ public partial class AddPaymentViewModel : ObservableObject
         }
         else
         {
-            SelectedEnrollmentOption = EnrollmentOptions.FirstOrDefault();
+            SelectedEnrollmentOption = init.EnrollmentId.HasValue
+                ? EnrollmentOptions.FirstOrDefault(o => o.EnrollmentId == init.EnrollmentId.Value)
+                : EnrollmentOptions.FirstOrDefault();
         }
     }
 
@@ -225,6 +233,9 @@ public partial class AddPaymentViewModel : ObservableObject
 
         try
         {
+            IsSaving = true;
+            SaveCommand.NotifyCanExecuteChanged();
+
             using var db = _dbFactory.Create();
             DbSeeder.EnsureSeeded(db);
 
@@ -278,6 +289,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 .AsNoTracking()
                 .Include(e => e.Student)
                 .Include(e => e.AcademicPeriod)
+                .Include(e => e.Program)
                 .FirstAsync(e => e.EnrollmentId == SelectedEnrollmentOption.EnrollmentId);
 
             var student = enrollment.Student;
@@ -324,12 +336,62 @@ public partial class AddPaymentViewModel : ObservableObject
             db.Receipts.Add(receipt);
             await db.SaveChangesAsync();
 
+            if (_isQuickPrintFlow)
+            {
+                await WaitForFileReadyAsync(pdfPath);
+                TryOpenFile(pdfPath);
+            }
+
             RequestClose?.Invoke(this, true);
         }
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
         }
+        finally
+        {
+            IsSaving = false;
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+
+    private static async Task WaitForFileReadyAsync(string path)
+    {
+        const int maxAttempts = 40;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            if (File.Exists(path))
+            {
+                try
+                {
+                    using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    if (stream.Length > 0)
+                        return;
+                }
+                catch
+                {
+                    // Keep waiting while file is still being written/locked.
+                }
+            }
+
+            await Task.Delay(200);
+        }
+    }
+
+    private static void TryOpenFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return;
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = filePath,
+            UseShellExecute = true
+        };
+
+        Process.Start(psi);
     }
 
     private static string ParseReason(string? notes)
