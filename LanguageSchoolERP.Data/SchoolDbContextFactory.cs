@@ -11,7 +11,7 @@ public class SchoolDbContextFactory : IDesignTimeDbContextFactory<SchoolDbContex
 
         // Same connection string as the app (for now)
         optionsBuilder.UseSqlServer(
-            @"Server=.\SQLEXPRESS;Database=FilotheiSchoolERP;Trusted_Connection=True;TrustServerCertificate=True");
+            @"Server=100.104.49.73,1433;Database=FilotheiSchoolERP;User Id=erp_app;Password=Th3redeemerz!;TrustServerCertificate=True;Encrypt=True;");
 
         return new SchoolDbContext(optionsBuilder.Options);
     }

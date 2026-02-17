@@ -1,7 +1,7 @@
 <Window x:Class="LanguageSchoolERP.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Σύστημα Σχολής Ξένων Γλωσσών" Height="720" Width="1240"
+        Title="ΕΥΡΩΓΝΩΣΗ ERP" Height="720" Width="1240"
         WindowStartupLocation="CenterScreen">
 
     <DockPanel Background="{StaticResource Brush.PageBackground}">
@@ -16,7 +16,7 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="Σύστημα Σχολής Ξένων Γλωσσών" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="ΕΥΡΩΓΝΩΣΗ ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock x:Name="YearProgressText" Text="Πρόοδος έτους: 0%" Foreground="#DCE7F4" FontSize="12"/>
