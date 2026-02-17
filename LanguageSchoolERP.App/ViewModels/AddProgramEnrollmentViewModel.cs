@@ -55,6 +55,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private string errorMessage = "";
     [ObservableProperty] private string dialogTitle = "Προσθήκη εγγραφής προγράμματος";
     [ObservableProperty] private string saveButtonText = "Προσθήκη";
+    [ObservableProperty] private bool isEditMode;
 
     public IAsyncRelayCommand SaveCommand { get; }
 
@@ -119,6 +120,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         _studentId = init.StudentId;
         _academicYear = init.AcademicYear;
         _editingEnrollmentId = init.EnrollmentId;
+        IsEditMode = _editingEnrollmentId.HasValue;
 
         await LoadProgramsAsync();
 
@@ -140,7 +142,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
         if (_editingEnrollmentId.HasValue)
         {
-            DialogTitle = "Επεξεργασία εγγραφής προγράμματος";
+            DialogTitle = "Επεξεργασία Εγγραφής";
             SaveButtonText = "Αποθήκευση αλλαγών";
 
             try
@@ -380,4 +382,3 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         return false;
     }
 }
-
