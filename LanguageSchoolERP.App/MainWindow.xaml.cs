@@ -77,6 +77,12 @@ public partial class MainWindow : Window
         {
             SyncTopBarState();
         }
+
+        if (e.PropertyName == nameof(AppState.SelectedAcademicYear) ||
+            e.PropertyName == nameof(AppState.DataVersion))
+        {
+            _ = RefreshAcademicYearProgressAsync();
+        }
     }
 
     private void SyncTopBarState()

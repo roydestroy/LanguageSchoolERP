@@ -266,6 +266,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 }
 
                 await db.SaveChangesAsync();
+                _state.NotifyDataChanged();
                 RequestClose?.Invoke(this, true);
                 return;
             }
@@ -335,6 +336,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
             db.Receipts.Add(receipt);
             await db.SaveChangesAsync();
+            _state.NotifyDataChanged();
 
             if (_isQuickPrintFlow)
             {

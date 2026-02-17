@@ -11,6 +11,7 @@ public class AppState : INotifyPropertyChanged
     private string _selectedRemoteDatabaseName = "FilotheiSchoolERP_View";
     private string _selectedDatabaseName = "FilotheiSchoolERP";
     private string _selectedAcademicYear = "2025-2026";
+    private long _dataVersion;
 
     public AppState(DatabaseAppSettingsProvider settingsProvider)
     {
@@ -82,6 +83,14 @@ public class AppState : INotifyPropertyChanged
                 OnPropertyChanged(nameof(SelectedRemoteDatabaseName));
             }
         }
+    }
+
+    public long DataVersion => _dataVersion;
+
+    public void NotifyDataChanged()
+    {
+        _dataVersion++;
+        OnPropertyChanged(nameof(DataVersion));
     }
 
     public string SelectedAcademicYear
