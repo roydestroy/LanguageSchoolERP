@@ -11,6 +11,7 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows.Media;
 
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -22,10 +23,17 @@ public partial class StudentsViewModel : ObservableObject
     private const string InactiveStudentsFilter = "Μόνο ανενεργοί";
     private const string ContractPendingFilter = "Εκκρεμεί συμφωνητικό";
     private const string OverdueFilter = "Ληξιπρόθεσμα";
+    private const string DiscontinuedFilter = "Με διακοπή";
 
     private const string SortByName = "Όνομα (Α-Ω)";
     private const string SortByBalance = "Υπόλοιπο (φθίνουσα)";
     private const string SortByOverdueAmount = "Ληξιπρόθεσμο ποσό (φθίνουσα)";
+
+    private static readonly Brush ProgressBlueBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
+    private static readonly Brush ProgressOrangeBrush = new SolidColorBrush(Color.FromRgb(230, 145, 56));
+    private static readonly Brush ProgressGreenBrush = new SolidColorBrush(Color.FromRgb(67, 160, 71));
+    private static readonly Brush ProgressPurpleBrush = new SolidColorBrush(Color.FromRgb(123, 97, 255));
+    private static readonly Brush ProgressStoppedRedBrush = new SolidColorBrush(Color.FromRgb(177, 38, 38));
 
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
@@ -37,7 +45,8 @@ public partial class StudentsViewModel : ObservableObject
         ActiveStudentsFilter,
         InactiveStudentsFilter,
         ContractPendingFilter,
-        OverdueFilter
+        OverdueFilter,
+        DiscontinuedFilter
     ];
 
     public ObservableCollection<string> StudentSortOptions { get; } =
@@ -54,6 +63,7 @@ public partial class StudentsViewModel : ObservableObject
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand NewStudentCommand { get; }
     public IRelayCommand<Guid> OpenStudentCommand { get; }
+    public IRelayCommand<Guid> QuickAddPaymentCommand { get; }
 
     public StudentsViewModel(AppState state, DbContextFactory dbFactory)
     {
@@ -63,6 +73,7 @@ public partial class StudentsViewModel : ObservableObject
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
         OpenStudentCommand = new RelayCommand<Guid>(OpenStudent);
+        QuickAddPaymentCommand = new RelayCommand<Guid>(OpenQuickPaymentDialog, CanOpenQuickPayment);
 
         // Refresh automatically when DB/year changes
         _state.PropertyChanged += OnAppStateChanged;
@@ -82,6 +93,7 @@ public partial class StudentsViewModel : ObservableObject
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
         {
             NewStudentCommand.NotifyCanExecuteChanged();
+            QuickAddPaymentCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -102,6 +114,53 @@ public partial class StudentsViewModel : ObservableObject
     }
 
     private bool CanCreateStudent() => !_state.IsReadOnlyMode;
+
+
+    private bool CanOpenQuickPayment(Guid enrollmentId)
+    {
+        return !_state.IsReadOnlyMode && enrollmentId != Guid.Empty;
+    }
+
+    private void OpenQuickPaymentDialog(Guid enrollmentId)
+    {
+        if (_state.IsReadOnlyMode)
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
+        if (enrollmentId == Guid.Empty)
+            return;
+
+        _ = OpenQuickPaymentDialogAsync(enrollmentId);
+    }
+
+    private async Task OpenQuickPaymentDialogAsync(Guid enrollmentId)
+    {
+        using var db = _dbFactory.Create();
+        DbSeeder.EnsureSeeded(db);
+
+        var enrollment = await db.Enrollments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.EnrollmentId == enrollmentId);
+
+        if (enrollment is null)
+            return;
+
+        var period = await db.AcademicPeriods
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.AcademicPeriodId == enrollment.AcademicPeriodId);
+
+        var yearName = period?.Name ?? _state.SelectedAcademicYear;
+
+        var win = App.Services.GetRequiredService<AddPaymentWindow>();
+        win.Owner = System.Windows.Application.Current.MainWindow;
+        win.Initialize(new AddPaymentInit(enrollment.StudentId, yearName, PaymentId: null, EnrollmentId: enrollment.EnrollmentId, IsQuickPrintFlow: true));
+
+        var result = win.ShowDialog();
+        if (result == true)
+            await LoadAsync();
+    }
 
     private void OpenNewStudentDialog()
     {
@@ -157,16 +216,19 @@ public partial class StudentsViewModel : ObservableObject
             {
                 ActiveStudentsFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
                 InactiveStudentsFilter => selectedPeriodId == null
                     ? baseQuery
-                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
                 ContractPendingFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
                     : baseQuery.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
                 OverdueFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
+                DiscontinuedFilter => selectedPeriodId == null
+                    ? baseQuery.Where(_ => false)
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
                 _ => baseQuery
             };
 
@@ -195,12 +257,11 @@ public partial class StudentsViewModel : ObservableObject
                 // Aggregate across enrollments in selected year
                 var yearEnrollments = s.Enrollments.ToList();
 
-                decimal agreementSum = yearEnrollments.Sum(en => en.AgreementTotal);
+                decimal agreementSum = yearEnrollments.Sum(e => e.AgreementTotal);
                 decimal downSum = yearEnrollments.Sum(en => en.DownPayment);
                 decimal paidSum = yearEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
 
-                var balance = agreementSum - (downSum + paidSum);
-                if (balance < 0) balance = 0;
+                var balance = yearEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
 
                 var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
                 if (totalProgress > 100) totalProgress = 100;
@@ -216,9 +277,7 @@ public partial class StudentsViewModel : ObservableObject
                     .Where(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today))
                     .Sum(en =>
                     {
-                        var paid = en.DownPayment + en.Payments.Sum(p => p.Amount);
-                        var enrollmentBalance = en.AgreementTotal - paid;
-                        return enrollmentBalance > 0 ? enrollmentBalance : 0;
+                        return InstallmentPlanHelper.GetOutstandingAmount(en);
                     });
 
                 if (SelectedStudentStatusFilter == OverdueFilter && !overdue)
@@ -227,6 +286,30 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == ContractPendingFilter && !hasPendingContract)
                     continue;
 
+                var hasStoppedProgram = yearEnrollments.Any(en => en.IsStopped);
+                var hasOnlyStoppedPrograms = yearEnrollments.Count > 0 && yearEnrollments.All(en => en.IsStopped);
+
+                if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
+                    continue;
+
+                var activeEnrollments = yearEnrollments.Where(en => !en.IsStopped).ToList();
+                var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
+                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) > en.AgreementTotal + 0.009m);
+                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) + 0.009m >= en.AgreementTotal);
+
+                var studentProgressBrush = hasOnlyStoppedPrograms
+                    ? ProgressStoppedRedBrush
+                    : anyActiveOverpaid
+                        ? ProgressPurpleBrush
+                        : anyActiveOverdue
+                            ? ProgressOrangeBrush
+                            : allActiveFullyPaid
+                                ? ProgressGreenBrush
+                                : ProgressBlueBrush;
+
+                var enrollmentSummaryText = yearEnrollments.Count == 0
+                    ? "Προγράμματα: —"
+                    : $"Προγράμματα: {string.Join(" · ", yearEnrollments.OrderBy(en => en.Program?.Name).Select(en => { var programName = en.Program?.Name ?? "—"; return string.IsNullOrWhiteSpace(en.LevelOrClass) ? programName : $"{programName} ({en.LevelOrClass})"; }))}";
 
                 var row = new StudentRowVm
                 {
@@ -234,13 +317,17 @@ public partial class StudentsViewModel : ObservableObject
                     FullName = s.FullName,
                     ContactLine = $"{s.Phone}  |  {s.Email}".Trim(' ', '|'),
                     YearLabel = $"Έτος: {year}",
+                    EnrollmentSummaryText = enrollmentSummaryText,
                     Balance = balance,
                     OverdueAmount = overdueAmount,
                     ProgressPercent = totalProgress,
                     ProgressText = $"{totalProgress:0}%",
+                    ProgressBrush = studentProgressBrush,
                     IsOverdue = overdue,
+                    HasStoppedProgram = hasStoppedProgram,
+                    HasOnlyStoppedPrograms = hasOnlyStoppedPrograms,
                     HasPendingContract = hasPendingContract,
-                    IsActive = yearEnrollments.Count > 0,
+                    IsActive = activeEnrollments.Count > 0,
                     IsExpanded = false
                 };
 
@@ -248,21 +335,37 @@ public partial class StudentsViewModel : ObservableObject
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
                     var enBalance = en.AgreementTotal - enPaid;
-                    if (enBalance < 0) enBalance = 0;
+                    var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
+                    var enOverpaid = enPaid > en.AgreementTotal + 0.009m;
+                    var enFullyPaid = enPaid + 0.009m >= en.AgreementTotal;
 
                     var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
                     if (enrollmentProgress > 100) enrollmentProgress = 100;
                     if (enrollmentProgress < 0) enrollmentProgress = 0;
 
+                    var enrollmentProgressBrush = en.IsStopped
+                        ? ProgressStoppedRedBrush
+                        : enOverpaid
+                            ? ProgressPurpleBrush
+                            : enOverdue
+                                ? ProgressOrangeBrush
+                                : enFullyPaid
+                                    ? ProgressGreenBrush
+                                    : ProgressBlueBrush;
+
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
+                        EnrollmentId = en.EnrollmentId,
                         Title = en.Program?.Name ?? "—",
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
                         AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
                         PaidText = $"Πληρωμένα: {enPaid:0.00} €",
                         BalanceText = $"Υπόλοιπο: {enBalance:0.00} €",
                         ProgressPercent = enrollmentProgress,
-                        ProgressText = $"{enrollmentProgress:0}%"
+                        ProgressText = $"{enrollmentProgress:0}%",
+                        ProgressBrush = enrollmentProgressBrush,
+                        IsStopped = en.IsStopped,
+                        CanIssuePayment = !en.IsStopped
                     });
                 }
 

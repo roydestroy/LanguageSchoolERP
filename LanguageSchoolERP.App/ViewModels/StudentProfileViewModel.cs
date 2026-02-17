@@ -12,11 +12,18 @@ using CommunityToolkit.Mvvm.Input;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows.Media;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class StudentProfileViewModel : ObservableObject
 {
+    private static readonly Brush ProgressBlueBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
+    private static readonly Brush ProgressOrangeBrush = new SolidColorBrush(Color.FromRgb(230, 145, 56));
+    private static readonly Brush ProgressGreenBrush = new SolidColorBrush(Color.FromRgb(67, 160, 71));
+    private static readonly Brush ProgressPurpleBrush = new SolidColorBrush(Color.FromRgb(123, 97, 255));
+    private static readonly Brush ProgressStoppedRedBrush = new SolidColorBrush(Color.FromRgb(177, 38, 38));
+
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private readonly ExcelReceiptGenerator _excelReceiptGenerator;
@@ -83,6 +90,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string balanceText = "0.00 €";
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent = 0;
+    [ObservableProperty] private Brush progressBrush = ProgressBlueBrush;
     [ObservableProperty] private string pendingContractsText = "";
     [ObservableProperty] private bool hasPendingContracts;
     public IRelayCommand AddPaymentCommand { get; }
@@ -889,7 +897,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     EnrollmentId = e.EnrollmentId,
                     ProgramText = ProgramLabel(e),
                     LevelOrClassText = string.IsNullOrWhiteSpace(e.LevelOrClass) ? "—" : e.LevelOrClass,
-                    AgreementTotalText = $"{e.AgreementTotal:0.00} €",
+                    AgreementTotalText = $"{InstallmentPlanHelper.GetEffectiveAgreementTotal(e):0.00} €",
                     BooksText = $"{e.BooksAmount:0.00} €",
                     DownPaymentText = $"{e.DownPayment:0.00} €",
                     InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
@@ -898,7 +906,9 @@ public partial class StudentProfileViewModel : ObservableObject
                     InstallmentAmountText = e.InstallmentCount > 0
                         ? BuildInstallmentAmountText(e)
                         : "—",
-                    StatusText = string.IsNullOrWhiteSpace(e.Status) ? "Ενεργός" : e.Status,
+                    StatusText = e.IsStopped
+                        ? $"Διακοπή ({(e.StoppedOn.HasValue ? e.StoppedOn.Value.ToString("dd/MM/yyyy") : "—")})"
+                        : (string.IsNullOrWhiteSpace(e.Status) ? "Ενεργός" : e.Status),
                     CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
                 });
             }
@@ -908,8 +918,7 @@ public partial class StudentProfileViewModel : ObservableObject
             decimal downSum = enrollments.Sum(e => e.DownPayment);
             decimal paidSum = enrollments.Sum(e => e.Payments.Sum(p => p.Amount));
             decimal paidTotal = downSum + paidSum;
-            decimal balance = agreementSum - paidTotal;
-            if (balance < 0) balance = 0;
+            decimal balance = enrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
 
             string BuildEnrollmentExtras(Enrollment e)
             {
@@ -959,6 +968,22 @@ public partial class StudentProfileViewModel : ObservableObject
             var progress = agreementSum <= 0 ? 0 : (double)(paidTotal / agreementSum * 100m);
             if (progress > 100) progress = 100;
             if (progress < 0) progress = 0;
+
+            var activeEnrollments = enrollments.Where(e => !e.IsStopped).ToList();
+            var hasOnlyStoppedPrograms = enrollments.Count > 0 && enrollments.All(e => e.IsStopped);
+            var anyActiveOverdue = activeEnrollments.Any(e => InstallmentPlanHelper.IsEnrollmentOverdue(e, DateTime.Today));
+            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + e.Payments.Sum(p => p.Amount)) > e.AgreementTotal + 0.009m);
+            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + e.Payments.Sum(p => p.Amount)) + 0.009m >= e.AgreementTotal);
+
+            ProgressBrush = hasOnlyStoppedPrograms
+                ? ProgressStoppedRedBrush
+                : anyActiveOverpaid
+                    ? ProgressPurpleBrush
+                    : anyActiveOverdue
+                        ? ProgressOrangeBrush
+                        : allActiveFullyPaid
+                            ? ProgressGreenBrush
+                            : ProgressBlueBrush;
 
             ProgressPercent = progress;
             ProgressText = $"{progress:0}%";

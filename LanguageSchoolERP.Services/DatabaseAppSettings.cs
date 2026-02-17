@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.Json;
 
 namespace LanguageSchoolERP.Services;
@@ -7,6 +8,7 @@ public sealed class DatabaseAppSettingsProvider
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private const string SettingsFolder = @"C:\ProgramData\LanguageSchoolERP";
     private const string SettingsFile = "appsettings.json";
+    private readonly string _fullPath = Path.Combine(SettingsFolder, SettingsFile);
 
     public DatabaseAppSettingsProvider()
     {
@@ -16,6 +18,12 @@ public sealed class DatabaseAppSettingsProvider
     public DatabaseAppSettings Settings { get; }
 
     public IReadOnlyList<RemoteDatabaseOption> RemoteDatabases => Settings.Remote.Databases;
+
+    public void Save()
+    {
+        Normalize(Settings);
+        File.WriteAllText(_fullPath, JsonSerializer.Serialize(Settings, JsonOptions));
+    }
 
     private static DatabaseAppSettings LoadOrCreate()
     {
@@ -59,6 +67,12 @@ public sealed class DatabaseAppSettingsProvider
                 new RemoteDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP_View" },
                 new RemoteDatabaseOption { Key = "NeaIonia", Database = "NeaIoniaSchoolERP_View" }
             ]
+        },
+        Startup = new StartupDatabaseSettings
+        {
+            Mode = DatabaseMode.Local,
+            LocalDatabase = "FilotheiSchoolERP",
+            RemoteDatabase = "FilotheiSchoolERP_View"
         }
     };
 
@@ -66,6 +80,7 @@ public sealed class DatabaseAppSettingsProvider
     {
         settings.Local ??= new LocalDatabaseSettings();
         settings.Remote ??= new RemoteDatabaseSettings();
+        settings.Startup ??= new StartupDatabaseSettings();
 
         if (string.IsNullOrWhiteSpace(settings.Local.Server))
             settings.Local.Server = @".\SQLEXPRESS";
@@ -88,6 +103,12 @@ public sealed class DatabaseAppSettingsProvider
             if (string.IsNullOrWhiteSpace(db.Key))
                 db.Key = db.Database;
         }
+
+        if (string.IsNullOrWhiteSpace(settings.Startup.LocalDatabase))
+            settings.Startup.LocalDatabase = settings.Local.Database;
+
+        if (string.IsNullOrWhiteSpace(settings.Startup.RemoteDatabase))
+            settings.Startup.RemoteDatabase = settings.Remote.Databases.First().Database;
     }
 }
 
@@ -95,6 +116,7 @@ public sealed class DatabaseAppSettings
 {
     public LocalDatabaseSettings Local { get; set; } = new();
     public RemoteDatabaseSettings Remote { get; set; } = new();
+    public StartupDatabaseSettings Startup { get; set; } = new();
 }
 
 public sealed class LocalDatabaseSettings
@@ -107,6 +129,13 @@ public sealed class RemoteDatabaseSettings
 {
     public string Server { get; set; } = "100.104.49.73,1433";
     public List<RemoteDatabaseOption> Databases { get; set; } = [];
+}
+
+public sealed class StartupDatabaseSettings
+{
+    public DatabaseMode Mode { get; set; } = DatabaseMode.Local;
+    public string LocalDatabase { get; set; } = "FilotheiSchoolERP";
+    public string RemoteDatabase { get; set; } = "FilotheiSchoolERP_View";
 }
 
 public sealed class RemoteDatabaseOption

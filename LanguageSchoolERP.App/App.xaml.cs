@@ -41,6 +41,8 @@ public partial class App : Application
         services.AddTransient<AddContractViewModel>();
         services.AddTransient<Windows.AddContractWindow>();
 
+        services.AddTransient<Windows.StartupDatabaseOptionsWindow>();
+
         // Services layer
         services.AddSingleton<ReceiptNumberService>();
         services.AddSingleton<ExcelReceiptGenerator>();

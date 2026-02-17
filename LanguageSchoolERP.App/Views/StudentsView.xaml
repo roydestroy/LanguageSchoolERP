@@ -202,21 +202,35 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
-                                            <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding FullName}"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding FullName}"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                <TextBlock Text="{Binding ContactLine}" Foreground="{StaticResource Brush.TextSecondary}"/>
+                                                <TextBlock Text="{Binding ContactLine}"
+                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding ContactLine}"/>
                                                 <TextBlock Text="  •  " Foreground="#999999"/>
                                                 <TextBlock Text="{Binding ActiveStatusText}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Text="{Binding EnrollmentSummaryText}"
+                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                       FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding EnrollmentSummaryText}"/>
                                         </StackPanel>
 
                                         <!-- Total payment progress -->
-                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Width="170">
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" MinWidth="120" MaxWidth="160">
                                             <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
-                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
+                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                         </StackPanel>
 
                                         <!-- Balance -->
@@ -237,6 +251,17 @@
                                         </Border>
 
                                         <!-- Pending contract badge -->
+                                        <!-- Stopped badge -->
+                                        <Border Grid.Column="5" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
+                                                Background="{Binding StoppedBadgeBackground}"
+                                                BorderBrush="{Binding StoppedBadgeBorder}"
+                                                Visibility="{Binding StoppedBadgeVisibility}">
+                                            <TextBlock Text="{Binding StoppedBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding StoppedBadgeForeground}"/>
+                                        </Border>
+
                                         <Border Grid.Column="4" Margin="12,0,0,0"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
@@ -247,7 +272,7 @@
                                                        Foreground="{Binding PendingContractBadgeForeground}"/>
                                         </Border>
 
-                                        <Button Grid.Column="5"
+                                        <Button Grid.Column="6"
                                                 Margin="12,0,0,0"
                                                 Width="90" Height="32"
                                                 Content="Άνοιγμα"
@@ -256,7 +281,7 @@
                                                 CommandParameter="{Binding StudentId}"
                                                 VerticalAlignment="Center"/>
 
-                                        <ToggleButton Grid.Column="6" Margin="12,0,0,0"
+                                        <ToggleButton Grid.Column="7" Margin="12,0,0,0"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                                       Style="{StaticResource ExpandCaretButtonStyle}"
                                                       VerticalAlignment="Center"/>
@@ -278,25 +303,52 @@
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                                 <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
                                                                 <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" Margin="0,4,0,0"/>
-                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
+                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                                             </StackPanel>
 
-                                                            <TextBlock Grid.Column="1" Margin="12,0,0,0"
-                                                                       Text="{Binding AgreementText}" HorizontalAlignment="Right"/>
+                                                            <Grid Grid.Column="1" Margin="14,0,0,0" MinWidth="360">
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="*"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
 
-                                                            <TextBlock Grid.Column="2" Margin="12,0,0,0"
-                                                                       Text="{Binding PaidText}" HorizontalAlignment="Right"/>
+                                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                                    <TextBlock Text="{Binding AgreementText}" Margin="0,0,12,0"/>
+                                                                    <TextBlock Text="{Binding PaidText}" Margin="0,0,12,0"/>
+                                                                    <TextBlock Text="{Binding BalanceText}" FontWeight="SemiBold"/>
+                                                                </StackPanel>
 
-                                                            <TextBlock Grid.Column="3" Margin="12,0,0,0"
-                                                                       Text="{Binding BalanceText}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                                                <Border Grid.Row="1"
+                                                                        Margin="0,6,0,0"
+                                                                        Style="{StaticResource StatusBadgeStyle}"
+                                                                        Background="#FDEDED"
+                                                                        BorderBrush="#F4C6C6"
+                                                                        HorizontalAlignment="Right"
+                                                                        VerticalAlignment="Top"
+                                                                        Visibility="{Binding StoppedBadgeVisibility}">
+                                                                    <TextBlock Text="ΔΙΑΚΟΠΗ"
+                                                                               Style="{StaticResource StatusBadgeTextStyle}"
+                                                                               Foreground="#B12626"/>
+                                                                </Border>
+
+                                                                <Button Grid.Row="2"
+                                                                        Margin="0,8,0,0"
+                                                                        Width="120" Height="30"
+                                                                        Content="Πληρωμή"
+                                                                        Style="{StaticResource PrimaryActionButtonStyle}"
+                                                                        Command="{Binding DataContext.QuickAddPaymentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                        CommandParameter="{Binding EnrollmentId}"
+                                                                        IsEnabled="{Binding CanIssuePayment}"
+                                                                        HorizontalAlignment="Right"
+                                                                        VerticalAlignment="Bottom"/>
+                                                            </Grid>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

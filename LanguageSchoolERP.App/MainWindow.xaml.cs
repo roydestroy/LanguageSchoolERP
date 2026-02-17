@@ -26,6 +26,13 @@ public partial class MainWindow : Window
         DbCombo.ItemsSource = settingsProvider.RemoteDatabases;
         DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
 
+        LocalDbCombo.ItemsSource = new[]
+        {
+            new { Key = "Filothei", Database = "FilotheiSchoolERP" },
+            new { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" }
+        };
+        LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
+
         YearCombo.ItemsSource = new[]
         {
             "2024-2025",
@@ -52,6 +59,15 @@ public partial class MainWindow : Window
             }
         };
 
+        LocalDbCombo.SelectionChanged += async (_, __) =>
+        {
+            if (LocalDbCombo.SelectedValue is string selectedLocalDb && !string.IsNullOrWhiteSpace(selectedLocalDb))
+            {
+                _state.SelectedLocalDatabaseName = selectedLocalDb;
+                await RefreshAcademicYearProgressAsync();
+            }
+        };
+
         YearCombo.SelectionChanged += async (_, __) =>
         {
             _state.SelectedAcademicYear = YearCombo.SelectedItem?.ToString() ?? _state.SelectedAcademicYear;
@@ -66,6 +82,7 @@ public partial class MainWindow : Window
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
+        SettingsBtn.Click += (_, __) => OpenStartupOptions();
 
         _ = RefreshAcademicYearProgressAsync();
     }
@@ -73,9 +90,16 @@ public partial class MainWindow : Window
     private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode) ||
-            e.PropertyName == nameof(AppState.SelectedRemoteDatabaseName))
+            e.PropertyName == nameof(AppState.SelectedRemoteDatabaseName) ||
+            e.PropertyName == nameof(AppState.SelectedLocalDatabaseName))
         {
             SyncTopBarState();
+        }
+
+        if (e.PropertyName == nameof(AppState.SelectedAcademicYear) ||
+            e.PropertyName == nameof(AppState.DataVersion))
+        {
+            _ = RefreshAcademicYearProgressAsync();
         }
     }
 
@@ -83,7 +107,11 @@ public partial class MainWindow : Window
     {
         ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
         DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
+        LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
         RemoteDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Remote
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        LocalDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Local
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
@@ -101,6 +129,7 @@ public partial class MainWindow : Window
         {
             YearProgressBar.Value = 0;
             YearProgressText.Text = "Πρόοδος Έτους: 0%";
+            YearLostRevenueText.Text = "Απώλειες διακοπών: 0,00 €";
             return;
         }
 
@@ -110,8 +139,9 @@ public partial class MainWindow : Window
             .Where(e => e.AcademicPeriodId == period.AcademicPeriodId)
             .ToListAsync();
 
-        decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
+        decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
         decimal paidSum = enrollments.Sum(e => e.DownPayment + e.Payments.Sum(p => p.Amount));
+        decimal lostRevenue = enrollments.Sum(InstallmentPlanHelper.GetLostAmount);
 
         var progress = agreementSum <= 0 ? 0d : (double)(paidSum / agreementSum * 100m);
         if (progress > 100) progress = 100;
@@ -119,6 +149,24 @@ public partial class MainWindow : Window
 
         YearProgressBar.Value = progress;
         YearProgressText.Text = $"Πρόοδος Έτους: {progress:0}%";
+        YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
+    }
+
+    private void OpenStartupOptions()
+    {
+        var win = App.Services.GetRequiredService<Windows.StartupDatabaseOptionsWindow>();
+        win.Owner = this;
+        win.Initialize(_state.StartupLocalDatabaseName);
+
+        if (win.ShowDialog() != true)
+            return;
+
+        _state.SaveStartupLocalDatabase(win.SelectedDatabaseName);
+        MessageBox.Show(
+            "Η προεπιλεγμένη βάση εκκίνησης αποθηκεύτηκε.",
+            "Επιτυχία",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void NavigateToStudents()

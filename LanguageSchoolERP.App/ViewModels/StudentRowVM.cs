@@ -7,14 +7,19 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class StudentRowVm : ObservableObject
 {
+    private static readonly Brush DefaultProgressBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
+
     public Guid StudentId { get; set; }
 
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
     [ObservableProperty] private string yearLabel = "";
+    [ObservableProperty] private string enrollmentSummaryText = "";
 
     [ObservableProperty] private bool isActive;
-    public string ActiveStatusText => IsActive ? "Ενεργός" : "Ανενεργός";
+    [ObservableProperty] private bool hasStoppedProgram;
+    [ObservableProperty] private bool hasOnlyStoppedPrograms;
+    public string ActiveStatusText => HasOnlyStoppedPrograms ? "Διακοπή" : (IsActive ? "Ενεργός" : "Ανενεργός");
 
     [ObservableProperty] private decimal balance;
     public string BalanceText => $"{Balance:0.00} €";
@@ -23,6 +28,7 @@ public partial class StudentRowVm : ObservableObject
 
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent;
+    [ObservableProperty] private Brush progressBrush = DefaultProgressBrush;
 
     [ObservableProperty] private bool isOverdue;
     public string OverdueBadgeText => "ΛΗΞΙΠΡΟΘΕΣΜΟ";
@@ -30,6 +36,12 @@ public partial class StudentRowVm : ObservableObject
     public Brush OverdueBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
     public Brush OverdueBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
     public Visibility OverdueBadgeVisibility => IsOverdue ? Visibility.Visible : Visibility.Collapsed;
+
+    public string StoppedBadgeText => "ΔΙΑΚΟΠΗ";
+    public Brush StoppedBadgeBackground => new SolidColorBrush(Color.FromRgb(253, 237, 237));
+    public Brush StoppedBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
+    public Brush StoppedBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
+    public Visibility StoppedBadgeVisibility => HasStoppedProgram ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool hasPendingContract;
     public string PendingContractBadgeText => "ΣΥΜΦΩΝΗΤΙΚΟ";
@@ -47,6 +59,12 @@ public partial class StudentRowVm : ObservableObject
         => OnPropertyChanged(nameof(ExpandedVisibility));
 
     partial void OnIsActiveChanged(bool value)
+        => OnPropertyChanged(nameof(ActiveStatusText));
+
+    partial void OnHasStoppedProgramChanged(bool value)
+        => OnPropertyChanged(nameof(StoppedBadgeVisibility));
+
+    partial void OnHasOnlyStoppedProgramsChanged(bool value)
         => OnPropertyChanged(nameof(ActiveStatusText));
 
     partial void OnIsOverdueChanged(bool value)
