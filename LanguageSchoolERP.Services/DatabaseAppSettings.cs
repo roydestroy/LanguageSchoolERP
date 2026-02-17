@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text.Json;
+using Microsoft.Data.SqlClient;
 
 namespace LanguageSchoolERP.Services;
 
@@ -18,6 +19,7 @@ public sealed class DatabaseAppSettingsProvider
     public DatabaseAppSettings Settings { get; }
 
     public IReadOnlyList<RemoteDatabaseOption> RemoteDatabases => Settings.Remote.Databases;
+    public IReadOnlyList<LocalDatabaseOption> LocalDatabases => Settings.Local.Databases;
 
     public void Save()
     {
@@ -57,11 +59,19 @@ public sealed class DatabaseAppSettingsProvider
         Local = new LocalDatabaseSettings
         {
             Server = @".\SQLEXPRESS",
-            Database = "FilotheiSchoolERP"
+            Database = "FilotheiSchoolERP",
+            ConnectionString = "Server=.\\SQLEXPRESS;Database=FilotheiSchoolERP;Trusted_Connection=True;TrustServerCertificate=True;Encrypt=True;",
+            Databases =
+            [
+                new LocalDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP" },
+                new LocalDatabaseOption { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" },
+                new LocalDatabaseOption { Key = "Default (from settings)", Database = "FilotheiSchoolERP" }
+            ]
         },
         Remote = new RemoteDatabaseSettings
         {
             Server = "100.104.49.73,1433",
+            ConnectionString = "Server=100.104.49.73,1433;Database=FilotheiSchoolERP_View;TrustServerCertificate=True;Encrypt=True;",
             Databases =
             [
                 new RemoteDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP_View" },
@@ -101,6 +111,29 @@ public sealed class DatabaseAppSettingsProvider
         if (string.IsNullOrWhiteSpace(settings.Remote.Server))
             settings.Remote.Server = "100.104.49.73,1433";
 
+        settings.Local.Databases ??= [];
+        if (settings.Local.Databases.Count == 0)
+        {
+            settings.Local.Databases.Add(new LocalDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP" });
+            settings.Local.Databases.Add(new LocalDatabaseOption { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" });
+        }
+
+        foreach (var db in settings.Local.Databases)
+        {
+            if (string.IsNullOrWhiteSpace(db.Key))
+                db.Key = db.Database;
+        }
+
+        var defaultLocalOption = settings.Local.Databases.FirstOrDefault(d => d.Database == settings.Local.Database);
+        if (defaultLocalOption is null)
+        {
+            settings.Local.Databases.Add(new LocalDatabaseOption
+            {
+                Key = "Default (from settings)",
+                Database = settings.Local.Database
+            });
+        }
+
         settings.Remote.Databases ??= [];
         if (settings.Remote.Databases.Count == 0)
         {
@@ -112,6 +145,21 @@ public sealed class DatabaseAppSettingsProvider
         {
             if (string.IsNullOrWhiteSpace(db.Key))
                 db.Key = db.Database;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Local.ConnectionString))
+        {
+            settings.Local.ConnectionString = BuildTrustedConnectionString(settings.Local.Server, settings.Local.Database);
+        }
+        else
+        {
+            settings.Local.ConnectionString = EnsureDatabaseInConnectionString(settings.Local.ConnectionString, settings.Local.Database);
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Remote.ConnectionString))
+        {
+            var firstRemoteDb = settings.Remote.Databases.First().Database;
+            settings.Remote.ConnectionString = BuildRemoteConnectionString(settings.Remote, firstRemoteDb);
         }
 
         if (string.IsNullOrWhiteSpace(settings.Startup.LocalDatabase))
@@ -132,6 +180,54 @@ public sealed class DatabaseAppSettingsProvider
         if (string.IsNullOrWhiteSpace(settings.Update.InstallFolder))
             settings.Update.InstallFolder = @"C:\Apps\LanguageSchoolERP";
     }
+
+    private static string BuildTrustedConnectionString(string server, string database)
+    {
+        var builder = new SqlConnectionStringBuilder
+        {
+            DataSource = server,
+            InitialCatalog = database,
+            IntegratedSecurity = true,
+            TrustServerCertificate = true,
+            Encrypt = true
+        };
+
+        return builder.ConnectionString;
+    }
+
+    private static string BuildRemoteConnectionString(RemoteDatabaseSettings remoteSettings, string database)
+    {
+        var builder = new SqlConnectionStringBuilder
+        {
+            DataSource = remoteSettings.Server,
+            InitialCatalog = database,
+            TrustServerCertificate = true,
+            Encrypt = true
+        };
+
+        if (!string.IsNullOrWhiteSpace(remoteSettings.User))
+        {
+            builder.UserID = remoteSettings.User;
+            builder.Password = remoteSettings.Password ?? string.Empty;
+            builder.IntegratedSecurity = false;
+        }
+        else
+        {
+            builder.IntegratedSecurity = true;
+        }
+
+        return builder.ConnectionString;
+    }
+
+    private static string EnsureDatabaseInConnectionString(string connectionString, string database)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = database
+        };
+
+        return builder.ConnectionString;
+    }
 }
 
 public sealed class DatabaseAppSettings
@@ -146,11 +242,22 @@ public sealed class LocalDatabaseSettings
 {
     public string Server { get; set; } = @".\SQLEXPRESS";
     public string Database { get; set; } = "FilotheiSchoolERP";
+    public string ConnectionString { get; set; } = "";
+    public List<LocalDatabaseOption> Databases { get; set; } = [];
+}
+
+public sealed class LocalDatabaseOption
+{
+    public string Key { get; set; } = "Filothei";
+    public string Database { get; set; } = "FilotheiSchoolERP";
 }
 
 public sealed class RemoteDatabaseSettings
 {
     public string Server { get; set; } = "100.104.49.73,1433";
+    public string ConnectionString { get; set; } = "";
+    public string? User { get; set; }
+    public string? Password { get; set; }
     public List<RemoteDatabaseOption> Databases { get; set; } = [];
 }
 
