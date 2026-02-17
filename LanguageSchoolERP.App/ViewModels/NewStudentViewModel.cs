@@ -78,6 +78,7 @@ public partial class NewStudentViewModel : ObservableObject
 
     public bool IsLanguageSchoolProgram => SelectedProgramType == ProgramType.LanguageSchool;
     public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
+    public bool HasBooksOption => SelectedProgramType == ProgramType.LanguageSchool;
 
     public IRelayCommand CreateCommand { get; }
 
@@ -86,11 +87,13 @@ public partial class NewStudentViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedProgramOption));
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
+        OnPropertyChanged(nameof(HasBooksOption));
 
         if (value != ProgramType.LanguageSchool)
         {
             IncludesStudyLab = false;
             StudyLabMonthlyPriceText = "";
+            BooksAmountText = "0";
         }
 
         if (value != ProgramType.StudyLab)
@@ -136,10 +139,14 @@ public partial class NewStudentViewModel : ObservableObject
             ErrorMessage = "Το σύνολο συμφωνίας πρέπει να είναι έγκυρος αριθμός (>= 0).";
             return;
         }
-        if (!TryParseMoney(BooksAmountText, out var books) || books < 0)
+        decimal books = 0;
+        if (HasBooksOption)
         {
-            ErrorMessage = "Το ποσό βιβλίων πρέπει να είναι έγκυρος αριθμός (>= 0).";
-            return;
+            if (!TryParseMoney(BooksAmountText, out books) || books < 0)
+            {
+                ErrorMessage = "Το ποσό βιβλίων πρέπει να είναι έγκυρος αριθμός (>= 0).";
+                return;
+            }
         }
         if (!TryParseMoney(DownPaymentText, out var down) || down < 0)
         {

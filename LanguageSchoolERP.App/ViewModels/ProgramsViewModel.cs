@@ -9,15 +9,12 @@ public partial class ProgramsViewModel : ObservableObject
 {
     public ObservableCollection<string> Programs { get; } = new();
 
-    [ObservableProperty] private string newProgramName = "";
     [ObservableProperty] private string? selectedProgram;
 
-    public IRelayCommand AddProgramCommand { get; }
     public IRelayCommand DeleteProgramCommand { get; }
 
     public ProgramsViewModel()
     {
-        AddProgramCommand = new RelayCommand(AddProgram);
         DeleteProgramCommand = new RelayCommand(DeleteProgram);
 
         Programs.Add(ProgramType.LanguageSchool.ToDisplayName());
@@ -25,20 +22,21 @@ public partial class ProgramsViewModel : ObservableObject
         Programs.Add(ProgramType.EuroLab.ToDisplayName());
     }
 
-    private void AddProgram()
+    public bool AddProgram(string name)
     {
-        var name = (NewProgramName ?? "").Trim();
+        name = (name ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
-            return;
+            return false;
         }
 
-        if (!Programs.Contains(name))
+        if (Programs.Contains(name))
         {
-            Programs.Add(name);
+            return false;
         }
 
-        NewProgramName = "";
+        Programs.Add(name);
+        return true;
     }
 
     private void DeleteProgram()

@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using LanguageSchoolERP.App.ViewModels;
 
@@ -9,5 +10,13 @@ public partial class AcademicYearsView : UserControl
     {
         InitializeComponent();
         DataContext = vm;
+    }
+
+    private async void AddAcademicYearButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is AcademicYearsViewModel vm)
+        {
+            await vm.AddAcademicYearAsync();
+        }
     }
 }

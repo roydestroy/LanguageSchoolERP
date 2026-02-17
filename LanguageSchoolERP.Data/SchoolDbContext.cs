@@ -13,7 +13,7 @@ public class SchoolDbContext : DbContext
     public DbSet<ContractTemplate> ContractTemplates => Set<ContractTemplate>();
     public DbSet<AcademicPeriod> AcademicPeriods => Set<AcademicPeriod>();
     public DbSet<ReceiptCounter> ReceiptCounters => Set<ReceiptCounter>();
-
+    public DbSet<StudyProgram> Programs => Set<StudyProgram>();
     public SchoolDbContext(DbContextOptions<SchoolDbContext> options)
         : base(options)
     {

@@ -11,7 +11,7 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Ακαδημαϊκά έτη" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <TextBox Width="210" Margin="20,0,10,0" VerticalContentAlignment="Center" Text="{Binding NewAcademicYearName, UpdateSourceTrigger=PropertyChanged}"/>
-                <Button Content="Νέο ακαδημαϊκό έτος" Width="170" Margin="0,0,10,0" Command="{Binding AddAcademicYearCommand}"/>
+                <Button x:Name="AddAcademicYearButton" Content="Νέο ακαδημαϊκό έτος" Width="170" Margin="0,0,10,0" Click="AddAcademicYearButton_Click"/>
                 <Button Content="Διαγραφή" Width="95" Command="{Binding DeleteAcademicYearCommand}" Background="#A64949" BorderBrush="#8F3939"/>
             </StackPanel>
         </Border>
