@@ -120,6 +120,8 @@ public class AppState : INotifyPropertyChanged
 
     public string StartupLocalDatabaseName => _settingsProvider.Settings.Startup.LocalDatabase;
 
+    public string ConfiguredLocalDatabaseName => _settingsProvider.Settings.Local.Database;
+
     public void SaveStartupLocalDatabase(string databaseName)
     {
         if (string.IsNullOrWhiteSpace(databaseName))

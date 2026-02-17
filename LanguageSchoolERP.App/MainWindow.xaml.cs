@@ -28,6 +28,7 @@ public partial class MainWindow : Window
 
         LocalDbCombo.ItemsSource = new[]
         {
+            new { Key = "Default local", Database = _state.ConfiguredLocalDatabaseName },
             new { Key = "Filothei", Database = "FilotheiSchoolERP" },
             new { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" }
         };
@@ -157,7 +158,7 @@ public partial class MainWindow : Window
     {
         var win = App.Services.GetRequiredService<Windows.StartupDatabaseOptionsWindow>();
         win.Owner = this;
-        win.Initialize(_state.StartupLocalDatabaseName);
+        win.Initialize(_state.StartupLocalDatabaseName, _state.ConfiguredLocalDatabaseName);
 
         if (win.ShowDialog() != true)
             return;
