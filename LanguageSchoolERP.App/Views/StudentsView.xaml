@@ -206,16 +206,23 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
-                                            <TextBlock Text="{Binding FullName}" FontSize="16" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding FullName}"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding FullName}"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                <TextBlock Text="{Binding ContactLine}" Foreground="{StaticResource Brush.TextSecondary}"/>
+                                                <TextBlock Text="{Binding ContactLine}"
+                                                           Foreground="{StaticResource Brush.TextSecondary}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding ContactLine}"/>
                                                 <TextBlock Text="  •  " Foreground="#999999"/>
                                                 <TextBlock Text="{Binding ActiveStatusText}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
                                         </StackPanel>
 
                                         <!-- Total payment progress -->
-                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Width="170">
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" MinWidth="120" MaxWidth="160">
                                             <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
                                             <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                         </StackPanel>
@@ -313,6 +320,7 @@
                                                                         Style="{StaticResource StatusBadgeStyle}"
                                                                         Background="#FDEDED"
                                                                         BorderBrush="#F4C6C6"
+                                                                        HorizontalAlignment="Right"
                                                                         Visibility="{Binding StoppedBadgeVisibility}">
                                                                     <TextBlock Text="ΔΙΑΚΟΠΗ"
                                                                                Style="{StaticResource StatusBadgeTextStyle}"
