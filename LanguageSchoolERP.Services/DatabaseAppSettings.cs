@@ -77,7 +77,7 @@ public sealed class DatabaseAppSettingsProvider
         Update = new UpdateSettings
         {
             Enabled = true,
-            GitHubOwner = "YOUR_GITHUB_OWNER",
+            GitHubOwner = "roydestroy",
             GitHubRepo = "LanguageSchoolERP",
             IncludePrerelease = false
         }
@@ -119,7 +119,7 @@ public sealed class DatabaseAppSettingsProvider
             settings.Startup.RemoteDatabase = settings.Remote.Databases.First().Database;
 
         if (string.IsNullOrWhiteSpace(settings.Update.GitHubOwner))
-            settings.Update.GitHubOwner = "YOUR_GITHUB_OWNER";
+            settings.Update.GitHubOwner = "roydestroy";
 
         if (string.IsNullOrWhiteSpace(settings.Update.GitHubRepo))
             settings.Update.GitHubRepo = "LanguageSchoolERP";
@@ -162,7 +162,7 @@ public sealed class RemoteDatabaseOption
 public sealed class UpdateSettings
 {
     public bool Enabled { get; set; } = true;
-    public string GitHubOwner { get; set; } = "YOUR_GITHUB_OWNER";
+    public string GitHubOwner { get; set; } = "roydestroy";
     public string GitHubRepo { get; set; } = "LanguageSchoolERP";
     public bool IncludePrerelease { get; set; }
 }
