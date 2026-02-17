@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using LanguageSchoolERP.App.ViewModels;
 
@@ -9,5 +10,13 @@ public partial class ProgramsView : UserControl
     {
         InitializeComponent();
         DataContext = vm;
+    }
+
+    private void AddProgramButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ProgramsViewModel vm && vm.AddProgramCommand.CanExecute(null))
+        {
+            vm.AddProgramCommand.Execute(null);
+        }
     }
 }

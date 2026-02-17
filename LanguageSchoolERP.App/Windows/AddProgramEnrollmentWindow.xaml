@@ -31,8 +31,11 @@
                 <TextBlock Text="Σύνολο συμφωνίας (€)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding AgreementTotalText}"/>
 
-                <TextBlock Text="Βιβλία (€)"/>
-                <TextBox Margin="0,4,0,10" Text="{Binding BooksAmountText}"/>
+                <TextBlock Text="Βιβλία (€)"
+                           Visibility="{Binding HasBooksOption, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <TextBox Margin="0,4,0,10"
+                         Text="{Binding BooksAmountText}"
+                         Visibility="{Binding HasBooksOption, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <TextBlock Text="Προκαταβολή (€)"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding DownPaymentText}"/>

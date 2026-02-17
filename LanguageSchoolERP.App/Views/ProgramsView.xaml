@@ -13,7 +13,7 @@
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="Προγράμματα" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <TextBox Width="300" Margin="20,0,10,0" VerticalContentAlignment="Center" Text="{Binding NewProgramName, UpdateSourceTrigger=PropertyChanged}"/>
-                <Button Content="Νέο πρόγραμμα" Width="130" Margin="0,0,10,0" Command="{Binding AddProgramCommand}"/>
+                <Button x:Name="AddProgramButton" Content="Νέο πρόγραμμα" Width="130" Margin="0,0,10,0" Command="{Binding AddProgramCommand}" Click="AddProgramButton_Click"/>
                 <Button Content="Διαγραφή" Width="95" Command="{Binding DeleteProgramCommand}" Background="#A64949" BorderBrush="#8F3939"/>
             </StackPanel>
         </Border>

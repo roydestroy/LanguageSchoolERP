@@ -75,6 +75,7 @@ public partial class AcademicYearsViewModel : ObservableObject
         }
 
         using var db = _dbFactory.Create();
+        DbSeeder.EnsureSeeded(db);
         var exists = await db.AcademicPeriods.AnyAsync(x => x.Name == name);
         if (exists)
         {
@@ -102,6 +103,7 @@ public partial class AcademicYearsViewModel : ObservableObject
         }
 
         using var db = _dbFactory.Create();
+        DbSeeder.EnsureSeeded(db);
         var period = await db.AcademicPeriods.FirstOrDefaultAsync(x => x.AcademicPeriodId == SelectedAcademicYear.AcademicPeriodId);
         if (period is null)
         {
