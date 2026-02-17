@@ -55,6 +55,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private string errorMessage = "";
     [ObservableProperty] private string dialogTitle = "Προσθήκη εγγραφής προγράμματος";
     [ObservableProperty] private string saveButtonText = "Προσθήκη";
+    [ObservableProperty] private string formTitle = "Εγγραφή προγράμματος";
     [ObservableProperty] private bool isEditMode;
 
     public IAsyncRelayCommand SaveCommand { get; }
@@ -144,6 +145,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         {
             DialogTitle = "Επεξεργασία Εγγραφής";
             SaveButtonText = "Αποθήκευση αλλαγών";
+            FormTitle = "Επεξεργασία εγγραφής προγράμματος";
 
             try
             {
@@ -186,6 +188,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         {
             DialogTitle = "Προσθήκη εγγραφής προγράμματος";
             SaveButtonText = "Προσθήκη";
+            FormTitle = "Προσθήκη εγγραφής προγράμματος";
         }
     }
 
