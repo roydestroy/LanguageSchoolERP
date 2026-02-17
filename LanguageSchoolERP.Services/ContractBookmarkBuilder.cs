@@ -20,7 +20,7 @@ public sealed class ContractBookmarkBuilder
             ["on_up"] = NormalizeNameForContract(payload.GuardianFullName),
             ["on_sp"] = NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
             ["per_prg"] = NormalizeProgramTextForContractBookmark(payload.ProgramNameUpper),
-            ["tit_prg"] = NormalizeProgramTextForContractBookmark(payload.ProgramTitleUpperWithExtras),
+            ["tit_prg"] = NormalizeProgramTextForContractBookmark(enrollment.LevelOrClass ?? string.Empty),
             ["sun_pos"] = FormatPlainAmount(payload.AgreementTotal),
             ["prok_pos"] = FormatPlainAmount(payload.DownPayment),
             ["up_pos"] = FormatPlainAmount(payload.AgreementTotal - payload.DownPayment)
