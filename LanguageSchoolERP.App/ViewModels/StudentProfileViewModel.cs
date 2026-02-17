@@ -646,8 +646,16 @@ public partial class StudentProfileViewModel : ObservableObject
                 return;
             }
 
-            TryDeleteFile(contract.DocxPath);
-            TryDeleteFile(contract.PdfPath);
+            var deleteErrors = new List<string>();
+            TryDeleteFile(contract.DocxPath, "DOCX", deleteErrors);
+            TryDeleteFile(contract.PdfPath, "PDF", deleteErrors);
+
+            if (deleteErrors.Count > 0)
+            {
+                var message = "Δεν ήταν δυνατή η διαγραφή όλων των αρχείων του συμφωνητικού.\n" + string.Join("\n", deleteErrors);
+                System.Windows.MessageBox.Show(message, "Αποτυχία διαγραφής αρχείου", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
 
             db.Contracts.Remove(contract);
             await db.SaveChangesAsync();
@@ -1146,13 +1154,20 @@ public partial class StudentProfileViewModel : ObservableObject
         return parts.Length == 2 ? parts[1] : "";
     }
 
-    private static void TryDeleteFile(string? path)
+    private static void TryDeleteFile(string? path, string label, ICollection<string> errors)
     {
         if (string.IsNullOrWhiteSpace(path))
             return;
 
-        if (File.Exists(path))
-            File.Delete(path);
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch (Exception ex)
+        {
+            errors.Add($"{label}: {Path.GetFileName(path)} ({ex.Message})");
+        }
     }
 
     private static (string Name, string Surname) SplitName(string? fullName)
