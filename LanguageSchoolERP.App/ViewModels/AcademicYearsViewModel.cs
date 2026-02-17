@@ -61,16 +61,16 @@ public partial class AcademicYearsViewModel : ObservableObject
         }
     }
 
-    public Task AddAcademicYearAsync() => AddAsync();
+    public Task AddAcademicYearAsync(string? yearName = null) => AddAsync(yearName);
 
-    private async Task AddAsync()
+    private async Task AddAsync(string? yearName = null)
     {
         if (!CanWrite())
         {
             System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
             return;
         }
-        var name = (NewAcademicYearName ?? "").Trim();
+        var name = (yearName ?? NewAcademicYearName ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
             return;
