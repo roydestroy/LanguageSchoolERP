@@ -369,7 +369,7 @@
 						<TextBlock DockPanel.Dock="Left" Text="Εγγραφές προγραμμάτων" FontWeight="SemiBold" VerticalAlignment="Center"/>
 						<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
 							<Button Content="Προσθήκη" Width="120" Command="{Binding AddProgramCommand}"/>
-							<Button Content="Επεξεργασία" Width="110" Margin="0,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSecondarySelectionActionButtonStyle}"/>
+							<Button Content="Επεξεργασία" Width="110" Margin="8,0,8,0" Command="{Binding EditSelectedProgramCommand}" Style="{StaticResource ProgramSecondarySelectionActionButtonStyle}"/>
 							<Button Content="Αφαίρεση"
                                     Width="110"
                                     Command="{Binding RemoveSelectedProgramCommand}"
@@ -413,7 +413,7 @@
 						<TextBlock DockPanel.Dock="Left" Text="Πληρωμές" FontWeight="SemiBold" VerticalAlignment="Center"/>
 						<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
 							<Button Content="Προσθήκη" Width="120" Command="{Binding AddPaymentCommand}"/>
-							<Button Content="Επεξεργασία" Width="100" Margin="0,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
+							<Button Content="Επεξεργασία" Width="100" Margin="8,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
 							<Button Content="Διαγραφή" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
 						</StackPanel>
 					</DockPanel>
@@ -524,7 +524,7 @@
 							<DataGrid.Columns>
 								<DataGridTextColumn Header="Ημ/νία δημιουργίας" Binding="{Binding CreatedAtText}" Width="180"/>
 								<DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="*"/>
-								<DataGridTextColumn Header="Εκκρεμής" Binding="{Binding IsPendingPrint}" Width="90"/>
+								<DataGridTextColumn Header="Εκκρεμεί" Binding="{Binding IsPendingPrint}" Width="90"/>
 							</DataGrid.Columns>
 						</DataGrid>
 					</Border>

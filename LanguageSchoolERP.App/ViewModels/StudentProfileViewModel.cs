@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
@@ -646,8 +647,16 @@ public partial class StudentProfileViewModel : ObservableObject
                 return;
             }
 
-            TryDeleteFile(contract.DocxPath);
-            TryDeleteFile(contract.PdfPath);
+            var deleteErrors = new List<string>();
+            TryDeleteFile(contract.DocxPath, "DOCX", deleteErrors);
+            TryDeleteFile(contract.PdfPath, "PDF", deleteErrors);
+
+            if (deleteErrors.Count > 0)
+            {
+                var message = "Δεν ήταν δυνατή η διαγραφή όλων των αρχείων του συμφωνητικού.\n" + string.Join("\n", deleteErrors);
+                System.Windows.MessageBox.Show(message, "Αποτυχία διαγραφής αρχείου", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
 
             db.Contracts.Remove(contract);
             await db.SaveChangesAsync();
@@ -1146,13 +1155,39 @@ public partial class StudentProfileViewModel : ObservableObject
         return parts.Length == 2 ? parts[1] : "";
     }
 
-    private static void TryDeleteFile(string? path)
+    private static void TryDeleteFile(string? path, string label, ICollection<string> errors)
     {
         if (string.IsNullOrWhiteSpace(path))
             return;
 
-        if (File.Exists(path))
-            File.Delete(path);
+        if (!File.Exists(path))
+            return;
+
+        if (NativeFileApi.DeleteFile(path))
+            return;
+
+        var win32Error = Marshal.GetLastWin32Error();
+        if (win32Error == 2)
+            return;
+
+        errors.Add($"{label}: {Path.GetFileName(path)} ({GetFriendlyDeleteErrorMessage(win32Error)})");
+    }
+
+    private static string GetFriendlyDeleteErrorMessage(int win32Error)
+    {
+        return win32Error switch
+        {
+            5 => "Δεν υπάρχει πρόσβαση στο αρχείο.",
+            32 => "Το αρχείο χρησιμοποιείται από άλλη εφαρμογή.",
+            33 => "Το αρχείο είναι κλειδωμένο από άλλη διεργασία.",
+            _ => $"Σφάλμα συστήματος ({win32Error})."
+        };
+    }
+
+    private static class NativeFileApi
+    {
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern bool DeleteFile(string lpFileName);
     }
 
     private static (string Name, string Surname) SplitName(string? fullName)
