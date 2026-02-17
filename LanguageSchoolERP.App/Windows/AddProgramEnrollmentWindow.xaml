@@ -17,7 +17,7 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock Text="Εγγραφή προγράμματος" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,12"/>
 
                 <TextBlock Text="Πρόγραμμα"/>
                 <ComboBox Margin="0,4,0,10"
@@ -65,10 +65,24 @@
 
                 <CheckBox Margin="0,0,0,10"
                           Content="Διακοπή προγράμματος"
-                          IsChecked="{Binding IsStopped}"/>
+                          IsChecked="{Binding IsStopped}"
+                          Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                <StackPanel Margin="0,0,0,10"
-                            Visibility="{Binding IsStopped, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Margin="0,0,0,10">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsEditMode}" Value="True"/>
+                                        <Condition Binding="{Binding IsStopped}" Value="True"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <TextBlock Text="Ημερομηνία διακοπής"/>
                     <DatePicker Margin="0,4,0,10" SelectedDate="{Binding StoppedOn}"/>
                     <TextBlock Text="Αιτιολογία διακοπής"/>
@@ -91,7 +105,7 @@
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                 <Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
-                <Button Content="Αποθήκευση" Width="120" Command="{Binding SaveCommand}"/>
+                <Button Content="{Binding SaveButtonText}" Width="140" Command="{Binding SaveCommand}"/>
             </StackPanel>
         </DockPanel>
     </Grid>
