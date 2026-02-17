@@ -28,3 +28,17 @@ Fields: Name (required), HasTransport, HasStudyLab, HasBooks.
 3) Views: ProgramsView (DataGrid) + Add/Edit dialog
 4) Replace hardcoded program sources in enrollment/payment UIs with DB-backed list
 5) Add tests if existing test project exists; otherwise add at least basic runtime validation.
+
+---
+
+## Programs Refactor (Database-backed Programs)
+
+Programs are now fully database-driven via StudyProgram.
+
+Rules:
+- Enrollment must store ProgramId (FK to Programs).
+- ProgramType enum must not be used anymore.
+- ProgramTypeResolver must not exist.
+- UI program selection must bind to StudyProgram objects.
+- Program display must use Program.Name.
+- FK delete behavior: Restrict.
