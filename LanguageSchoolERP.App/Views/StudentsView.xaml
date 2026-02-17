@@ -309,7 +309,7 @@
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                                 <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
                                                                 <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" Margin="0,4,0,0"/>
-                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
+                                                                <ProgressBar Height="8" Width="180" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}" HorizontalAlignment="Left"/>
                                                             </StackPanel>
 
                                                             <Grid Grid.Column="1" Margin="14,0,0,0" MinWidth="360">
