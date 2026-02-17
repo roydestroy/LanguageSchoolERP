@@ -14,9 +14,9 @@ public partial class ProgramsView : UserControl
 
     private void AddProgramButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is ProgramsViewModel vm && vm.AddProgramCommand.CanExecute(null))
+        if (DataContext is ProgramsViewModel vm)
         {
-            vm.AddProgramCommand.Execute(null);
+            vm.AddProgramFromInput();
         }
     }
 }

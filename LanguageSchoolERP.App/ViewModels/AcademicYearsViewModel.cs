@@ -61,6 +61,8 @@ public partial class AcademicYearsViewModel : ObservableObject
         }
     }
 
+    public Task AddAcademicYearAsync() => AddAsync();
+
     private async Task AddAsync()
     {
         if (!CanWrite())

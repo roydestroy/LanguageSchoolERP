@@ -12,11 +12,11 @@ public partial class AcademicYearsView : UserControl
         DataContext = vm;
     }
 
-    private void AddAcademicYearButton_Click(object sender, RoutedEventArgs e)
+    private async void AddAcademicYearButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is AcademicYearsViewModel vm && vm.AddAcademicYearCommand.CanExecute(null))
+        if (DataContext is AcademicYearsViewModel vm)
         {
-            vm.AddAcademicYearCommand.Execute(null);
+            await vm.AddAcademicYearAsync();
         }
     }
 }

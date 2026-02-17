@@ -25,6 +25,8 @@ public partial class ProgramsViewModel : ObservableObject
         Programs.Add(ProgramType.EuroLab.ToDisplayName());
     }
 
+    public void AddProgramFromInput() => AddProgram();
+
     private void AddProgram()
     {
         var name = (NewProgramName ?? "").Trim();
