@@ -261,8 +261,7 @@ public partial class StudentsViewModel : ObservableObject
                 decimal downSum = yearEnrollments.Sum(en => en.DownPayment);
                 decimal paidSum = yearEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
 
-                var balance = yearEnrollments.Sum(e => InstallmentPlanHelper.GetOutstandingAmount(e));
-                if (balance < 0) balance = 0;
+                var balance = yearEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
 
                 var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
                 if (totalProgress > 100) totalProgress = 100;
@@ -330,7 +329,7 @@ public partial class StudentsViewModel : ObservableObject
                 foreach (var en in yearEnrollments.OrderBy(x => x.Program.Name))
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
-                    var enBalance = InstallmentPlanHelper.GetOutstandingAmount(en);
+                    var enBalance = en.AgreementTotal - enPaid;
                     var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
                     var enOverpaid = enPaid > en.AgreementTotal + 0.009m;
                     var enFullyPaid = enPaid + 0.009m >= en.AgreementTotal;

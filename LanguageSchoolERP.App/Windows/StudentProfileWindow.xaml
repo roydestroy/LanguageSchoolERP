@@ -253,7 +253,7 @@
 
 				<StackPanel Grid.Column="4" Margin="18,0,0,0" VerticalAlignment="Center">
 					<TextBlock Text="{Binding ProgressText}" Foreground="#666666" FontSize="12"/>
-					<ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" />
+					<ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}" />
 				</StackPanel>
 			</Grid>
 		</Border>
