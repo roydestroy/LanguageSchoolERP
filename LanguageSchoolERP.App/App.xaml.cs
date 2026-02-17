@@ -206,7 +206,7 @@ public partial class App : Application
 
         Directory.CreateDirectory(updateDir);
 
-        var zipPath = Path.Combine(updateDir, "update.zip");
+        var zipPath = Path.Combine(updateDir, $"update_{DateTime.UtcNow:yyyyMMdd_HHmmss}.zip");
         UpdaterLog.Write("App", $"Downloading update asset to '{zipPath}' from '{result.AssetDownloadUrl}'.");
 
         using (var httpClient = new HttpClient())
@@ -221,7 +221,7 @@ public partial class App : Application
             response.EnsureSuccessStatusCode();
 
             await using var source = await response.Content.ReadAsStreamAsync();
-            await using var target = File.Create(zipPath);
+            await using var target = new FileStream(zipPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await source.CopyToAsync(target);
         }
 
