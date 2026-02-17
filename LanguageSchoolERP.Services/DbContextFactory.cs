@@ -15,7 +15,7 @@ public class DbContextFactory
     public SchoolDbContext Create()
     {
         var options = new DbContextOptionsBuilder<SchoolDbContext>()
-            .UseSqlServer($@"Server=.\SQLEXPRESS;Database={_state.SelectedDatabaseName};Trusted_Connection=True;TrustServerCertificate=True")
+            .UseSqlServer($"Server=100.104.49.73,1433;Database={_state.SelectedDatabaseName};User Id=erp_app;Password=Th3redeemerz!;TrustServerCertificate=True;Encrypt=True;")
             .Options;
 
         return new SchoolDbContext(options);
