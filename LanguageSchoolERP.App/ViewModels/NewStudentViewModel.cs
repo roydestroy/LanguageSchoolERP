@@ -104,11 +104,24 @@ public partial class NewStudentViewModel : ObservableObject
     {
         _state = state;
         _dbFactory = dbFactory;
-        CreateCommand = new AsyncRelayCommand(CreateAsync);
+        CreateCommand = new AsyncRelayCommand(CreateAsync, CanWrite);
+
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+                CreateCommand.NotifyCanExecuteChanged();
+        };
     }
+
+    private bool CanWrite() => !_state.IsReadOnlyMode;
 
     private async Task CreateAsync()
     {
+        if (!CanWrite())
+        {
+            ErrorMessage = "Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.";
+            return;
+        }
         ErrorMessage = "";
 
         var fullName = JoinName(StudentName, StudentSurname);

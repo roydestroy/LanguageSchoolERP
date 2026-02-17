@@ -16,6 +16,7 @@ public record AddProgramEnrollmentInit(Guid StudentId, string AcademicYear, Guid
 public partial class AddProgramEnrollmentViewModel : ObservableObject
 {
     private readonly DbContextFactory _dbFactory;
+    private readonly AppState _state;
 
     private Guid _studentId;
     private string _academicYear = "";
@@ -89,11 +90,20 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         }
     }
 
-    public AddProgramEnrollmentViewModel(DbContextFactory dbFactory)
+    public AddProgramEnrollmentViewModel(DbContextFactory dbFactory, AppState state)
     {
         _dbFactory = dbFactory;
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
+        _state = state;
+        SaveCommand = new AsyncRelayCommand(SaveAsync, CanWrite);
+
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+                SaveCommand.NotifyCanExecuteChanged();
+        };
     }
+
+    private bool CanWrite() => !_state.IsReadOnlyMode;
 
     public async void Initialize(AddProgramEnrollmentInit init)
     {
@@ -162,6 +172,12 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     private async Task SaveAsync()
     {
+        if (!CanWrite())
+        {
+            ErrorMessage = "Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.";
+            return;
+        }
+
         ErrorMessage = "";
 
         if (!TryParseMoney(AgreementTotalText, out var agreementTotal) || agreementTotal < 0)

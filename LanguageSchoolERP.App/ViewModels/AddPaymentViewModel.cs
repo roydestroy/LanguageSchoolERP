@@ -86,8 +86,16 @@ public partial class AddPaymentViewModel : ObservableObject
         _excelReceiptGenerator = excelReceiptGenerator;
         _state = state;
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
+        SaveCommand = new AsyncRelayCommand(SaveAsync, CanWrite);
+
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+                SaveCommand.NotifyCanExecuteChanged();
+        };
     }
+
+    private bool CanWrite() => !_state.IsReadOnlyMode;
 
     public async void Initialize(AddPaymentInit init)
     {
@@ -182,6 +190,12 @@ public partial class AddPaymentViewModel : ObservableObject
 
     private async Task SaveAsync()
     {
+        if (!CanWrite())
+        {
+            ErrorMessage = "Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.";
+            return;
+        }
+
         ErrorMessage = "";
 
         if (_init is null)

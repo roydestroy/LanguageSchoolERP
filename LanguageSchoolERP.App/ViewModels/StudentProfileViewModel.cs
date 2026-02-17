@@ -114,24 +114,63 @@ public partial class StudentProfileViewModel : ObservableObject
         _excelReceiptGenerator = excelReceiptGenerator;
         _contractDocumentService = contractDocumentService;
 
-        AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog);
+        AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog, CanWrite);
         EditPaymentCommand = new RelayCommand(OpenEditPaymentDialog, CanModifySelectedPayment);
         DeletePaymentCommand = new AsyncRelayCommand(DeleteSelectedPaymentAsync, CanModifySelectedPayment);
-        CreateContractCommand = new RelayCommand(OpenCreateContractDialog);
-        PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync());
+        CreateContractCommand = new RelayCommand(OpenCreateContractDialog, CanWrite);
+        PrintReceiptCommand = new RelayCommand(() => _ = PrintSelectedReceiptAsync(), CanWrite);
         EditContractCommand = new RelayCommand(EditSelectedContract, () => SelectedContract is not null);
-        ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync(), () => SelectedContract is not null);
-        DeleteContractCommand = new RelayCommand(() => _ = DeleteSelectedContractAsync(), () => SelectedContract is not null);
-        EditProfileCommand = new RelayCommand(StartEdit);
-        SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync);
+        ExportContractPdfCommand = new RelayCommand(() => _ = ExportSelectedContractPdfAsync(), CanExportContractPdf);
+        DeleteContractCommand = new RelayCommand(() => _ = DeleteSelectedContractAsync(), CanDeleteSelectedContract);
+        EditProfileCommand = new RelayCommand(StartEdit, CanWrite);
+        SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync, CanWrite);
         CancelEditCommand = new RelayCommand(CancelEdit);
-        DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync);
-        AddProgramCommand = new RelayCommand(OpenAddProgramDialog);
-        EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog);
-        RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync);
-        EditSelectedProgramCommand = new RelayCommand(EditSelectedProgram, () => SelectedProgram is not null);
-        RemoveSelectedProgramCommand = new AsyncRelayCommand(RemoveSelectedProgramAsync, () => SelectedProgram is not null);
+        DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync, CanWrite);
+        AddProgramCommand = new RelayCommand(OpenAddProgramDialog, CanWrite);
+        EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog, CanEditProgram);
+        RemoveProgramCommand = new AsyncRelayCommand<ProgramEnrollmentRowVm>(RemoveProgramAsync, CanEditProgram);
+        EditSelectedProgramCommand = new RelayCommand(EditSelectedProgram, CanEditSelectedProgram);
+        RemoveSelectedProgramCommand = new AsyncRelayCommand(RemoveSelectedProgramAsync, CanEditSelectedProgram);
 
+        _state.PropertyChanged += OnAppStateChanged;
+    }
+
+
+    private bool CanWrite() => !_state.IsReadOnlyMode;
+
+    private bool CanModifySelectedPayment()
+    {
+        return CanWrite() && SelectedPayment is not null && !SelectedPayment.IsSyntheticEntry && SelectedPayment.PaymentId.HasValue;
+    }
+
+    private bool CanDeleteSelectedContract() => CanWrite() && SelectedContract is not null;
+
+    private bool CanExportContractPdf() => CanWrite() && SelectedContract is not null;
+
+    private bool CanEditProgram(ProgramEnrollmentRowVm? row) => CanWrite() && row is not null;
+
+    private bool CanEditSelectedProgram() => CanWrite() && SelectedProgram is not null;
+
+    private void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(AppState.SelectedDatabaseMode))
+            return;
+
+        AddPaymentCommand.NotifyCanExecuteChanged();
+        EditPaymentCommand.NotifyCanExecuteChanged();
+        DeletePaymentCommand.NotifyCanExecuteChanged();
+        CreateContractCommand.NotifyCanExecuteChanged();
+        PrintReceiptCommand.NotifyCanExecuteChanged();
+        ExportContractPdfCommand.NotifyCanExecuteChanged();
+        DeleteContractCommand.NotifyCanExecuteChanged();
+        EditProfileCommand.NotifyCanExecuteChanged();
+        SaveProfileCommand.NotifyCanExecuteChanged();
+        DeleteStudentCommand.NotifyCanExecuteChanged();
+        AddProgramCommand.NotifyCanExecuteChanged();
+        EditProgramCommand.NotifyCanExecuteChanged();
+        RemoveProgramCommand.NotifyCanExecuteChanged();
+        EditSelectedProgramCommand.NotifyCanExecuteChanged();
+        RemoveSelectedProgramCommand.NotifyCanExecuteChanged();
     }
 
 
@@ -156,6 +195,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private void StartEdit()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         IsEditing = true;
     }
 
@@ -180,6 +225,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task SaveProfileAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         try
         {
             using var db = _dbFactory.Create();
@@ -216,6 +267,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task DeleteStudentAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         var result = System.Windows.MessageBox.Show(
             "Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτόν τον μαθητή; Η ενέργεια δεν αναιρείται.",
             "Επιβεβαίωση διαγραφής",
@@ -253,6 +310,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private void OpenAddProgramDialog()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
         win.Owner = System.Windows.Application.Current.MainWindow;
         win.Initialize(new AddProgramEnrollmentInit(_studentId, LocalAcademicYear));
@@ -265,6 +328,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private void OpenEditProgramDialog(ProgramEnrollmentRowVm? row)
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (row is null) return;
 
         var win = App.Services.GetRequiredService<AddProgramEnrollmentWindow>();
@@ -288,6 +357,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task RemoveProgramAsync(ProgramEnrollmentRowVm? row)
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (row is null) return;
 
         var result = System.Windows.MessageBox.Show(
@@ -335,6 +410,12 @@ public partial class StudentProfileViewModel : ObservableObject
     }
     private void OpenAddPaymentDialog()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         var win = App.Services.GetRequiredService<AddPaymentWindow>();
         win.Owner = System.Windows.Application.Current.MainWindow;
 
@@ -348,13 +429,14 @@ public partial class StudentProfileViewModel : ObservableObject
         }
     }
 
-    private bool CanModifySelectedPayment()
-    {
-        return SelectedPayment is not null && !SelectedPayment.IsSyntheticEntry && SelectedPayment.PaymentId.HasValue;
-    }
-
     private void OpenEditPaymentDialog()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (!CanModifySelectedPayment())
             return;
 
@@ -371,6 +453,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task DeleteSelectedPaymentAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (!CanModifySelectedPayment())
             return;
 
@@ -411,6 +499,12 @@ public partial class StudentProfileViewModel : ObservableObject
     }
     private void OpenCreateContractDialog()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         var win = App.Services.GetRequiredService<AddContractWindow>();
         win.Owner = System.Windows.Application.Current.MainWindow;
 
@@ -460,6 +554,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task ExportSelectedContractPdfAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (SelectedContract is null)
         {
             System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
@@ -513,6 +613,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task DeleteSelectedContractAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (SelectedContract is null)
         {
             System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα συμφωνητικό.");
@@ -555,6 +661,12 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private async Task PrintSelectedReceiptAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
+
         if (SelectedReceipt is null)
         {
             System.Windows.MessageBox.Show("Παρακαλώ επιλέξτε πρώτα απόδειξη.");

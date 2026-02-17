@@ -1,6 +1,7 @@
 ﻿using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 
 namespace LanguageSchoolERP.Services;
@@ -9,6 +10,12 @@ public static class DbSeeder
 {
     public static void EnsureSeeded(SchoolDbContext db)
     {
+        var databaseName = db.Database.GetDbConnection().Database;
+        if (!string.IsNullOrWhiteSpace(databaseName) && databaseName.EndsWith("_View", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         if (!db.AcademicPeriods.Any())
         {
             db.AcademicPeriods.Add(new AcademicPeriod { Name = "2024-2025", IsCurrent = false });

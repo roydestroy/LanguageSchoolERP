@@ -45,7 +45,8 @@ public partial class App : Application
         services.AddSingleton<ContractDocumentService>();
         services.AddSingleton<ContractBookmarkBuilder>();
 
-        // Global state
+        // Global settings/state
+        services.AddSingleton<DatabaseAppSettingsProvider>();
         services.AddSingleton<AppState>();
 
         // DbContext factory (runtime)

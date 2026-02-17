@@ -15,6 +15,7 @@ public partial class AddContractViewModel : ObservableObject
     private readonly DbContextFactory _dbFactory;
     private readonly ContractDocumentService _contractDocumentService;
     private readonly ContractBookmarkBuilder _bookmarkBuilder;
+    private readonly AppState _state;
 
     private AddContractInit? _init;
     private ContractTemplate? _defaultTemplate;
@@ -37,13 +38,23 @@ public partial class AddContractViewModel : ObservableObject
     public AddContractViewModel(
         DbContextFactory dbFactory,
         ContractDocumentService contractDocumentService,
-        ContractBookmarkBuilder bookmarkBuilder)
+        ContractBookmarkBuilder bookmarkBuilder,
+        AppState state)
     {
         _dbFactory = dbFactory;
         _contractDocumentService = contractDocumentService;
         _bookmarkBuilder = bookmarkBuilder;
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
+        _state = state;
+        SaveCommand = new AsyncRelayCommand(SaveAsync, CanWrite);
+
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+                SaveCommand.NotifyCanExecuteChanged();
+        };
     }
+
+    private bool CanWrite() => !_state.IsReadOnlyMode;
 
     public async void Initialize(AddContractInit init)
     {
@@ -116,6 +127,12 @@ public partial class AddContractViewModel : ObservableObject
 
     private async Task SaveAsync()
     {
+        if (!CanWrite())
+        {
+            ErrorMessage = "Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.";
+            return;
+        }
+
         ErrorMessage = "";
 
         if (_init is null)

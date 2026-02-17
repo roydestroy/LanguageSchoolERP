@@ -14,6 +14,7 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="ΕΥΡΩΓΝΩΣΗ ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -29,11 +30,21 @@
                         <ColumnDefinition Width="8"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="Βάση δεδομένων" Foreground="#DCE7F4" VerticalAlignment="Center"/>
-                    <ComboBox Grid.Column="2" x:Name="DbCombo" Width="230" Height="34" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="Λειτουργία" Foreground="#DCE7F4" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="2" x:Name="ModeCombo" Width="130" Height="34" VerticalAlignment="Center"/>
                 </Grid>
 
-                <Grid Grid.Column="5" VerticalAlignment="Center">
+                <Grid Grid.Column="5" x:Name="RemoteDbGrid" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Βάση δεδομένων" Foreground="#DCE7F4" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="2" x:Name="DbCombo" Width="230" Height="34" VerticalAlignment="Center" DisplayMemberPath="Key" SelectedValuePath="Database"/>
+                </Grid>
+
+                <Grid Grid.Column="6" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="8"/>
