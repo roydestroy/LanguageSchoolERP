@@ -719,7 +719,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     StudentEmail: student.Email ?? "",
                     Amount: enrollment.DownPayment,
                     PaymentMethod: "Προκαταβολή εγγραφής",
-                    ProgramLabel: enrollment.ProgramType.ToDisplayName(),
+                    ProgramLabel: enrollment.Program?.Name ?? "—",
                     AcademicYear: academicYear,
                     Notes: "Προκαταβολή εγγραφής"
                 );
@@ -810,10 +810,10 @@ public partial class StudentProfileViewModel : ObservableObject
             var student = await db.Students
                 .AsNoTracking()
                 .Include(s => s.Enrollments.Where(e => e.AcademicPeriodId == period.AcademicPeriodId))
-                    .ThenInclude(e => e.Payments)
-                        .ThenInclude(p => p.Receipts)
+                    .ThenInclude(e => e.Program)
                 .Include(s => s.Enrollments.Where(e => e.AcademicPeriodId == period.AcademicPeriodId))
                     .ThenInclude(e => e.Payments)
+                        .ThenInclude(p => p.Receipts)
                 .FirstOrDefaultAsync(s => s.StudentId == _studentId);
 
 
@@ -871,14 +871,14 @@ public partial class StudentProfileViewModel : ObservableObject
             ActiveStatusText = hasAnyEnrollment ? "Ενεργός" : "Ανενεργός";
 
             var enrollments = student.Enrollments.ToList();
-            static string ProgramLabel(ProgramType p) => p.ToDisplayName();
+            static string ProgramLabel(Enrollment e) => e.Program?.Name ?? "—";
 
-            foreach (var e in enrollments.OrderBy(e => e.ProgramType).ThenBy(e => e.LevelOrClass))
+            foreach (var e in enrollments.OrderBy(e => e.Program?.Name).ThenBy(e => e.LevelOrClass))
             {
                 Programs.Add(new ProgramEnrollmentRowVm
                 {
                     EnrollmentId = e.EnrollmentId,
-                    ProgramText = ProgramLabel(e.ProgramType),
+                    ProgramText = ProgramLabel(e),
                     LevelOrClassText = string.IsNullOrWhiteSpace(e.LevelOrClass) ? "—" : e.LevelOrClass,
                     AgreementTotalText = $"{e.AgreementTotal:0.00} €",
                     BooksText = $"{e.BooksAmount:0.00} €",
@@ -920,7 +920,7 @@ public partial class StudentProfileViewModel : ObservableObject
             }
 
             var enrollmentProgramLabels = enrollments
-                .Select(e => $"{ProgramLabel(e.ProgramType)}{BuildEnrollmentExtras(e)}")
+                .Select(e => $"{ProgramLabel(e)}{BuildEnrollmentExtras(e)}")
                 .Distinct()
                 .ToList();
 
@@ -1014,7 +1014,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     AmountText = $"{x.p.Amount:0.00} €",
                     MethodText = x.p.Method.ToString(),
                     ReasonText = ParseReason(x.p.Notes),
-                    ProgramText = ProgramLabel(x.e.ProgramType),
+                    ProgramText = ProgramLabel(x.e),
                     HasPdf = !string.IsNullOrWhiteSpace(x.r.PdfPath),
                     PdfPath = x.r.PdfPath
                 });
@@ -1032,7 +1032,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     AmountText = $"{enrollment.DownPayment:0.00} €",
                     MethodText = "Εγγραφή",
                     ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
-                    ProgramText = ProgramLabel(enrollment.ProgramType),
+                    ProgramText = ProgramLabel(enrollment),
                     HasPdf = false,
                     PdfPath = ""
                 });
@@ -1042,6 +1042,7 @@ public partial class StudentProfileViewModel : ObservableObject
                 .AsNoTracking()
                 .Where(c => c.StudentId == _studentId && enrollmentIds.Contains(c.EnrollmentId))
                 .Include(c => c.Enrollment)
+                    .ThenInclude(e => e.Program)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
@@ -1051,8 +1052,8 @@ public partial class StudentProfileViewModel : ObservableObject
                 var programText = c.Enrollment is null
                     ? "—"
                     : string.IsNullOrWhiteSpace(c.Enrollment.LevelOrClass)
-                        ? c.Enrollment.ProgramType.ToDisplayName()
-                        : $"{c.Enrollment.ProgramType} ({c.Enrollment.LevelOrClass})";
+                        ? c.Enrollment.Program?.Name ?? "—"
+                        : $"{(c.Enrollment.Program?.Name ?? "—")} ({c.Enrollment.LevelOrClass})";
 
                 Contracts.Add(new ContractRowVm
                 {

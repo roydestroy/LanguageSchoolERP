@@ -48,13 +48,10 @@ public sealed class ContractBookmarkBuilder
 
     public static string BuildProgramTitleUpperWithExtras(Enrollment enrollment)
     {
-        var baseTitle = enrollment.ProgramType switch
-        {
-            ProgramType.LanguageSchool => $"{enrollment.ProgramType.ToDisplayName()} {enrollment.LevelOrClass}".Trim(),
-            _ => string.IsNullOrWhiteSpace(enrollment.LevelOrClass)
-                ? enrollment.ProgramType.ToDisplayName()
-                : $"{enrollment.ProgramType.ToDisplayName()} {enrollment.LevelOrClass}".Trim()
-        };
+        var programName = enrollment.Program?.Name ?? string.Empty;
+        var baseTitle = string.IsNullOrWhiteSpace(enrollment.LevelOrClass)
+            ? programName
+            : $"{programName} {enrollment.LevelOrClass}".Trim();
 
         if (enrollment.IncludesTransportation)
             return $"{baseTitle} + ΜΕΤΑΦΟΡΑ".ToUpperInvariant();

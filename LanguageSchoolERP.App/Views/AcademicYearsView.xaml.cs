@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using LanguageSchoolERP.App.ViewModels;
+using LanguageSchoolERP.App.Windows;
 
 namespace LanguageSchoolERP.App.Views;
 
@@ -14,9 +15,19 @@ public partial class AcademicYearsView : UserControl
 
     private async void AddAcademicYearButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is AcademicYearsViewModel vm)
+        if (DataContext is not AcademicYearsViewModel vm)
         {
-            await vm.AddAcademicYearAsync();
+            return;
+        }
+
+        var dialog = new AddAcademicYearWindow
+        {
+            Owner = Window.GetWindow(this)
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            await vm.AddAcademicYearAsync(dialog.AcademicYearName);
         }
     }
 }

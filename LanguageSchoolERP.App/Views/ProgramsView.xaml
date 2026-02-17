@@ -10,15 +10,39 @@
         </Grid.RowDefinitions>
 
         <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <DockPanel>
                 <TextBlock Text="Προγράμματα" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <Button x:Name="AddProgramButton" Content="Νέο πρόγραμμα" Width="130" Margin="20,0,10,0" Click="AddProgramButton_Click"/>
-                <Button Content="Διαγραφή" Width="95" Command="{Binding DeleteProgramCommand}" Background="#A64949" BorderBrush="#8F3939"/>
-            </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                    <Button Content="Νέο" Width="90" Margin="0,0,8,0" Click="AddProgramButton_Click"/>
+                    <Button Content="Επεξεργασία" Width="110" Margin="0,0,8,0" Click="EditProgramButton_Click"/>
+                    <Button Content="Διαγραφή" Width="95" Background="#A64949" BorderBrush="#8F3939" Click="DeleteProgramButton_Click"/>
+                </StackPanel>
+            </DockPanel>
         </Border>
 
         <Border Grid.Row="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <ListBox ItemsSource="{Binding Programs}" SelectedItem="{Binding SelectedProgram, Mode=TwoWay}"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <DataGrid ItemsSource="{Binding Programs}"
+                          SelectedItem="{Binding SelectedProgram, Mode=TwoWay}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          Margin="0,0,0,8">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Όνομα" Binding="{Binding Name}" Width="*"/>
+                        <DataGridCheckBoxColumn Header="Μεταφορά" Binding="{Binding HasTransport}" Width="130"/>
+                        <DataGridCheckBoxColumn Header="Study Lab" Binding="{Binding HasStudyLab}" Width="130"/>
+                        <DataGridCheckBoxColumn Header="Βιβλία" Binding="{Binding HasBooks}" Width="120"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="IndianRed"/>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

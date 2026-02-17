@@ -180,6 +180,8 @@ public partial class StudentsViewModel : ObservableObject
             }
 
             var students = await baseQuery
+                 .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
+                    .ThenInclude(en => en.Program)
                 .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
                     .ThenInclude(en => en.Payments)
                 .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
@@ -242,7 +244,7 @@ public partial class StudentsViewModel : ObservableObject
                     IsExpanded = false
                 };
 
-                foreach (var en in yearEnrollments.OrderBy(x => x.ProgramType))
+                foreach (var en in yearEnrollments.OrderBy(x => x.Program.Name))
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
                     var enBalance = en.AgreementTotal - enPaid;
@@ -254,7 +256,7 @@ public partial class StudentsViewModel : ObservableObject
 
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
-                        Title = en.ProgramType.ToDisplayName(),
+                        Title = en.Program?.Name ?? "—",
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
                         AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
                         PaidText = $"Πληρωμένα: {enPaid:0.00} €",

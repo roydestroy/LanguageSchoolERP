@@ -19,7 +19,8 @@ public class Enrollment
     public Guid AcademicPeriodId { get; set; }
     public AcademicPeriod AcademicPeriod { get; set; }
 
-    public ProgramType ProgramType { get; set; }
+    public int ProgramId { get; set; }
+    public StudyProgram Program { get; set; } = null!;
 
     public string LevelOrClass { get; set; } = "";
 

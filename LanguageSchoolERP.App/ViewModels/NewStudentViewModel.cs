@@ -5,8 +5,10 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -15,29 +17,13 @@ public partial class NewStudentViewModel : ObservableObject
 {
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
+    private readonly IProgramService _programService;
 
     public event EventHandler<bool>? RequestClose;
 
-    public IReadOnlyList<ProgramOptionVm> ProgramTypes { get; } =
-        new[]
-        {
-            new ProgramOptionVm(ProgramType.LanguageSchool, ProgramType.LanguageSchool.ToDisplayName()),
-            new ProgramOptionVm(ProgramType.StudyLab, ProgramType.StudyLab.ToDisplayName()),
-            new ProgramOptionVm(ProgramType.EuroLab, ProgramType.EuroLab.ToDisplayName())
-        };
+    public ObservableCollection<StudyProgram> StudyPrograms { get; } = new();
 
-    public ProgramOptionVm? SelectedProgramOption
-    {
-        get => ProgramTypes.FirstOrDefault(x => x.Value == SelectedProgramType);
-        set
-        {
-            if (value is null) return;
-            SelectedProgramType = value.Value;
-            OnPropertyChanged();
-        }
-    }
-
-    [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
+    [ObservableProperty] private StudyProgram? selectedStudyProgram;
 
     // Student
     [ObservableProperty] private string studentName = "";
@@ -76,38 +62,39 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private bool includesTransportation;
     [ObservableProperty] private string transportationMonthlyPriceText = "";
 
-    public bool IsLanguageSchoolProgram => SelectedProgramType == ProgramType.LanguageSchool;
-    public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
-    public bool HasBooksOption => SelectedProgramType == ProgramType.LanguageSchool;
+    public bool HasStudyLabOption => SelectedStudyProgram?.HasStudyLab == true;
+    public bool HasTransportOption => SelectedStudyProgram?.HasTransport == true;
+    public bool HasBooksOption => SelectedStudyProgram?.HasBooks == true;
 
     public IRelayCommand CreateCommand { get; }
 
-    partial void OnSelectedProgramTypeChanged(ProgramType value)
+    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
     {
-        OnPropertyChanged(nameof(SelectedProgramOption));
-        OnPropertyChanged(nameof(IsLanguageSchoolProgram));
-        OnPropertyChanged(nameof(IsStudyLabProgram));
+        OnPropertyChanged(nameof(HasStudyLabOption));
+        OnPropertyChanged(nameof(HasTransportOption));
         OnPropertyChanged(nameof(HasBooksOption));
 
-        if (value != ProgramType.LanguageSchool)
+        if (!HasStudyLabOption)
         {
             IncludesStudyLab = false;
             StudyLabMonthlyPriceText = "";
             BooksAmountText = "0";
         }
 
-        if (value != ProgramType.StudyLab)
+        if (!HasTransportOption)
         {
             IncludesTransportation = false;
             TransportationMonthlyPriceText = "";
         }
     }
 
-    public NewStudentViewModel(AppState state, DbContextFactory dbFactory)
+    public NewStudentViewModel(AppState state, DbContextFactory dbFactory, IProgramService programService)
     {
         _state = state;
         _dbFactory = dbFactory;
+        _programService = programService;
         CreateCommand = new AsyncRelayCommand(CreateAsync, CanWrite);
+        _ = LoadProgramsAsync();
 
         _state.PropertyChanged += (_, e) =>
         {
@@ -118,6 +105,25 @@ public partial class NewStudentViewModel : ObservableObject
 
     private bool CanWrite() => !_state.IsReadOnlyMode;
 
+    private async Task LoadProgramsAsync()
+    {
+        try
+        {
+            var programs = await _programService.GetAllAsync(CancellationToken.None);
+            StudyPrograms.Clear();
+            foreach (var program in programs)
+            {
+                StudyPrograms.Add(program);
+            }
+
+            SelectedStudyProgram = StudyPrograms.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
     private async Task CreateAsync()
     {
         if (!CanWrite())
@@ -126,6 +132,12 @@ public partial class NewStudentViewModel : ObservableObject
             return;
         }
         ErrorMessage = "";
+
+        if (SelectedStudyProgram is null)
+        {
+            ErrorMessage = "Παρακαλώ επιλέξτε πρόγραμμα.";
+            return;
+        }
 
         var fullName = JoinName(StudentName, StudentSurname);
         if (string.IsNullOrWhiteSpace(fullName))
@@ -160,7 +172,7 @@ public partial class NewStudentViewModel : ObservableObject
         }
 
         decimal? studyLabPrice = null;
-        if (IsLanguageSchoolProgram && IncludesStudyLab)
+        if (HasStudyLabOption && IncludesStudyLab)
         {
             if (!TryParseMoney(StudyLabMonthlyPriceText, out var parsedStudyLabPrice) || parsedStudyLabPrice < 0)
             {
@@ -172,7 +184,7 @@ public partial class NewStudentViewModel : ObservableObject
         }
 
         decimal? transportationPrice = null;
-        if (IsStudyLabProgram && IncludesTransportation)
+        if (HasTransportOption && IncludesTransportation)
         {
             if (!TryParseMoney(TransportationMonthlyPriceText, out var parsedTransportationPrice) || parsedTransportationPrice < 0)
             {
@@ -227,7 +239,7 @@ public partial class NewStudentViewModel : ObservableObject
             var enrollment = new Enrollment
             {
                 AcademicPeriodId = period.AcademicPeriodId,
-                ProgramType = SelectedProgramType,
+                ProgramId = SelectedStudyProgram.Id,
                 LevelOrClass = LevelOrClass.Trim(),
                 AgreementTotal = agreementTotal,
                 BooksAmount = books,
@@ -236,10 +248,10 @@ public partial class NewStudentViewModel : ObservableObject
                 Status = "Ενεργός",
                 InstallmentCount = installmentCount,
                 InstallmentStartMonth = startMonth,
-                IncludesStudyLab = IsLanguageSchoolProgram && IncludesStudyLab,
-                StudyLabMonthlyPrice = IsLanguageSchoolProgram && IncludesStudyLab ? studyLabPrice : null,
-                IncludesTransportation = IsStudyLabProgram && IncludesTransportation,
-                TransportationMonthlyPrice = IsStudyLabProgram && IncludesTransportation ? transportationPrice : null
+                IncludesStudyLab = HasStudyLabOption && IncludesStudyLab,
+                StudyLabMonthlyPrice = HasStudyLabOption && IncludesStudyLab ? studyLabPrice : null,
+                IncludesTransportation = HasTransportOption && IncludesTransportation,
+                TransportationMonthlyPrice = HasTransportOption && IncludesTransportation ? transportationPrice : null
             };
 
             student.Enrollments.Add(enrollment);

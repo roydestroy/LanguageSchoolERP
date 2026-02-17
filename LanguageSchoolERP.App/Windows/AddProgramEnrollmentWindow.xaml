@@ -21,9 +21,9 @@
 
                 <TextBlock Text="Πρόγραμμα"/>
                 <ComboBox Margin="0,4,0,10"
-                          ItemsSource="{Binding ProgramTypes}"
+                          ItemsSource="{Binding StudyPrograms}"
                           DisplayMemberPath="Name"
-                          SelectedItem="{Binding SelectedProgramOption}"/>
+                          SelectedItem="{Binding SelectedStudyProgram}"/>
 
                 <TextBlock Text="Επίπεδο / Τάξη"/>
                 <TextBox Margin="0,4,0,10" Text="{Binding LevelOrClass}"/>
@@ -43,7 +43,7 @@
                 <CheckBox Margin="0,0,0,10"
                           Content="Study Lab"
                           IsChecked="{Binding IncludesStudyLab}"
-                          Visibility="{Binding IsLanguageSchoolProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                          Visibility="{Binding HasStudyLabOption, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <StackPanel Margin="0,0,0,10"
                             Visibility="{Binding IncludesStudyLab, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -54,7 +54,7 @@
                 <CheckBox Margin="0,0,0,10"
                           Content="Μεταφορά"
                           IsChecked="{Binding IncludesTransportation}"
-                          Visibility="{Binding IsStudyLabProgram, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                          Visibility="{Binding HasTransportOption, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <StackPanel Margin="0,0,0,10"
                             Visibility="{Binding IncludesTransportation, Converter={StaticResource BoolToVisibilityConverter}}">
