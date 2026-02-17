@@ -202,6 +202,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel>
@@ -216,7 +217,7 @@
                                         <!-- Total payment progress -->
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Width="170">
                                             <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
-                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
+                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                         </StackPanel>
 
                                         <!-- Balance -->
@@ -237,6 +238,17 @@
                                         </Border>
 
                                         <!-- Pending contract badge -->
+                                        <!-- Stopped badge -->
+                                        <Border Grid.Column="5" Margin="12,0,0,0"
+                                                Style="{StaticResource StatusBadgeStyle}"
+                                                Background="{Binding StoppedBadgeBackground}"
+                                                BorderBrush="{Binding StoppedBadgeBorder}"
+                                                Visibility="{Binding StoppedBadgeVisibility}">
+                                            <TextBlock Text="{Binding StoppedBadgeText}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding StoppedBadgeForeground}"/>
+                                        </Border>
+
                                         <Border Grid.Column="4" Margin="12,0,0,0"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 Background="{Binding PendingContractBadgeBackground}"
@@ -247,7 +259,7 @@
                                                        Foreground="{Binding PendingContractBadgeForeground}"/>
                                         </Border>
 
-                                        <Button Grid.Column="5"
+                                        <Button Grid.Column="6"
                                                 Margin="12,0,0,0"
                                                 Width="90" Height="32"
                                                 Content="Άνοιγμα"
@@ -256,7 +268,7 @@
                                                 CommandParameter="{Binding StudentId}"
                                                 VerticalAlignment="Center"/>
 
-                                        <ToggleButton Grid.Column="6" Margin="12,0,0,0"
+                                        <ToggleButton Grid.Column="7" Margin="12,0,0,0"
                                                       IsChecked="{Binding IsExpanded, Mode=TwoWay}"
                                                       Style="{StaticResource ExpandCaretButtonStyle}"
                                                       VerticalAlignment="Center"/>
@@ -286,7 +298,7 @@
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                                 <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
                                                                 <TextBlock Text="{Binding ProgressText}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" Margin="0,4,0,0"/>
-                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}"/>
+                                                                <ProgressBar Height="8" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                                             </StackPanel>
 
                                                             <TextBlock Grid.Column="1" Margin="12,0,0,0"
@@ -295,8 +307,18 @@
                                                             <TextBlock Grid.Column="2" Margin="12,0,0,0"
                                                                        Text="{Binding PaidText}" HorizontalAlignment="Right"/>
 
-                                                            <TextBlock Grid.Column="3" Margin="12,0,0,0"
-                                                                       Text="{Binding BalanceText}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                                            <StackPanel Grid.Column="3" Margin="12,0,0,0" HorizontalAlignment="Right">
+                                                                <TextBlock Text="{Binding BalanceText}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                                                <Border Margin="0,4,0,0"
+                                                                        Style="{StaticResource StatusBadgeStyle}"
+                                                                        Background="#FDEDED"
+                                                                        BorderBrush="#F4C6C6"
+                                                                        Visibility="{Binding StoppedBadgeVisibility}">
+                                                                    <TextBlock Text="ΔΙΑΚΟΠΗ"
+                                                                               Style="{StaticResource StatusBadgeTextStyle}"
+                                                                               Foreground="#B12626"/>
+                                                                </Border>
+                                                            </StackPanel>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

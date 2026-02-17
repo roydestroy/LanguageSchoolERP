@@ -22,6 +22,7 @@ public partial class StudentsViewModel : ObservableObject
     private const string InactiveStudentsFilter = "Μόνο ανενεργοί";
     private const string ContractPendingFilter = "Εκκρεμεί συμφωνητικό";
     private const string OverdueFilter = "Ληξιπρόθεσμα";
+    private const string DiscontinuedFilter = "Με διακοπή";
 
     private const string SortByName = "Όνομα (Α-Ω)";
     private const string SortByBalance = "Υπόλοιπο (φθίνουσα)";
@@ -37,7 +38,8 @@ public partial class StudentsViewModel : ObservableObject
         ActiveStudentsFilter,
         InactiveStudentsFilter,
         ContractPendingFilter,
-        OverdueFilter
+        OverdueFilter,
+        DiscontinuedFilter
     ];
 
     public ObservableCollection<string> StudentSortOptions { get; } =
@@ -157,16 +159,19 @@ public partial class StudentsViewModel : ObservableObject
             {
                 ActiveStudentsFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
                 InactiveStudentsFilter => selectedPeriodId == null
                     ? baseQuery
-                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId)),
+                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
                 ContractPendingFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
                     : baseQuery.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
                 OverdueFilter => selectedPeriodId == null
                     ? baseQuery.Where(_ => false)
                     : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
+                DiscontinuedFilter => selectedPeriodId == null
+                    ? baseQuery.Where(_ => false)
+                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
                 _ => baseQuery
             };
 
@@ -195,11 +200,11 @@ public partial class StudentsViewModel : ObservableObject
                 // Aggregate across enrollments in selected year
                 var yearEnrollments = s.Enrollments.ToList();
 
-                decimal agreementSum = yearEnrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
+                decimal agreementSum = yearEnrollments.Sum(e => e.AgreementTotal);
                 decimal downSum = yearEnrollments.Sum(en => en.DownPayment);
                 decimal paidSum = yearEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
 
-                var balance = yearEnrollments.Sum(InstallmentPlanHelper.GetOutstandingAmount);
+                var balance = yearEnrollments.Sum(e => InstallmentPlanHelper.GetOutstandingAmount(e));
                 if (balance < 0) balance = 0;
 
                 var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
@@ -225,6 +230,11 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == ContractPendingFilter && !hasPendingContract)
                     continue;
 
+                var hasStoppedProgram = yearEnrollments.Any(en => en.IsStopped);
+                var hasOnlyStoppedPrograms = yearEnrollments.Count > 0 && yearEnrollments.All(en => en.IsStopped);
+
+                if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
+                    continue;
 
                 var row = new StudentRowVm
                 {
@@ -237,18 +247,19 @@ public partial class StudentsViewModel : ObservableObject
                     ProgressPercent = totalProgress,
                     ProgressText = $"{totalProgress:0}%",
                     IsOverdue = overdue,
+                    HasStoppedProgram = hasStoppedProgram,
+                    HasOnlyStoppedPrograms = hasOnlyStoppedPrograms,
                     HasPendingContract = hasPendingContract,
-                    IsActive = yearEnrollments.Count > 0,
+                    IsActive = yearEnrollments.Any(en => !en.IsStopped),
                     IsExpanded = false
                 };
 
                 foreach (var en in yearEnrollments.OrderBy(x => x.Program.Name))
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
-                    var effectiveAgreement = InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
                     var enBalance = InstallmentPlanHelper.GetOutstandingAmount(en);
 
-                    var enrollmentProgress = effectiveAgreement <= 0 ? 0d : (double)(enPaid / effectiveAgreement * 100m);
+                    var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
                     if (enrollmentProgress > 100) enrollmentProgress = 100;
                     if (enrollmentProgress < 0) enrollmentProgress = 0;
 
@@ -256,11 +267,12 @@ public partial class StudentsViewModel : ObservableObject
                     {
                         Title = en.Program?.Name ?? "—",
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
-                        AgreementText = $"Συμφωνία: {effectiveAgreement:0.00} €",
+                        AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
                         PaidText = $"Πληρωμένα: {enPaid:0.00} €",
                         BalanceText = $"Υπόλοιπο: {enBalance:0.00} €",
                         ProgressPercent = enrollmentProgress,
-                        ProgressText = $"{enrollmentProgress:0}%"
+                        ProgressText = $"{enrollmentProgress:0}%",
+                        IsStopped = en.IsStopped
                     });
                 }
 

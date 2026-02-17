@@ -14,7 +14,9 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private string yearLabel = "";
 
     [ObservableProperty] private bool isActive;
-    public string ActiveStatusText => IsActive ? "Ενεργός" : "Ανενεργός";
+    [ObservableProperty] private bool hasStoppedProgram;
+    [ObservableProperty] private bool hasOnlyStoppedPrograms;
+    public string ActiveStatusText => HasOnlyStoppedPrograms ? "Διακοπή" : (IsActive ? "Ενεργός" : "Ανενεργός");
 
     [ObservableProperty] private decimal balance;
     public string BalanceText => $"{Balance:0.00} €";
@@ -23,6 +25,9 @@ public partial class StudentRowVm : ObservableObject
 
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent;
+    public Brush ProgressBrush => HasOnlyStoppedPrograms
+        ? new SolidColorBrush(Color.FromRgb(177, 38, 38))
+        : new SolidColorBrush(Color.FromRgb(78, 153, 228));
 
     [ObservableProperty] private bool isOverdue;
     public string OverdueBadgeText => "ΛΗΞΙΠΡΟΘΕΣΜΟ";
@@ -30,6 +35,12 @@ public partial class StudentRowVm : ObservableObject
     public Brush OverdueBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
     public Brush OverdueBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
     public Visibility OverdueBadgeVisibility => IsOverdue ? Visibility.Visible : Visibility.Collapsed;
+
+    public string StoppedBadgeText => "ΔΙΑΚΟΠΗ";
+    public Brush StoppedBadgeBackground => new SolidColorBrush(Color.FromRgb(253, 237, 237));
+    public Brush StoppedBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
+    public Brush StoppedBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
+    public Visibility StoppedBadgeVisibility => HasStoppedProgram ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool hasPendingContract;
     public string PendingContractBadgeText => "ΣΥΜΦΩΝΗΤΙΚΟ";
@@ -48,6 +59,15 @@ public partial class StudentRowVm : ObservableObject
 
     partial void OnIsActiveChanged(bool value)
         => OnPropertyChanged(nameof(ActiveStatusText));
+
+    partial void OnHasStoppedProgramChanged(bool value)
+        => OnPropertyChanged(nameof(StoppedBadgeVisibility));
+
+    partial void OnHasOnlyStoppedProgramsChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ActiveStatusText));
+        OnPropertyChanged(nameof(ProgressBrush));
+    }
 
     partial void OnIsOverdueChanged(bool value)
         => OnPropertyChanged(nameof(OverdueBadgeVisibility));
