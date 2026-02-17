@@ -83,6 +83,7 @@ public partial class MainWindow : Window
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
         SettingsBtn.Click += (_, __) => OpenStartupOptions();
+        CheckUpdatesBtn.Click += async (_, __) => await App.CheckForUpdatesInteractiveAsync(this, userInitiated: true);
 
         _ = RefreshAcademicYearProgressAsync();
     }

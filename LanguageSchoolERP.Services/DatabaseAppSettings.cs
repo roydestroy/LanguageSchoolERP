@@ -79,7 +79,9 @@ public sealed class DatabaseAppSettingsProvider
             Enabled = true,
             GitHubOwner = "roydestroy",
             GitHubRepo = "LanguageSchoolERP",
-            IncludePrerelease = false
+            IncludePrerelease = false,
+            AssetName = "LanguageSchoolERP-win-x64.zip",
+            InstallFolder = @"C:\Apps\LanguageSchoolERP"
         }
     };
 
@@ -123,6 +125,12 @@ public sealed class DatabaseAppSettingsProvider
 
         if (string.IsNullOrWhiteSpace(settings.Update.GitHubRepo))
             settings.Update.GitHubRepo = "LanguageSchoolERP";
+
+        if (string.IsNullOrWhiteSpace(settings.Update.AssetName))
+            settings.Update.AssetName = "LanguageSchoolERP-win-x64.zip";
+
+        if (string.IsNullOrWhiteSpace(settings.Update.InstallFolder))
+            settings.Update.InstallFolder = @"C:\Apps\LanguageSchoolERP";
     }
 }
 
@@ -165,4 +173,6 @@ public sealed class UpdateSettings
     public string GitHubOwner { get; set; } = "roydestroy";
     public string GitHubRepo { get; set; } = "LanguageSchoolERP";
     public bool IncludePrerelease { get; set; }
+    public string AssetName { get; set; } = "LanguageSchoolERP-win-x64.zip";
+    public string InstallFolder { get; set; } = @"C:\Apps\LanguageSchoolERP";
 }
