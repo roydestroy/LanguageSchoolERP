@@ -219,6 +219,12 @@
                                                 <TextBlock Text="  •  " Foreground="#999999"/>
                                                 <TextBlock Text="{Binding ActiveStatusText}" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Text="{Binding EnrollmentSummaryText}"
+                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                       FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding EnrollmentSummaryText}"/>
                                         </StackPanel>
 
                                         <!-- Total payment progress -->

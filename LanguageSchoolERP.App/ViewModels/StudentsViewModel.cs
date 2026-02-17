@@ -307,12 +307,17 @@ public partial class StudentsViewModel : ObservableObject
                                 ? ProgressGreenBrush
                                 : ProgressBlueBrush;
 
+                var enrollmentSummaryText = yearEnrollments.Count == 0
+                    ? "Προγράμματα: —"
+                    : $"Προγράμματα: {string.Join(" · ", yearEnrollments.OrderBy(en => en.Program?.Name).Select(en => { var programName = en.Program?.Name ?? "—"; return string.IsNullOrWhiteSpace(en.LevelOrClass) ? programName : $"{programName} ({en.LevelOrClass})"; }))}";
+
                 var row = new StudentRowVm
                 {
                     StudentId = s.StudentId,
                     FullName = s.FullName,
                     ContactLine = $"{s.Phone}  |  {s.Email}".Trim(' ', '|'),
                     YearLabel = $"Έτος: {year}",
+                    EnrollmentSummaryText = enrollmentSummaryText,
                     Balance = balance,
                     OverdueAmount = overdueAmount,
                     ProgressPercent = totalProgress,

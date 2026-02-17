@@ -14,6 +14,7 @@ public partial class StudentRowVm : ObservableObject
     [ObservableProperty] private string fullName = "";
     [ObservableProperty] private string contactLine = "";
     [ObservableProperty] private string yearLabel = "";
+    [ObservableProperty] private string enrollmentSummaryText = "";
 
     [ObservableProperty] private bool isActive;
     [ObservableProperty] private bool hasStoppedProgram;
