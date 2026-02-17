@@ -15,6 +15,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="ΕΥΡΩΓΝΩΣΗ ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -35,7 +36,12 @@
                     <ComboBox x:Name="DbCombo" Width="150" Height="34" VerticalAlignment="Center" DisplayMemberPath="Key" SelectedValuePath="Database"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="6" VerticalAlignment="Center">
+                <StackPanel Grid.Column="6" x:Name="LocalDbGrid" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <TextBlock Text="Τοπική βάση" Foreground="#DCE7F4" FontSize="12" Margin="0,0,0,4"/>
+                    <ComboBox x:Name="LocalDbCombo" Width="150" Height="34" VerticalAlignment="Center" DisplayMemberPath="Key" SelectedValuePath="Database"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="7" VerticalAlignment="Center">
                     <TextBlock Text="Ακαδημαϊκό έτος" Foreground="#DCE7F4" FontSize="12" Margin="0,0,0,4"/>
                     <ComboBox x:Name="YearCombo" Width="150" Height="34" VerticalAlignment="Center"/>
                 </StackPanel>

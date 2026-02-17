@@ -8,6 +8,7 @@ public class AppState : INotifyPropertyChanged
     private readonly DatabaseAppSettingsProvider _settingsProvider;
 
     private DatabaseMode _selectedDatabaseMode = DatabaseMode.Local;
+    private string _selectedLocalDatabaseName = "FilotheiSchoolERP";
     private string _selectedRemoteDatabaseName = "FilotheiSchoolERP_View";
     private string _selectedDatabaseName = "FilotheiSchoolERP";
     private string _selectedAcademicYear = "2025-2026";
@@ -20,6 +21,7 @@ public class AppState : INotifyPropertyChanged
         _selectedRemoteDatabaseName = settingsProvider.RemoteDatabases.FirstOrDefault()?.Database
             ?? "FilotheiSchoolERP_View";
 
+        _selectedLocalDatabaseName = settingsProvider.Settings.Local.Database;
         _selectedDatabaseName = settingsProvider.Settings.Local.Database;
     }
 
@@ -37,7 +39,7 @@ public class AppState : INotifyPropertyChanged
 
             if (_selectedDatabaseMode == DatabaseMode.Local)
             {
-                SelectedDatabaseName = _settingsProvider.Settings.Local.Database;
+                SelectedDatabaseName = SelectedLocalDatabaseName;
             }
             else
             {
@@ -62,6 +64,24 @@ public class AppState : INotifyPropertyChanged
             if (SelectedDatabaseMode == DatabaseMode.Remote)
             {
                 SelectedDatabaseName = _selectedRemoteDatabaseName;
+            }
+        }
+    }
+
+    public string SelectedLocalDatabaseName
+    {
+        get => _selectedLocalDatabaseName;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || _selectedLocalDatabaseName == value)
+                return;
+
+            _selectedLocalDatabaseName = value;
+            OnPropertyChanged();
+
+            if (SelectedDatabaseMode == DatabaseMode.Local)
+            {
+                SelectedDatabaseName = _selectedLocalDatabaseName;
             }
         }
     }

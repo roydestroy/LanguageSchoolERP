@@ -26,6 +26,13 @@ public partial class MainWindow : Window
         DbCombo.ItemsSource = settingsProvider.RemoteDatabases;
         DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
 
+        LocalDbCombo.ItemsSource = new[]
+        {
+            new { Key = "Filothei", Database = "FilotheiSchoolERP" },
+            new { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" }
+        };
+        LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
+
         YearCombo.ItemsSource = new[]
         {
             "2024-2025",
@@ -52,6 +59,15 @@ public partial class MainWindow : Window
             }
         };
 
+        LocalDbCombo.SelectionChanged += async (_, __) =>
+        {
+            if (LocalDbCombo.SelectedValue is string selectedLocalDb && !string.IsNullOrWhiteSpace(selectedLocalDb))
+            {
+                _state.SelectedLocalDatabaseName = selectedLocalDb;
+                await RefreshAcademicYearProgressAsync();
+            }
+        };
+
         YearCombo.SelectionChanged += async (_, __) =>
         {
             _state.SelectedAcademicYear = YearCombo.SelectedItem?.ToString() ?? _state.SelectedAcademicYear;
@@ -73,7 +89,8 @@ public partial class MainWindow : Window
     private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode) ||
-            e.PropertyName == nameof(AppState.SelectedRemoteDatabaseName))
+            e.PropertyName == nameof(AppState.SelectedRemoteDatabaseName) ||
+            e.PropertyName == nameof(AppState.SelectedLocalDatabaseName))
         {
             SyncTopBarState();
         }
@@ -89,7 +106,11 @@ public partial class MainWindow : Window
     {
         ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
         DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
+        LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
         RemoteDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Remote
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        LocalDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Local
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
