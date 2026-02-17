@@ -73,6 +73,13 @@ public sealed class DatabaseAppSettingsProvider
             Mode = DatabaseMode.Local,
             LocalDatabase = "FilotheiSchoolERP",
             RemoteDatabase = "FilotheiSchoolERP_View"
+        },
+        Update = new UpdateSettings
+        {
+            Enabled = true,
+            GitHubOwner = "roydestroy",
+            GitHubRepo = "LanguageSchoolERP",
+            IncludePrerelease = false
         }
     };
 
@@ -81,6 +88,7 @@ public sealed class DatabaseAppSettingsProvider
         settings.Local ??= new LocalDatabaseSettings();
         settings.Remote ??= new RemoteDatabaseSettings();
         settings.Startup ??= new StartupDatabaseSettings();
+        settings.Update ??= new UpdateSettings();
 
         if (string.IsNullOrWhiteSpace(settings.Local.Server))
             settings.Local.Server = @".\SQLEXPRESS";
@@ -109,6 +117,12 @@ public sealed class DatabaseAppSettingsProvider
 
         if (string.IsNullOrWhiteSpace(settings.Startup.RemoteDatabase))
             settings.Startup.RemoteDatabase = settings.Remote.Databases.First().Database;
+
+        if (string.IsNullOrWhiteSpace(settings.Update.GitHubOwner))
+            settings.Update.GitHubOwner = "roydestroy";
+
+        if (string.IsNullOrWhiteSpace(settings.Update.GitHubRepo))
+            settings.Update.GitHubRepo = "LanguageSchoolERP";
     }
 }
 
@@ -117,6 +131,7 @@ public sealed class DatabaseAppSettings
     public LocalDatabaseSettings Local { get; set; } = new();
     public RemoteDatabaseSettings Remote { get; set; } = new();
     public StartupDatabaseSettings Startup { get; set; } = new();
+    public UpdateSettings Update { get; set; } = new();
 }
 
 public sealed class LocalDatabaseSettings
@@ -142,4 +157,12 @@ public sealed class RemoteDatabaseOption
 {
     public string Key { get; set; } = "Filothei";
     public string Database { get; set; } = "FilotheiSchoolERP_View";
+}
+
+public sealed class UpdateSettings
+{
+    public bool Enabled { get; set; } = true;
+    public string GitHubOwner { get; set; } = "roydestroy";
+    public string GitHubRepo { get; set; } = "LanguageSchoolERP";
+    public bool IncludePrerelease { get; set; }
 }
