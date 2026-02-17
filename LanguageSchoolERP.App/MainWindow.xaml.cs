@@ -82,7 +82,7 @@ public partial class MainWindow : Window
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
-        StartupDefaultDbMenuItem.Click += (_, __) => OpenStartupOptions();
+        SettingsBtn.Click += (_, __) => OpenStartupOptions();
 
         _ = RefreshAcademicYearProgressAsync();
     }

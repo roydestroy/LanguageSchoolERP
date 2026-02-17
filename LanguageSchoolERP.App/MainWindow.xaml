@@ -63,11 +63,14 @@
                     <Button x:Name="ProgramsBtn" Content="Προγράμματα" Height="40" Margin="0,0,0,10"/>
                     <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά έτη" Height="40" Margin="0,0,0,10"/>
                     <Separator Margin="0,10,0,10"/>
-                    <Menu Margin="0,0,0,10">
-                        <MenuItem Header="Επιλογές">
-                            <MenuItem x:Name="StartupDefaultDbMenuItem" Header="Ορισμός Προεπιλεγμένης Βάσης"/>
-                        </MenuItem>
-                    </Menu>
+                    <Button x:Name="SettingsBtn"
+                            Content="Ρυθμίσεις"
+                            Height="40"
+                            Margin="0,0,0,10"
+                            FontWeight="SemiBold"
+                            Background="{StaticResource Brush.AccentDark}"
+                            Foreground="White"
+                            BorderThickness="2"/>
                     <Button Content="Εισαγωγή (Διαχειριστής)" Height="40"/>
                 </StackPanel>
             </Border>
