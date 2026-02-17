@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace LanguageSchoolERP.App.ViewModels;
 
@@ -1159,15 +1160,34 @@ public partial class StudentProfileViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(path))
             return;
 
-        try
+        if (!File.Exists(path))
+            return;
+
+        if (NativeFileApi.DeleteFile(path))
+            return;
+
+        var win32Error = Marshal.GetLastWin32Error();
+        if (win32Error == 2)
+            return;
+
+        errors.Add($"{label}: {Path.GetFileName(path)} ({GetFriendlyDeleteErrorMessage(win32Error)})");
+    }
+
+    private static string GetFriendlyDeleteErrorMessage(int win32Error)
+    {
+        return win32Error switch
         {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch (Exception ex)
-        {
-            errors.Add($"{label}: {Path.GetFileName(path)} ({ex.Message})");
-        }
+            5 => "Δεν υπάρχει πρόσβαση στο αρχείο.",
+            32 => "Το αρχείο χρησιμοποιείται από άλλη εφαρμογή.",
+            33 => "Το αρχείο είναι κλειδωμένο από άλλη διεργασία.",
+            _ => $"Σφάλμα συστήματος ({win32Error})."
+        };
+    }
+
+    private static class NativeFileApi
+    {
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        internal static extern bool DeleteFile(string lpFileName);
     }
 
     private static (string Name, string Surname) SplitName(string? fullName)
