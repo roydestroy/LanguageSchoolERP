@@ -5,8 +5,10 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -17,6 +19,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 {
     private readonly DbContextFactory _dbFactory;
     private readonly AppState _state;
+    private readonly IProgramService _programService;
 
     private Guid _studentId;
     private string _academicYear = "";
@@ -24,29 +27,9 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     public event EventHandler<bool>? RequestClose;
 
-    public IReadOnlyList<ProgramOptionVm> ProgramTypes { get; } =
-        new[]
-        {
-            new ProgramOptionVm(ProgramType.LanguageSchool, ProgramType.LanguageSchool.ToDisplayName()),
-            new ProgramOptionVm(ProgramType.StudyLab, ProgramType.StudyLab.ToDisplayName()),
-            new ProgramOptionVm(ProgramType.EuroLab, ProgramType.EuroLab.ToDisplayName())
-        };
+    public ObservableCollection<StudyProgram> StudyPrograms { get; } = new();
 
-    public ProgramOptionVm? SelectedProgramOption
-    {
-        get => ProgramTypes.FirstOrDefault(x => x.Value == SelectedProgramType);
-        set
-        {
-            if (value is null)
-            {
-                return;
-            }
-
-            SelectedProgramType = value.Value;
-            OnPropertyChanged();
-        }
-    }
-
+    [ObservableProperty] private StudyProgram? selectedStudyProgram;
     [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
     [ObservableProperty] private string levelOrClass = "";
     [ObservableProperty] private string agreementTotalText = "0";
@@ -74,7 +57,6 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     partial void OnSelectedProgramTypeChanged(ProgramType value)
     {
-        OnPropertyChanged(nameof(SelectedProgramOption));
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
         OnPropertyChanged(nameof(HasBooksOption));
@@ -93,11 +75,28 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         }
     }
 
-    public AddProgramEnrollmentViewModel(DbContextFactory dbFactory, AppState state)
+    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
+    {
+        if (ProgramTypeResolver.TryResolveLegacyType(value, out var mappedType, out var mappingError))
+        {
+            ErrorMessage = string.Empty;
+            SelectedProgramType = mappedType;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(mappingError))
+        {
+            ErrorMessage = mappingError;
+        }
+    }
+
+    public AddProgramEnrollmentViewModel(DbContextFactory dbFactory, AppState state, IProgramService programService)
     {
         _dbFactory = dbFactory;
         _state = state;
+        _programService = programService;
         SaveCommand = new AsyncRelayCommand(SaveAsync, CanWrite);
+        _ = LoadProgramsAsync();
 
         _state.PropertyChanged += (_, e) =>
         {
@@ -108,11 +107,32 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     private bool CanWrite() => !_state.IsReadOnlyMode;
 
+    private async Task LoadProgramsAsync()
+    {
+        try
+        {
+            var programs = await _programService.GetAllAsync(CancellationToken.None);
+            StudyPrograms.Clear();
+            foreach (var program in programs)
+            {
+                StudyPrograms.Add(program);
+            }
+
+            SelectedStudyProgram = StudyPrograms.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
     public async void Initialize(AddProgramEnrollmentInit init)
     {
         _studentId = init.StudentId;
         _academicYear = init.AcademicYear;
         _editingEnrollmentId = init.EnrollmentId;
+
+        await LoadProgramsAsync();
 
         SelectedProgramType = ProgramType.LanguageSchool;
         LevelOrClass = "";
@@ -148,7 +168,8 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                     return;
                 }
 
-                SelectedProgramType = enrollment.ProgramType;
+                SelectedStudyProgram = StudyPrograms.FirstOrDefault(x => ProgramTypeResolver.TryResolveLegacyType(x, out var mappedType, out _) && mappedType == enrollment.ProgramType)
+                    ?? StudyPrograms.FirstOrDefault();
                 LevelOrClass = enrollment.LevelOrClass ?? "";
                 AgreementTotalText = enrollment.AgreementTotal.ToString("0.00", CultureInfo.InvariantCulture);
                 BooksAmountText = enrollment.BooksAmount.ToString("0.00", CultureInfo.InvariantCulture);
@@ -182,6 +203,14 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         }
 
         ErrorMessage = "";
+
+        if (!ProgramTypeResolver.TryResolveLegacyType(SelectedStudyProgram, out var mappedProgramType, out var mappingError))
+        {
+            ErrorMessage = mappingError ?? "Παρακαλώ επιλέξτε πρόγραμμα.";
+            return;
+        }
+
+        SelectedProgramType = mappedProgramType;
 
         if (!TryParseMoney(AgreementTotalText, out var agreementTotal) || agreementTotal < 0)
         {

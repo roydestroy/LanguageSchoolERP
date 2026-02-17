@@ -18,8 +18,10 @@ public partial class App : Application
         services.AddSingleton<StudentsViewModel>();
         services.AddSingleton<StudentsView>();
 
-        services.AddSingleton<ProgramsViewModel>();
-        services.AddSingleton<ProgramsView>();
+        services.AddTransient<ProgramsListViewModel>();
+        services.AddTransient<ProgramsView>();
+        services.AddTransient<ProgramEditViewModel>();
+        services.AddTransient<Windows.ProgramEditWindow>();
 
         services.AddSingleton<AcademicYearsViewModel>();
         services.AddSingleton<AcademicYearsView>();
@@ -44,6 +46,7 @@ public partial class App : Application
         services.AddSingleton<ExcelReceiptGenerator>();
         services.AddSingleton<ContractDocumentService>();
         services.AddSingleton<ContractBookmarkBuilder>();
+        services.AddTransient<IProgramService, ProgramService>();
 
         // Global settings/state
         services.AddSingleton<DatabaseAppSettingsProvider>();

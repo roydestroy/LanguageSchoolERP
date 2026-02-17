@@ -5,8 +5,10 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -15,28 +17,13 @@ public partial class NewStudentViewModel : ObservableObject
 {
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
+    private readonly IProgramService _programService;
 
     public event EventHandler<bool>? RequestClose;
 
-    public IReadOnlyList<ProgramOptionVm> ProgramTypes { get; } =
-        new[]
-        {
-            new ProgramOptionVm(ProgramType.LanguageSchool, ProgramType.LanguageSchool.ToDisplayName()),
-            new ProgramOptionVm(ProgramType.StudyLab, ProgramType.StudyLab.ToDisplayName()),
-            new ProgramOptionVm(ProgramType.EuroLab, ProgramType.EuroLab.ToDisplayName())
-        };
+    public ObservableCollection<StudyProgram> StudyPrograms { get; } = new();
 
-    public ProgramOptionVm? SelectedProgramOption
-    {
-        get => ProgramTypes.FirstOrDefault(x => x.Value == SelectedProgramType);
-        set
-        {
-            if (value is null) return;
-            SelectedProgramType = value.Value;
-            OnPropertyChanged();
-        }
-    }
-
+    [ObservableProperty] private StudyProgram? selectedStudyProgram;
     [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
 
     // Student
@@ -84,7 +71,6 @@ public partial class NewStudentViewModel : ObservableObject
 
     partial void OnSelectedProgramTypeChanged(ProgramType value)
     {
-        OnPropertyChanged(nameof(SelectedProgramOption));
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
         OnPropertyChanged(nameof(HasBooksOption));
@@ -103,11 +89,28 @@ public partial class NewStudentViewModel : ObservableObject
         }
     }
 
-    public NewStudentViewModel(AppState state, DbContextFactory dbFactory)
+    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
+    {
+        if (ProgramTypeResolver.TryResolveLegacyType(value, out var mappedType, out var mappingError))
+        {
+            ErrorMessage = string.Empty;
+            SelectedProgramType = mappedType;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(mappingError))
+        {
+            ErrorMessage = mappingError;
+        }
+    }
+
+    public NewStudentViewModel(AppState state, DbContextFactory dbFactory, IProgramService programService)
     {
         _state = state;
         _dbFactory = dbFactory;
+        _programService = programService;
         CreateCommand = new AsyncRelayCommand(CreateAsync, CanWrite);
+        _ = LoadProgramsAsync();
 
         _state.PropertyChanged += (_, e) =>
         {
@@ -118,6 +121,25 @@ public partial class NewStudentViewModel : ObservableObject
 
     private bool CanWrite() => !_state.IsReadOnlyMode;
 
+    private async Task LoadProgramsAsync()
+    {
+        try
+        {
+            var programs = await _programService.GetAllAsync(CancellationToken.None);
+            StudyPrograms.Clear();
+            foreach (var program in programs)
+            {
+                StudyPrograms.Add(program);
+            }
+
+            SelectedStudyProgram = StudyPrograms.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
     private async Task CreateAsync()
     {
         if (!CanWrite())
@@ -126,6 +148,14 @@ public partial class NewStudentViewModel : ObservableObject
             return;
         }
         ErrorMessage = "";
+
+        if (!ProgramTypeResolver.TryResolveLegacyType(SelectedStudyProgram, out var mappedProgramType, out var mappingError))
+        {
+            ErrorMessage = mappingError ?? "Παρακαλώ επιλέξτε πρόγραμμα.";
+            return;
+        }
+
+        SelectedProgramType = mappedProgramType;
 
         var fullName = JoinName(StudentName, StudentSurname);
         if (string.IsNullOrWhiteSpace(fullName))

@@ -93,9 +93,9 @@
 
                     <TextBlock Text="Πρόγραμμα"/>
                     <ComboBox Margin="0,2,0,6"
-                              ItemsSource="{Binding ProgramTypes}"
+                              ItemsSource="{Binding StudyPrograms}"
                               DisplayMemberPath="Name"
-                              SelectedItem="{Binding SelectedProgramOption}"/>
+                              SelectedItem="{Binding SelectedStudyProgram}"/>
 
                     <TextBlock Text="Επίπεδο / Τάξη"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding LevelOrClass}"/>
