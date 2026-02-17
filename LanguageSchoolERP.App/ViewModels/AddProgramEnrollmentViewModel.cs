@@ -30,7 +30,6 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     public ObservableCollection<StudyProgram> StudyPrograms { get; } = new();
 
     [ObservableProperty] private StudyProgram? selectedStudyProgram;
-    [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
     [ObservableProperty] private string levelOrClass = "";
     [ObservableProperty] private string agreementTotalText = "0";
     [ObservableProperty] private string booksAmountText = "0";
@@ -45,9 +44,9 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private bool includesTransportation;
     [ObservableProperty] private string transportationMonthlyPriceText = "";
 
-    public bool IsLanguageSchoolProgram => SelectedProgramType == ProgramType.LanguageSchool;
-    public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
-    public bool HasBooksOption => SelectedProgramType == ProgramType.LanguageSchool;
+    public bool IsLanguageSchoolProgram => SelectedStudyProgram?.HasBooks == true;
+    public bool IsStudyLabProgram => SelectedStudyProgram?.HasTransport == true;
+    public bool HasBooksOption => SelectedStudyProgram?.HasBooks == true;
 
     [ObservableProperty] private string errorMessage = "";
     [ObservableProperty] private string dialogTitle = "Προσθήκη εγγραφής προγράμματος";
@@ -55,38 +54,23 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
     public IAsyncRelayCommand SaveCommand { get; }
 
-    partial void OnSelectedProgramTypeChanged(ProgramType value)
+    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
     {
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
         OnPropertyChanged(nameof(HasBooksOption));
 
-        if (value != ProgramType.LanguageSchool)
+        if (!IsLanguageSchoolProgram)
         {
             IncludesStudyLab = false;
             StudyLabMonthlyPriceText = "";
             BooksAmountText = "0";
         }
 
-        if (value != ProgramType.StudyLab)
+        if (!IsStudyLabProgram)
         {
             IncludesTransportation = false;
             TransportationMonthlyPriceText = "";
-        }
-    }
-
-    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
-    {
-        if (ProgramTypeResolver.TryResolveLegacyType(value, out var mappedType, out var mappingError))
-        {
-            ErrorMessage = string.Empty;
-            SelectedProgramType = mappedType;
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(mappingError))
-        {
-            ErrorMessage = mappingError;
         }
     }
 
@@ -134,8 +118,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
         await LoadProgramsAsync();
 
-        SelectedProgramType = ProgramType.LanguageSchool;
-        LevelOrClass = "";
+                LevelOrClass = "";
         AgreementTotalText = "0";
         BooksAmountText = "0";
         DownPaymentText = "0";
@@ -168,7 +151,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                     return;
                 }
 
-                SelectedStudyProgram = StudyPrograms.FirstOrDefault(x => ProgramTypeResolver.TryResolveLegacyType(x, out var mappedType, out _) && mappedType == enrollment.ProgramType)
+                SelectedStudyProgram = StudyPrograms.FirstOrDefault(x => x.Id == enrollment.ProgramId)
                     ?? StudyPrograms.FirstOrDefault();
                 LevelOrClass = enrollment.LevelOrClass ?? "";
                 AgreementTotalText = enrollment.AgreementTotal.ToString("0.00", CultureInfo.InvariantCulture);
@@ -204,13 +187,11 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
 
         ErrorMessage = "";
 
-        if (!ProgramTypeResolver.TryResolveLegacyType(SelectedStudyProgram, out var mappedProgramType, out var mappingError))
+        if (SelectedStudyProgram is null)
         {
-            ErrorMessage = mappingError ?? "Παρακαλώ επιλέξτε πρόγραμμα.";
+            ErrorMessage = "Παρακαλώ επιλέξτε πρόγραμμα.";
             return;
         }
-
-        SelectedProgramType = mappedProgramType;
 
         if (!TryParseMoney(AgreementTotalText, out var agreementTotal) || agreementTotal < 0)
         {
@@ -306,7 +287,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                     return;
                 }
 
-                enrollment.ProgramType = SelectedProgramType;
+                enrollment.ProgramId = SelectedStudyProgram.Id;
                 enrollment.LevelOrClass = LevelOrClass.Trim();
                 enrollment.AgreementTotal = agreementTotal;
                 enrollment.BooksAmount = books;
@@ -325,7 +306,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
                 {
                     StudentId = _studentId,
                     AcademicPeriodId = period.AcademicPeriodId,
-                    ProgramType = SelectedProgramType,
+                    ProgramId = SelectedStudyProgram.Id,
                     LevelOrClass = LevelOrClass.Trim(),
                     AgreementTotal = agreementTotal,
                     BooksAmount = books,

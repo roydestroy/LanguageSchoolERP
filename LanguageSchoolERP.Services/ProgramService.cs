@@ -69,7 +69,15 @@ public class ProgramService : IProgramService
         }
 
         db.Programs.Remove(existing);
-        await db.SaveChangesAsync(ct);
+
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            throw new InvalidOperationException("Δεν μπορείτε να διαγράψετε πρόγραμμα που χρησιμοποιείται από εγγραφές.");
+        }
     }
 
     private static async Task<string> ValidateAndNormalizeNameAsync(SchoolDbContext db, string? name, int? currentId, CancellationToken ct)

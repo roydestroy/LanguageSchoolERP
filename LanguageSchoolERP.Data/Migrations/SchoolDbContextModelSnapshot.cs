@@ -33,7 +33,8 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("AcademicPeriodId");
 
@@ -155,7 +156,7 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProgramType")
+                    b.Property<int>("ProgramId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -180,6 +181,8 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasKey("EnrollmentId");
 
                     b.HasIndex("AcademicPeriodId");
+
+                    b.HasIndex("ProgramId");
 
                     b.HasIndex("StudentId");
 
@@ -341,7 +344,8 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -389,7 +393,15 @@ namespace LanguageSchoolERP.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LanguageSchoolERP.Core.Models.StudyProgram", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("AcademicPeriod");
+
+                    b.Navigation("Program");
 
                     b.Navigation("Student");
                 });

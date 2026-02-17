@@ -24,7 +24,6 @@ public partial class NewStudentViewModel : ObservableObject
     public ObservableCollection<StudyProgram> StudyPrograms { get; } = new();
 
     [ObservableProperty] private StudyProgram? selectedStudyProgram;
-    [ObservableProperty] private ProgramType selectedProgramType = ProgramType.LanguageSchool;
 
     // Student
     [ObservableProperty] private string studentName = "";
@@ -63,44 +62,29 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private bool includesTransportation;
     [ObservableProperty] private string transportationMonthlyPriceText = "";
 
-    public bool IsLanguageSchoolProgram => SelectedProgramType == ProgramType.LanguageSchool;
-    public bool IsStudyLabProgram => SelectedProgramType == ProgramType.StudyLab;
-    public bool HasBooksOption => SelectedProgramType == ProgramType.LanguageSchool;
+    public bool IsLanguageSchoolProgram => SelectedStudyProgram?.HasBooks == true;
+    public bool IsStudyLabProgram => SelectedStudyProgram?.HasTransport == true;
+    public bool HasBooksOption => SelectedStudyProgram?.HasBooks == true;
 
     public IRelayCommand CreateCommand { get; }
 
-    partial void OnSelectedProgramTypeChanged(ProgramType value)
+    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
     {
         OnPropertyChanged(nameof(IsLanguageSchoolProgram));
         OnPropertyChanged(nameof(IsStudyLabProgram));
         OnPropertyChanged(nameof(HasBooksOption));
 
-        if (value != ProgramType.LanguageSchool)
+        if (!IsLanguageSchoolProgram)
         {
             IncludesStudyLab = false;
             StudyLabMonthlyPriceText = "";
             BooksAmountText = "0";
         }
 
-        if (value != ProgramType.StudyLab)
+        if (!IsStudyLabProgram)
         {
             IncludesTransportation = false;
             TransportationMonthlyPriceText = "";
-        }
-    }
-
-    partial void OnSelectedStudyProgramChanged(StudyProgram? value)
-    {
-        if (ProgramTypeResolver.TryResolveLegacyType(value, out var mappedType, out var mappingError))
-        {
-            ErrorMessage = string.Empty;
-            SelectedProgramType = mappedType;
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(mappingError))
-        {
-            ErrorMessage = mappingError;
         }
     }
 
@@ -149,13 +133,11 @@ public partial class NewStudentViewModel : ObservableObject
         }
         ErrorMessage = "";
 
-        if (!ProgramTypeResolver.TryResolveLegacyType(SelectedStudyProgram, out var mappedProgramType, out var mappingError))
+        if (SelectedStudyProgram is null)
         {
-            ErrorMessage = mappingError ?? "Παρακαλώ επιλέξτε πρόγραμμα.";
+            ErrorMessage = "Παρακαλώ επιλέξτε πρόγραμμα.";
             return;
         }
-
-        SelectedProgramType = mappedProgramType;
 
         var fullName = JoinName(StudentName, StudentSurname);
         if (string.IsNullOrWhiteSpace(fullName))
@@ -257,7 +239,7 @@ public partial class NewStudentViewModel : ObservableObject
             var enrollment = new Enrollment
             {
                 AcademicPeriodId = period.AcademicPeriodId,
-                ProgramType = SelectedProgramType,
+                ProgramId = SelectedStudyProgram.Id,
                 LevelOrClass = LevelOrClass.Trim(),
                 AgreementTotal = agreementTotal,
                 BooksAmount = books,

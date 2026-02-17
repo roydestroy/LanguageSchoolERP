@@ -128,16 +128,17 @@ public partial class AddPaymentViewModel : ObservableObject
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
-            .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId)
+             .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId)
+            .Include(e => e.Program)
             .Include(e => e.Payments)
-            .OrderBy(e => e.ProgramType)
+            .OrderBy(e => e.Program.Name)
             .ToListAsync();
 
         foreach (var e in enrollments)
         {
             var label = string.IsNullOrWhiteSpace(e.LevelOrClass)
-                ? $"{e.ProgramType.ToDisplayName()}"
-                : $"{e.ProgramType.ToDisplayName()} ({e.LevelOrClass})";
+                ? e.Program.Name
+                : $"{e.Program.Name} ({e.LevelOrClass})";
 
             var suggested = InstallmentPlanHelper.GetNextInstallmentAmount(e);
             _suggestedAmountsByEnrollment[e.EnrollmentId] = suggested;
@@ -303,7 +304,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 StudentEmail: student.Email ?? "",
                 Amount: newPayment.Amount,
                 PaymentMethod: newPayment.Method.ToString(),
-                ProgramLabel: enrollment.ProgramType.ToDisplayName(),
+                ProgramLabel: enrollment.Program?.Name ?? "—",
                 AcademicYear: academicYear,
                 Notes: newPayment.Notes ?? ""
             );

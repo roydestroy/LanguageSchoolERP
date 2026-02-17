@@ -45,6 +45,14 @@ public class SchoolDbContext : DbContext
             .Property(x => x.TemplateRelativePath)
             .HasMaxLength(400);
 
+        modelBuilder.Entity<StudyProgram>()
+            .ToTable("Programs");
+
+        modelBuilder.Entity<StudyProgram>()
+            .Property(p => p.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
         // -------------------------------------------------------
         // FIX: Explicit relationships to avoid multiple cascade paths
         // -------------------------------------------------------
@@ -85,6 +93,12 @@ public class SchoolDbContext : DbContext
         modelBuilder.Entity<Enrollment>()
             .Property(x => x.StudyLabMonthlyFee)
             .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.Program)
+            .WithMany()
+            .HasForeignKey(e => e.ProgramId)
+            .OnDelete(DeleteBehavior.Restrict);
 
     }
 

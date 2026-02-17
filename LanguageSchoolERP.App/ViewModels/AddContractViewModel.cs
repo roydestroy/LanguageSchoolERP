@@ -108,16 +108,17 @@ public partial class AddContractViewModel : ObservableObject
 
         var enrollments = await db.Enrollments
             .AsNoTracking()
-            .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId)
-            .OrderBy(e => e.ProgramType)
+             .Where(e => e.StudentId == init.StudentId && e.AcademicPeriodId == period.AcademicPeriodId)
+            .Include(e => e.Program)
+            .OrderBy(e => e.Program.Name)
             .ThenBy(e => e.LevelOrClass)
             .ToListAsync();
 
         foreach (var e in enrollments)
         {
             var label = string.IsNullOrWhiteSpace(e.LevelOrClass)
-                ? e.ProgramType.ToDisplayName()
-                : $"{e.ProgramType.ToDisplayName()} ({e.LevelOrClass})";
+                ? e.Program.Name
+                : $"{e.Program.Name} ({e.LevelOrClass})";
 
             EnrollmentOptions.Add(new EnrollmentOption(e.EnrollmentId, label, 0));
         }
@@ -180,7 +181,7 @@ public partial class AddContractViewModel : ObservableObject
                 StudentFirstName = firstName,
                 StudentLastName = lastName,
                 GuardianFullName = effectiveGuardianName,
-                ProgramNameUpper = enrollment.ProgramType.ToDisplayName().ToUpperInvariant(),
+                ProgramNameUpper = (enrollment.Program?.Name ?? "").ToUpperInvariant(),
                 ProgramTitleUpperWithExtras = ContractBookmarkBuilder.BuildProgramTitleUpperWithExtras(enrollment),
                 AgreementTotal = enrollment.AgreementTotal,
                 DownPayment = enrollment.DownPayment,

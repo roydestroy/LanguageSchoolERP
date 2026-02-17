@@ -38,24 +38,6 @@
                         <DataGridCheckBoxColumn Header="Μεταφορά" Binding="{Binding HasTransport}" Width="130"/>
                         <DataGridCheckBoxColumn Header="Study Lab" Binding="{Binding HasStudyLab}" Width="130"/>
                         <DataGridCheckBoxColumn Header="Βιβλία" Binding="{Binding HasBooks}" Width="120"/>
-                        <DataGridTemplateColumn Header="Legacy Compatible" Width="150">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding LegacyCompatibilityText}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="ToolTip" Value="{x:Null}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsLegacyCompatible}" Value="False">
-                                                        <Setter Property="ToolTip" Value="{Binding LegacyCompatibilityMessage}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
 
