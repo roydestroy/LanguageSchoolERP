@@ -7,6 +7,8 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class StudentRowVm : ObservableObject
 {
+    private static readonly Brush DefaultProgressBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
+
     public Guid StudentId { get; set; }
 
     [ObservableProperty] private string fullName = "";
@@ -25,9 +27,7 @@ public partial class StudentRowVm : ObservableObject
 
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent;
-    public Brush ProgressBrush => HasOnlyStoppedPrograms
-        ? new SolidColorBrush(Color.FromRgb(177, 38, 38))
-        : new SolidColorBrush(Color.FromRgb(78, 153, 228));
+    [ObservableProperty] private Brush progressBrush = DefaultProgressBrush;
 
     [ObservableProperty] private bool isOverdue;
     public string OverdueBadgeText => "ΛΗΞΙΠΡΟΘΕΣΜΟ";
@@ -64,10 +64,7 @@ public partial class StudentRowVm : ObservableObject
         => OnPropertyChanged(nameof(StoppedBadgeVisibility));
 
     partial void OnHasOnlyStoppedProgramsChanged(bool value)
-    {
-        OnPropertyChanged(nameof(ActiveStatusText));
-        OnPropertyChanged(nameof(ProgressBrush));
-    }
+        => OnPropertyChanged(nameof(ActiveStatusText));
 
     partial void OnIsOverdueChanged(bool value)
         => OnPropertyChanged(nameof(OverdueBadgeVisibility));

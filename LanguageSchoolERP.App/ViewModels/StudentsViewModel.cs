@@ -11,6 +11,7 @@ using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows.Media;
 
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -27,6 +28,12 @@ public partial class StudentsViewModel : ObservableObject
     private const string SortByName = "Όνομα (Α-Ω)";
     private const string SortByBalance = "Υπόλοιπο (φθίνουσα)";
     private const string SortByOverdueAmount = "Ληξιπρόθεσμο ποσό (φθίνουσα)";
+
+    private static readonly Brush ProgressBlueBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
+    private static readonly Brush ProgressOrangeBrush = new SolidColorBrush(Color.FromRgb(230, 145, 56));
+    private static readonly Brush ProgressGreenBrush = new SolidColorBrush(Color.FromRgb(67, 160, 71));
+    private static readonly Brush ProgressPurpleBrush = new SolidColorBrush(Color.FromRgb(123, 97, 255));
+    private static readonly Brush ProgressStoppedRedBrush = new SolidColorBrush(Color.FromRgb(177, 38, 38));
 
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
@@ -236,6 +243,21 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
                     continue;
 
+                var activeEnrollments = yearEnrollments.Where(en => !en.IsStopped).ToList();
+                var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
+                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) > en.AgreementTotal + 0.009m);
+                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) + 0.009m >= en.AgreementTotal);
+
+                var studentProgressBrush = hasOnlyStoppedPrograms
+                    ? ProgressStoppedRedBrush
+                    : anyActiveOverpaid
+                        ? ProgressPurpleBrush
+                        : anyActiveOverdue
+                            ? ProgressOrangeBrush
+                            : allActiveFullyPaid
+                                ? ProgressGreenBrush
+                                : ProgressBlueBrush;
+
                 var row = new StudentRowVm
                 {
                     StudentId = s.StudentId,
@@ -246,11 +268,12 @@ public partial class StudentsViewModel : ObservableObject
                     OverdueAmount = overdueAmount,
                     ProgressPercent = totalProgress,
                     ProgressText = $"{totalProgress:0}%",
+                    ProgressBrush = studentProgressBrush,
                     IsOverdue = overdue,
                     HasStoppedProgram = hasStoppedProgram,
                     HasOnlyStoppedPrograms = hasOnlyStoppedPrograms,
                     HasPendingContract = hasPendingContract,
-                    IsActive = yearEnrollments.Any(en => !en.IsStopped),
+                    IsActive = activeEnrollments.Count > 0,
                     IsExpanded = false
                 };
 
@@ -258,10 +281,23 @@ public partial class StudentsViewModel : ObservableObject
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
                     var enBalance = InstallmentPlanHelper.GetOutstandingAmount(en);
+                    var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
+                    var enOverpaid = enPaid > en.AgreementTotal + 0.009m;
+                    var enFullyPaid = enPaid + 0.009m >= en.AgreementTotal;
 
                     var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
                     if (enrollmentProgress > 100) enrollmentProgress = 100;
                     if (enrollmentProgress < 0) enrollmentProgress = 0;
+
+                    var enrollmentProgressBrush = en.IsStopped
+                        ? ProgressStoppedRedBrush
+                        : enOverpaid
+                            ? ProgressPurpleBrush
+                            : enOverdue
+                                ? ProgressOrangeBrush
+                                : enFullyPaid
+                                    ? ProgressGreenBrush
+                                    : ProgressBlueBrush;
 
                     row.Enrollments.Add(new EnrollmentRowVm
                     {
@@ -272,6 +308,7 @@ public partial class StudentsViewModel : ObservableObject
                         BalanceText = $"Υπόλοιπο: {enBalance:0.00} €",
                         ProgressPercent = enrollmentProgress,
                         ProgressText = $"{enrollmentProgress:0}%",
+                        ProgressBrush = enrollmentProgressBrush,
                         IsStopped = en.IsStopped
                     });
                 }

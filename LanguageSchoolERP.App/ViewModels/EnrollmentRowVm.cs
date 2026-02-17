@@ -6,6 +6,7 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class EnrollmentRowVm : ObservableObject
 {
+    private static readonly Brush DefaultProgressBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
     [ObservableProperty] private string title = "";
     [ObservableProperty] private string details = "";
 
@@ -17,14 +18,10 @@ public partial class EnrollmentRowVm : ObservableObject
     [ObservableProperty] private double progressPercent;
 
     [ObservableProperty] private bool isStopped;
+    [ObservableProperty] private Brush progressBrush = DefaultProgressBrush;
+
     public Visibility StoppedBadgeVisibility => IsStopped ? Visibility.Visible : Visibility.Collapsed;
-    public Brush ProgressBrush => IsStopped
-        ? new SolidColorBrush(Color.FromRgb(177, 38, 38))
-        : new SolidColorBrush(Color.FromRgb(78, 153, 228));
 
     partial void OnIsStoppedChanged(bool value)
-    {
-        OnPropertyChanged(nameof(StoppedBadgeVisibility));
-        OnPropertyChanged(nameof(ProgressBrush));
-    }
+        => OnPropertyChanged(nameof(StoppedBadgeVisibility));
 }
