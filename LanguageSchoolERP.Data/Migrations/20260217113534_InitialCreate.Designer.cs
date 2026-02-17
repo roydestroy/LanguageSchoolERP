@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LanguageSchoolERP.Data.Migrations
 {
     [DbContext(typeof(SchoolDbContext))]
-    [Migration("20260217102243_InitialBaseline")]
-    partial class InitialBaseline
+    [Migration("20260217113534_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -158,7 +158,7 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProgramType")
+                    b.Property<int>("ProgramId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -183,6 +183,8 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasKey("EnrollmentId");
 
                     b.HasIndex("AcademicPeriodId");
+
+                    b.HasIndex("ProgramId");
 
                     b.HasIndex("StudentId");
 
@@ -216,32 +218,6 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasIndex("EnrollmentId");
 
                     b.ToTable("Payments");
-                });
-
-            modelBuilder.Entity("LanguageSchoolERP.Core.Models.Program", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("HasBooks")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasStudyLab")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("HasTransport")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Programs");
                 });
 
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Receipt", b =>
@@ -351,6 +327,33 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.ToTable("Students");
                 });
 
+            modelBuilder.Entity("LanguageSchoolERP.Core.Models.StudyProgram", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("HasBooks")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasStudyLab")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasTransport")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Programs", (string)null);
+                });
+
             modelBuilder.Entity("LanguageSchoolERP.Core.Models.Contract", b =>
                 {
                     b.HasOne("LanguageSchoolERP.Core.Models.ContractTemplate", "ContractTemplate")
@@ -386,6 +389,12 @@ namespace LanguageSchoolERP.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LanguageSchoolERP.Core.Models.StudyProgram", "Program")
+                        .WithMany()
+                        .HasForeignKey("ProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("LanguageSchoolERP.Core.Models.Student", "Student")
                         .WithMany("Enrollments")
                         .HasForeignKey("StudentId")
@@ -393,6 +402,8 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("AcademicPeriod");
+
+                    b.Navigation("Program");
 
                     b.Navigation("Student");
                 });

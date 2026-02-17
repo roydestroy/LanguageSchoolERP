@@ -4,7 +4,7 @@ namespace LanguageSchoolERP.App.Windows;
 
 public partial class AddAcademicYearWindow : Window
 {
-    public string AcademicYearName { get; private set; } = string.Empty;
+    public string AcademicYearName { get; set; } = string.Empty;
 
     public AddAcademicYearWindow()
     {
@@ -16,6 +16,7 @@ public partial class AddAcademicYearWindow : Window
     private void AddButton_Click(object sender, RoutedEventArgs e)
     {
         AcademicYearName = (AcademicYearName ?? string.Empty).Trim();
+
         if (string.IsNullOrWhiteSpace(AcademicYearName))
         {
             MessageBox.Show("Παρακαλώ εισάγετε όνομα ακαδημαϊκού έτους.");

@@ -27,7 +27,10 @@ public partial class AcademicYearsViewModel : ObservableObject
         _state = state;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
+
+        // ✅ Use textbox value (NewAcademicYearName)
         AddAcademicYearCommand = new AsyncRelayCommand(AddAsync, CanWrite);
+
         DeleteAcademicYearCommand = new AsyncRelayCommand(DeleteAsync, CanWrite);
 
         _state.PropertyChanged += (_, e) =>
@@ -46,43 +49,68 @@ public partial class AcademicYearsViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
-        using var db = _dbFactory.Create();
-        DbSeeder.EnsureSeeded(db);
-
-        var years = await db.AcademicPeriods
-            .AsNoTracking()
-            .OrderByDescending(x => x.Name)
-            .ToListAsync();
-
-        AcademicYears.Clear();
-        foreach (var year in years)
+        try
         {
-            AcademicYears.Add(year);
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var years = await db.AcademicPeriods
+                .AsNoTracking()
+                .OrderByDescending(x => x.Name)
+                .ToListAsync();
+
+            AcademicYears.Clear();
+            foreach (var year in years) AcademicYears.Add(year);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"Σφάλμα φόρτωσης ακαδημαϊκών ετών:\n{ex.Message}",
+                "Σφάλμα",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
         }
     }
 
+
+    // Optional: keep this for external callers
     public Task AddAcademicYearAsync(string? yearName = null) => AddAsync(yearName);
 
-    private async Task AddAsync(string? yearName = null)
+    private async Task AddAsync()
+    {
+        try
+        {
+            await AddAsync(yearName: null);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(
+                $"Σφάλμα κατά την προσθήκη ακαδημαϊκού έτους:\n{ex.Message}",
+                "Σφάλμα",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
+        }
+    }
+
+    private async Task AddAsync(string? yearName)
     {
         if (!CanWrite())
         {
             System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
             return;
         }
+
         var name = (yearName ?? NewAcademicYearName ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
-        {
             return;
-        }
 
         using var db = _dbFactory.Create();
         DbSeeder.EnsureSeeded(db);
-        var exists = await db.AcademicPeriods.AnyAsync(x => x.Name == name);
+
+        // safer duplicate check (no ToUpper translation issues, relies on SQL collation)
+        var exists = await db.AcademicPeriods.AsNoTracking().AnyAsync(x => x.Name == name);
         if (exists)
-        {
             return;
-        }
 
         db.AcademicPeriods.Add(new AcademicPeriod { Name = name, IsCurrent = false });
         await db.SaveChangesAsync();
@@ -92,6 +120,7 @@ public partial class AcademicYearsViewModel : ObservableObject
         await LoadAsync();
     }
 
+
     private async Task DeleteAsync()
     {
         if (!CanWrite())
@@ -99,25 +128,29 @@ public partial class AcademicYearsViewModel : ObservableObject
             System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
             return;
         }
+
         if (SelectedAcademicYear is null)
-        {
             return;
-        }
 
         using var db = _dbFactory.Create();
         DbSeeder.EnsureSeeded(db);
-        var period = await db.AcademicPeriods.FirstOrDefaultAsync(x => x.AcademicPeriodId == SelectedAcademicYear.AcademicPeriodId);
+
+        var period = await db.AcademicPeriods
+            .FirstOrDefaultAsync(x => x.AcademicPeriodId == SelectedAcademicYear.AcademicPeriodId);
+
         if (period is null)
-        {
             return;
-        }
 
         db.AcademicPeriods.Remove(period);
         await db.SaveChangesAsync();
 
         if (_state.SelectedAcademicYear == period.Name)
         {
-            _state.SelectedAcademicYear = db.AcademicPeriods.OrderByDescending(x => x.Name).Select(x => x.Name).FirstOrDefault() ?? "";
+            _state.SelectedAcademicYear = await db.AcademicPeriods
+                .AsNoTracking()
+                .OrderByDescending(x => x.Name)
+                .Select(x => x.Name)
+                .FirstOrDefaultAsync() ?? "";
         }
 
         await LoadAsync();
