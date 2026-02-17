@@ -239,41 +239,40 @@
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
 
-                                        <!-- Overdue badge -->
-                                        <Border Grid.Column="3" Margin="12,0,0,0"
-                                                Style="{StaticResource StatusBadgeStyle}"
-                                                Background="{Binding OverdueBadgeBackground}"
-                                                BorderBrush="{Binding OverdueBadgeBorder}"
-                                                VerticalAlignment="Center"
-                                                Visibility="{Binding OverdueBadgeVisibility}">
-                                            <TextBlock Text="{Binding OverdueBadgeText}"
-                                                       Style="{StaticResource StatusBadgeTextStyle}"
-                                                       Foreground="{Binding OverdueBadgeForeground}"/>
-                                        </Border>
+                                        <!-- Centered flags -->
+                                        <StackPanel Grid.ColumnSpan="8"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                            <Border Margin="0,0,8,0"
+                                                    Style="{StaticResource StatusBadgeStyle}"
+                                                    Background="{Binding OverdueBadgeBackground}"
+                                                    BorderBrush="{Binding OverdueBadgeBorder}"
+                                                    Visibility="{Binding OverdueBadgeVisibility}">
+                                                <TextBlock Text="{Binding OverdueBadgeText}"
+                                                           Style="{StaticResource StatusBadgeTextStyle}"
+                                                           Foreground="{Binding OverdueBadgeForeground}"/>
+                                            </Border>
 
-                                        <!-- Pending contract badge -->
-                                        <!-- Stopped badge -->
-                                        <Border Grid.Column="5" Margin="12,0,0,0"
-                                                Style="{StaticResource StatusBadgeStyle}"
-                                                Background="{Binding StoppedBadgeBackground}"
-                                                BorderBrush="{Binding StoppedBadgeBorder}"
-                                                VerticalAlignment="Center"
-                                                Visibility="{Binding StoppedBadgeVisibility}">
-                                            <TextBlock Text="{Binding StoppedBadgeText}"
-                                                       Style="{StaticResource StatusBadgeTextStyle}"
-                                                       Foreground="{Binding StoppedBadgeForeground}"/>
-                                        </Border>
+                                            <Border Margin="0,0,8,0"
+                                                    Style="{StaticResource StatusBadgeStyle}"
+                                                    Background="{Binding PendingContractBadgeBackground}"
+                                                    BorderBrush="{Binding PendingContractBadgeBorder}"
+                                                    Visibility="{Binding PendingContractVisibility}">
+                                                <TextBlock Text="{Binding PendingContractBadgeText}"
+                                                           Style="{StaticResource StatusBadgeTextStyle}"
+                                                           Foreground="{Binding PendingContractBadgeForeground}"/>
+                                            </Border>
 
-                                        <Border Grid.Column="4" Margin="12,0,0,0"
-                                                Style="{StaticResource StatusBadgeStyle}"
-                                                Background="{Binding PendingContractBadgeBackground}"
-                                                BorderBrush="{Binding PendingContractBadgeBorder}"
-                                                VerticalAlignment="Center"
-                                                Visibility="{Binding PendingContractVisibility}">
-                                            <TextBlock Text="{Binding PendingContractBadgeText}"
-                                                       Style="{StaticResource StatusBadgeTextStyle}"
-                                                       Foreground="{Binding PendingContractBadgeForeground}"/>
-                                        </Border>
+                                            <Border Style="{StaticResource StatusBadgeStyle}"
+                                                    Background="{Binding StoppedBadgeBackground}"
+                                                    BorderBrush="{Binding StoppedBadgeBorder}"
+                                                    Visibility="{Binding StoppedBadgeVisibility}">
+                                                <TextBlock Text="{Binding StoppedBadgeText}"
+                                                           Style="{StaticResource StatusBadgeTextStyle}"
+                                                           Foreground="{Binding StoppedBadgeForeground}"/>
+                                            </Border>
+                                        </StackPanel>
 
                                         <Button Grid.Column="6"
                                                 Margin="12,0,0,0"
@@ -306,6 +305,7 @@
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*"/>
                                                                 <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel>
@@ -315,7 +315,20 @@
                                                                 <ProgressBar Height="8" Width="180" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}" HorizontalAlignment="Left"/>
                                                             </StackPanel>
 
-                                                            <Grid Grid.Column="1" Margin="14,0,0,0" MinWidth="360">
+                                                            <Border Grid.Column="1"
+                                                                    Margin="14,0,14,0"
+                                                                    Style="{StaticResource StatusBadgeStyle}"
+                                                                    Background="#FDEDED"
+                                                                    BorderBrush="#F4C6C6"
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Visibility="{Binding StoppedBadgeVisibility}">
+                                                                <TextBlock Text="ΔΙΑΚΟΠΗ"
+                                                                           Style="{StaticResource StatusBadgeTextStyle}"
+                                                                           Foreground="#B12626"/>
+                                                            </Border>
+
+                                                            <Grid Grid.Column="2" Margin="14,0,0,0" MinWidth="360">
                                                                 <Grid.RowDefinitions>
                                                                     <RowDefinition Height="Auto"/>
                                                                     <RowDefinition Height="*"/>
@@ -327,19 +340,6 @@
                                                                     <TextBlock Text="{Binding PaidText}" Margin="0,0,12,0"/>
                                                                     <TextBlock Text="{Binding BalanceText}" FontWeight="SemiBold"/>
                                                                 </StackPanel>
-
-                                                                <Border Grid.Row="1"
-                                                                        Margin="0,6,0,0"
-                                                                        Style="{StaticResource StatusBadgeStyle}"
-                                                                        Background="#FDEDED"
-                                                                        BorderBrush="#F4C6C6"
-                                                                        HorizontalAlignment="Right"
-                                                                        VerticalAlignment="Center"
-                                                                        Visibility="{Binding StoppedBadgeVisibility}">
-                                                                    <TextBlock Text="ΔΙΑΚΟΠΗ"
-                                                                               Style="{StaticResource StatusBadgeTextStyle}"
-                                                                               Foreground="#B12626"/>
-                                                                </Border>
 
                                                                 <Button Grid.Row="2"
                                                                         Margin="0,8,0,0"
