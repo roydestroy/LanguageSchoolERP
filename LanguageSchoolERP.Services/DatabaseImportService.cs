@@ -1,5 +1,6 @@
 using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -14,11 +15,12 @@ public sealed class DatabaseImportService : IDatabaseImportService
         IProgress<ImportProgress>? progress,
         CancellationToken cancellationToken)
     {
+        // ✅ Ensure the target local database exists BEFORE creating the local DbContext
+        progress?.Report(new ImportProgress("Ensuring local database exists...", 0, 1));
+        await EnsureDatabaseExistsAsync(localConnectionString, cancellationToken);
+
         await using var remoteDb = CreateDbContext(remoteConnectionString);
         await using var localDb = CreateDbContext(localConnectionString);
-
-        progress?.Report(new ImportProgress("Ensuring local database exists and migrations are applied...", 0, 1));
-        await localDb.Database.MigrateAsync(cancellationToken);
 
         var importActions = new Func<SchoolDbContext, SchoolDbContext, int, int, IProgress<ImportProgress>?, CancellationToken, Task>[]
         {
@@ -33,8 +35,11 @@ public sealed class DatabaseImportService : IDatabaseImportService
             static (remote, local, step, total, report, ct) => ImportEntitySetAsync<ReceiptCounter>(remote, local, step, total, report, ct)
         };
 
-        var totalSteps = (wipeLocalFirst ? 1 : 0) + importActions.Length;
+        var totalSteps = (wipeLocalFirst ? 1 : 0) + 1 /* migrate */ + importActions.Length;
         var currentStep = 0;
+
+        progress?.Report(new ImportProgress("Applying migrations...", ++currentStep, totalSteps));
+        await localDb.Database.MigrateAsync(cancellationToken);
 
         await using var tx = await localDb.Database.BeginTransactionAsync(cancellationToken);
         try
@@ -69,6 +74,32 @@ public sealed class DatabaseImportService : IDatabaseImportService
         return new SchoolDbContext(options);
     }
 
+    private static async Task EnsureDatabaseExistsAsync(string localConnectionString, CancellationToken ct)
+    {
+        var builder = new SqlConnectionStringBuilder(localConnectionString);
+        var databaseName = builder.InitialCatalog;
+
+        if (string.IsNullOrWhiteSpace(databaseName))
+            throw new InvalidOperationException("Local connection string has no database name.");
+
+        // Connect to master instead
+        builder.InitialCatalog = "master";
+
+        await using var conn = new SqlConnection(builder.ConnectionString);
+        await conn.OpenAsync(ct);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+IF DB_ID(@db) IS NULL
+BEGIN
+    DECLARE @sql nvarchar(max) = N'CREATE DATABASE [' + @db + N']';
+    EXEC(@sql);
+END";
+        cmd.Parameters.AddWithValue("@db", databaseName);
+
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
     private static async Task ClearLocalAsync(SchoolDbContext localDb, CancellationToken cancellationToken)
     {
         // child -> parent order
@@ -87,10 +118,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
         foreach (var entityType in entityTypes)
         {
-            if (entityType is null)
-            {
-                continue;
-            }
+            if (entityType is null) continue;
 
             var qualified = ToQualifiedTableName(entityType);
             await localDb.Database.ExecuteSqlRawAsync($"DELETE FROM {qualified}", cancellationToken);
@@ -150,10 +178,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
     private static bool IsIdentityPrimaryKey(IEntityType entityType)
     {
         var pk = entityType.FindPrimaryKey();
-        if (pk is null || pk.Properties.Count != 1)
-        {
-            return false;
-        }
+        if (pk is null || pk.Properties.Count != 1) return false;
 
         var property = pk.Properties[0];
         var clrType = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;

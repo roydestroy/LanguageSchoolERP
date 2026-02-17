@@ -64,13 +64,16 @@ public sealed class DatabaseAppSettingsProvider
         Remote = new RemoteDatabaseSettings
         {
             Server = "100.104.49.73,1433",
-            ConnectionString = "Server=100.104.49.73,1433;Database=FilotheiSchoolERP_View;TrustServerCertificate=True;Encrypt=True;",
+            User = "erp_viewer",
+            Password = "Th3redeemerz!",
+            ConnectionString = "", // let Normalize() build it
             Databases =
             [
                 new RemoteDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP_View" },
-                new RemoteDatabaseOption { Key = "NeaIonia", Database = "NeaIoniaSchoolERP_View" }
+                new RemoteDatabaseOption { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP_View" }
             ]
-        },
+        }
+,
         Startup = new StartupDatabaseSettings
         {
             Mode = DatabaseMode.Local,
