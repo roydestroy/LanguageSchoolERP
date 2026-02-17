@@ -55,7 +55,7 @@
                 <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά έτη" Height="34" MinWidth="140" Margin="0,0,8,0"/>
                 <Button x:Name="SettingsBtn" Content="Ρυθμίσεις" Height="34" MinWidth="120" Margin="0,0,8,0"/>
                 <Button Content="Εισαγωγή (Διαχειριστής)" Height="34" MinWidth="170" Margin="0,0,8,0"/>
-                <Button x:Name="CheckUpdatesBtn" Content="Βοήθεια: Έλεγχος ενημερώσεων" Height="34" MinWidth="220"/>
+                <Button x:Name="CheckUpdatesBtn" Content="Έλεγχος ενημερώσεων" Height="34" MinWidth="170" Width="147"/>
             </WrapPanel>
         </Border>
 
