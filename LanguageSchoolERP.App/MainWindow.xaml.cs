@@ -82,6 +82,7 @@ public partial class MainWindow : Window
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
+        SetStartupDbBtn.Click += (_, __) => SaveStartupDefault();
 
         _ = RefreshAcademicYearProgressAsync();
     }
@@ -149,6 +150,16 @@ public partial class MainWindow : Window
         YearProgressBar.Value = progress;
         YearProgressText.Text = $"Πρόοδος Έτους: {progress:0}%";
         YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
+    }
+
+    private void SaveStartupDefault()
+    {
+        _state.SaveCurrentSelectionAsStartupDefault();
+        MessageBox.Show(
+            "Η προεπιλεγμένη βάση εκκίνησης αποθηκεύτηκε.",
+            "Επιτυχία",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void NavigateToStudents()

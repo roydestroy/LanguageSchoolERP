@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LanguageSchoolERP.Services;
@@ -18,11 +19,18 @@ public class AppState : INotifyPropertyChanged
     {
         _settingsProvider = settingsProvider;
 
-        _selectedRemoteDatabaseName = settingsProvider.RemoteDatabases.FirstOrDefault()?.Database
-            ?? "FilotheiSchoolERP_View";
+        _selectedRemoteDatabaseName = settingsProvider.Settings.Startup.RemoteDatabase;
+        if (string.IsNullOrWhiteSpace(_selectedRemoteDatabaseName))
+            _selectedRemoteDatabaseName = settingsProvider.RemoteDatabases.FirstOrDefault()?.Database ?? "FilotheiSchoolERP_View";
 
-        _selectedLocalDatabaseName = settingsProvider.Settings.Local.Database;
-        _selectedDatabaseName = settingsProvider.Settings.Local.Database;
+        _selectedLocalDatabaseName = settingsProvider.Settings.Startup.LocalDatabase;
+        if (string.IsNullOrWhiteSpace(_selectedLocalDatabaseName))
+            _selectedLocalDatabaseName = settingsProvider.Settings.Local.Database;
+
+        _selectedDatabaseMode = settingsProvider.Settings.Startup.Mode;
+        _selectedDatabaseName = _selectedDatabaseMode == DatabaseMode.Local
+            ? _selectedLocalDatabaseName
+            : _selectedRemoteDatabaseName;
     }
 
     public DatabaseMode SelectedDatabaseMode
@@ -102,7 +110,20 @@ public class AppState : INotifyPropertyChanged
                 _selectedRemoteDatabaseName = value;
                 OnPropertyChanged(nameof(SelectedRemoteDatabaseName));
             }
+            else
+            {
+                _selectedLocalDatabaseName = value;
+                OnPropertyChanged(nameof(SelectedLocalDatabaseName));
+            }
         }
+    }
+
+    public void SaveCurrentSelectionAsStartupDefault()
+    {
+        _settingsProvider.Settings.Startup.Mode = SelectedDatabaseMode;
+        _settingsProvider.Settings.Startup.LocalDatabase = SelectedLocalDatabaseName;
+        _settingsProvider.Settings.Startup.RemoteDatabase = SelectedRemoteDatabaseName;
+        _settingsProvider.Save();
     }
 
     public long DataVersion => _dataVersion;
