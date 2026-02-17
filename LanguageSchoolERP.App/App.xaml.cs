@@ -49,12 +49,16 @@ public partial class App : Application
 
         services.AddTransient<Windows.StartupDatabaseOptionsWindow>();
 
+        services.AddTransient<DatabaseImportViewModel>();
+        services.AddTransient<DatabaseImportView>();
+
         // Services
         services.AddSingleton<ReceiptNumberService>();
         services.AddSingleton<ExcelReceiptGenerator>();
         services.AddSingleton<ContractDocumentService>();
         services.AddSingleton<ContractBookmarkBuilder>();
         services.AddTransient<IProgramService, ProgramService>();
+        services.AddTransient<IDatabaseImportService, DatabaseImportService>();
 
         services.AddSingleton<DatabaseAppSettingsProvider>();
         services.AddSingleton<AppState>();
