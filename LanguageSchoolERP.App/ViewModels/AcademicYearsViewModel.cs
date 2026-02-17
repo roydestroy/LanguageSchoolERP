@@ -27,11 +27,22 @@ public partial class AcademicYearsViewModel : ObservableObject
         _state = state;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
-        AddAcademicYearCommand = new AsyncRelayCommand(AddAsync);
-        DeleteAcademicYearCommand = new AsyncRelayCommand(DeleteAsync);
+        AddAcademicYearCommand = new AsyncRelayCommand(AddAsync, CanWrite);
+        DeleteAcademicYearCommand = new AsyncRelayCommand(DeleteAsync, CanWrite);
+
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+            {
+                AddAcademicYearCommand.NotifyCanExecuteChanged();
+                DeleteAcademicYearCommand.NotifyCanExecuteChanged();
+            }
+        };
 
         _ = LoadAsync();
     }
+
+    private bool CanWrite() => !_state.IsReadOnlyMode;
 
     private async Task LoadAsync()
     {
@@ -52,6 +63,11 @@ public partial class AcademicYearsViewModel : ObservableObject
 
     private async Task AddAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
         var name = (NewAcademicYearName ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -75,6 +91,11 @@ public partial class AcademicYearsViewModel : ObservableObject
 
     private async Task DeleteAsync()
     {
+        if (!CanWrite())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
         if (SelectedAcademicYear is null)
         {
             return;

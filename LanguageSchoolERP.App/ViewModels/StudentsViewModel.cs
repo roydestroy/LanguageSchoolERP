@@ -61,7 +61,7 @@ public partial class StudentsViewModel : ObservableObject
         _dbFactory = dbFactory;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
-        NewStudentCommand = new RelayCommand(OpenNewStudentDialog);
+        NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
         OpenStudentCommand = new RelayCommand<Guid>(OpenStudent);
 
         // Refresh automatically when DB/year changes
@@ -77,6 +77,11 @@ public partial class StudentsViewModel : ObservableObject
             e.PropertyName == nameof(AppState.SelectedDatabaseName))
         {
             _ = LoadAsync();
+        }
+
+        if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+        {
+            NewStudentCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -96,8 +101,15 @@ public partial class StudentsViewModel : ObservableObject
         _ = LoadAsync();
     }
 
+    private bool CanCreateStudent() => !_state.IsReadOnlyMode;
+
     private void OpenNewStudentDialog()
     {
+        if (!CanCreateStudent())
+        {
+            System.Windows.MessageBox.Show("Η απομακρυσμένη λειτουργία είναι μόνο για ανάγνωση.");
+            return;
+        }
         var win = App.Services.GetRequiredService<LanguageSchoolERP.App.Windows.NewStudentWindow>();
         win.Owner = System.Windows.Application.Current.MainWindow;
 

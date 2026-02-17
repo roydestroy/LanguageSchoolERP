@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using LanguageSchoolERP.Services;
@@ -13,18 +14,17 @@ public partial class MainWindow : Window
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
 
-    public MainWindow(AppState state, DbContextFactory dbFactory)
+    public MainWindow(AppState state, DbContextFactory dbFactory, DatabaseAppSettingsProvider settingsProvider)
     {
         InitializeComponent();
         _state = state;
         _dbFactory = dbFactory;
 
-        DbCombo.ItemsSource = new[]
-        {
-            "FilotheiSchoolERP",
-            "NeaIoniaSchoolERP"
-        };
-        DbCombo.SelectedItem = _state.SelectedDatabaseName;
+        ModeCombo.ItemsSource = new[] { DatabaseMode.Local, DatabaseMode.Remote };
+        ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
+
+        DbCombo.ItemsSource = settingsProvider.RemoteDatabases;
+        DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
 
         YearCombo.ItemsSource = new[]
         {
@@ -33,10 +33,23 @@ public partial class MainWindow : Window
         };
         YearCombo.SelectedItem = _state.SelectedAcademicYear;
 
+        ModeCombo.SelectionChanged += async (_, __) =>
+        {
+            if (ModeCombo.SelectedItem is DatabaseMode mode)
+            {
+                _state.SelectedDatabaseMode = mode;
+                SyncTopBarState();
+                await RefreshAcademicYearProgressAsync();
+            }
+        };
+
         DbCombo.SelectionChanged += async (_, __) =>
         {
-            _state.SelectedDatabaseName = DbCombo.SelectedItem?.ToString() ?? _state.SelectedDatabaseName;
-            await RefreshAcademicYearProgressAsync();
+            if (DbCombo.SelectedValue is string selectedRemoteDb && !string.IsNullOrWhiteSpace(selectedRemoteDb))
+            {
+                _state.SelectedRemoteDatabaseName = selectedRemoteDb;
+                await RefreshAcademicYearProgressAsync();
+            }
         };
 
         YearCombo.SelectionChanged += async (_, __) =>
@@ -45,7 +58,9 @@ public partial class MainWindow : Window
             await RefreshAcademicYearProgressAsync();
         };
 
-        // Default screen
+        _state.PropertyChanged += OnAppStateChanged;
+        SyncTopBarState();
+
         NavigateToStudents();
 
         StudentsBtn.Click += (_, __) => NavigateToStudents();
@@ -53,6 +68,24 @@ public partial class MainWindow : Window
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
 
         _ = RefreshAcademicYearProgressAsync();
+    }
+
+    private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AppState.SelectedDatabaseMode) ||
+            e.PropertyName == nameof(AppState.SelectedRemoteDatabaseName))
+        {
+            SyncTopBarState();
+        }
+    }
+
+    private void SyncTopBarState()
+    {
+        ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
+        DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
+        RemoteDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Remote
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private async Task RefreshAcademicYearProgressAsync()
