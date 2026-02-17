@@ -37,15 +37,13 @@ public partial class DatabaseImportViewModel : ObservableObject
         _databaseImportService = databaseImportService;
         _appState = appState;
 
-        foreach (var option in _settingsProvider.RemoteDatabases)
-        {
-            RemoteDatabases.Add(option);
-        }
-
-        SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault();
-
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
         CancelCommand = new AsyncRelayCommand(CancelAsync, () => IsBusy);
+
+        foreach (var option in _settingsProvider.RemoteDatabases)
+            RemoteDatabases.Add(option);
+
+        SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
     }
 
     partial void OnIsBusyChanged(bool value)
@@ -55,7 +53,10 @@ public partial class DatabaseImportViewModel : ObservableObject
     }
 
     partial void OnSelectedRemoteDatabaseOptionChanged(RemoteDatabaseOption? value)
-        => ImportCommand.NotifyCanExecuteChanged();
+    {
+        ImportCommand?.NotifyCanExecuteChanged();
+    }
+
 
     private bool CanImport() => !IsBusy && SelectedRemoteDatabaseOption is not null;
 
