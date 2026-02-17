@@ -17,9 +17,11 @@ public class DbContextFactory
     public SchoolDbContext Create()
     {
         var settings = _settingsProvider.Settings;
-        var connectionString = _state.SelectedDatabaseMode == DatabaseMode.Local
-            ? $"Server={settings.Local.Server};Database={_state.SelectedDatabaseName};Trusted_Connection=True;TrustServerCertificate=True;Encrypt=True;"
-            : $"Server={settings.Remote.Server};Database={_state.SelectedDatabaseName};User Id=erp_viewer;Password=Th3redeemerz!;TrustServerCertificate=True;Encrypt=True;";
+        var baseConnectionString = _state.SelectedDatabaseMode == DatabaseMode.Local
+            ? settings.Local.ConnectionString
+            : settings.Remote.ConnectionString;
+
+        var connectionString = ConnectionStringHelpers.ReplaceDatabase(baseConnectionString, _state.SelectedDatabaseName);
 
         var options = new DbContextOptionsBuilder<SchoolDbContext>()
             .UseSqlServer(connectionString)
