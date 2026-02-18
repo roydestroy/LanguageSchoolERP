@@ -317,7 +317,7 @@ public partial class StudentsViewModel : ObservableObject
                 {
                     StudentId = s.StudentId,
                     FullName = s.FullName,
-                    ContactLine = $"{s.Phone}  |  {s.Email}".Trim(' ', '|'),
+                    ContactLine = BuildPreferredContactLine(s),
                     YearLabel = $"Έτος: {year}",
                     EnrollmentSummaryText = enrollmentSummaryText,
                     Balance = balance,
@@ -401,4 +401,49 @@ public partial class StudentsViewModel : ObservableObject
         }
 
     }
+    private static string BuildPreferredContactLine(Student student)
+    {
+        var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
+        var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
+
+        var phone = student.PreferredPhoneSource switch
+        {
+            PreferredPhoneSource.Father => fatherPhone,
+            PreferredPhoneSource.Mother => motherPhone,
+            _ => student.Phone
+        };
+
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            phone = !string.IsNullOrWhiteSpace(student.Phone) ? student.Phone
+                : !string.IsNullOrWhiteSpace(fatherPhone) ? fatherPhone
+                : motherPhone;
+        }
+
+        var email = student.PreferredEmailSource switch
+        {
+            PreferredEmailSource.Father => fatherEmail,
+            PreferredEmailSource.Mother => motherEmail,
+            _ => student.Email
+        };
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            email = !string.IsNullOrWhiteSpace(student.Email) ? student.Email
+                : !string.IsNullOrWhiteSpace(fatherEmail) ? fatherEmail
+                : motherEmail;
+        }
+
+        return $"{phone}  |  {email}".Trim(' ', '|');
+    }
+
+    private static (string Phone, string Email) SplitPhoneEmail(string? value)
+    {
+        var raw = (value ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw)) return ("", "");
+
+        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
+        return parts.Length == 2 ? (parts[0], parts[1]) : (raw, "");
+    }
+
 }

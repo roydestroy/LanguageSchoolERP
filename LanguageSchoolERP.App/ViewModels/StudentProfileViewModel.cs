@@ -46,6 +46,8 @@ public partial class StudentProfileViewModel : ObservableObject
     private string _originalMotherSurname = "";
     private string _originalMotherPhone = "";
     private string _originalMotherEmail = "";
+    private PreferredPhoneSource _originalPreferredPhoneSource = PreferredPhoneSource.Student;
+    private PreferredEmailSource _originalPreferredEmailSource = PreferredEmailSource.Student;
     private string _originalNotes = "";
 
     public ObservableCollection<string> AvailableAcademicYears { get; } = new();
@@ -77,7 +79,17 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string editableMotherSurname = "";
     [ObservableProperty] private string editableMotherPhone = "";
     [ObservableProperty] private string editableMotherEmail = "";
+    [ObservableProperty] private PreferredPhoneSource editablePreferredPhoneSource = PreferredPhoneSource.Student;
+    [ObservableProperty] private PreferredEmailSource editablePreferredEmailSource = PreferredEmailSource.Student;
     [ObservableProperty] private string editableNotes = "";
+
+    public bool IsStudentPhonePreferred => EditablePreferredPhoneSource == PreferredPhoneSource.Student;
+    public bool IsFatherPhonePreferred => EditablePreferredPhoneSource == PreferredPhoneSource.Father;
+    public bool IsMotherPhonePreferred => EditablePreferredPhoneSource == PreferredPhoneSource.Mother;
+
+    public bool IsStudentEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Student;
+    public bool IsFatherEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Father;
+    public bool IsMotherEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Mother;
 
     [ObservableProperty] private string dobLine = "";
     [ObservableProperty] private string phoneLine = "";
@@ -105,6 +117,12 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand EditProfileCommand { get; }
     public IAsyncRelayCommand SaveProfileCommand { get; }
     public IRelayCommand CancelEditCommand { get; }
+    public IRelayCommand SelectStudentPhonePreferredCommand { get; }
+    public IRelayCommand SelectFatherPhonePreferredCommand { get; }
+    public IRelayCommand SelectMotherPhonePreferredCommand { get; }
+    public IRelayCommand SelectStudentEmailPreferredCommand { get; }
+    public IRelayCommand SelectFatherEmailPreferredCommand { get; }
+    public IRelayCommand SelectMotherEmailPreferredCommand { get; }
     public IAsyncRelayCommand DeleteStudentCommand { get; }
     public IRelayCommand AddProgramCommand { get; }
     public IRelayCommand<ProgramEnrollmentRowVm> EditProgramCommand { get; }
@@ -135,6 +153,12 @@ public partial class StudentProfileViewModel : ObservableObject
         EditProfileCommand = new RelayCommand(StartEdit, CanWrite);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync, CanWrite);
         CancelEditCommand = new RelayCommand(CancelEdit);
+        SelectStudentPhonePreferredCommand = new RelayCommand(() => SelectPreferredPhone(PreferredPhoneSource.Student));
+        SelectFatherPhonePreferredCommand = new RelayCommand(() => SelectPreferredPhone(PreferredPhoneSource.Father));
+        SelectMotherPhonePreferredCommand = new RelayCommand(() => SelectPreferredPhone(PreferredPhoneSource.Mother));
+        SelectStudentEmailPreferredCommand = new RelayCommand(() => SelectPreferredEmail(PreferredEmailSource.Student));
+        SelectFatherEmailPreferredCommand = new RelayCommand(() => SelectPreferredEmail(PreferredEmailSource.Father));
+        SelectMotherEmailPreferredCommand = new RelayCommand(() => SelectPreferredEmail(PreferredEmailSource.Mother));
         DeleteStudentCommand = new AsyncRelayCommand(DeleteStudentAsync, CanWrite);
         AddProgramCommand = new RelayCommand(OpenAddProgramDialog, CanWrite);
         EditProgramCommand = new RelayCommand<ProgramEnrollmentRowVm>(OpenEditProgramDialog, CanEditProgram);
@@ -229,6 +253,8 @@ public partial class StudentProfileViewModel : ObservableObject
         EditableMotherSurname = _originalMotherSurname;
         EditableMotherPhone = _originalMotherPhone;
         EditableMotherEmail = _originalMotherEmail;
+        EditablePreferredPhoneSource = _originalPreferredPhoneSource;
+        EditablePreferredEmailSource = _originalPreferredEmailSource;
         EditableNotes = _originalNotes;
         IsEditing = false;
     }
@@ -263,6 +289,8 @@ public partial class StudentProfileViewModel : ObservableObject
             student.FatherContact = JoinPhoneEmail(EditableFatherPhone, EditableFatherEmail);
             student.MotherName = JoinName(EditableMotherName, EditableMotherSurname);
             student.MotherContact = JoinPhoneEmail(EditableMotherPhone, EditableMotherEmail);
+            student.PreferredPhoneSource = ResolvePreferredPhoneSource();
+            student.PreferredEmailSource = ResolvePreferredEmailSource();
             student.Notes = EditableNotes.Trim();
 
             await db.SaveChangesAsync();
@@ -839,7 +867,7 @@ public partial class StudentProfileViewModel : ObservableObject
             if (student is null) return;
 
             FullName = student.FullName;
-            ContactLine = $"{student.Phone}  |  {student.Email}".Trim(' ', '|');
+            ContactLine = BuildPreferredContactLine(student);
             Notes = student.Notes ?? "";
 
             var (studentName, studentSurname) = SplitName(student.FullName);
@@ -861,6 +889,8 @@ public partial class StudentProfileViewModel : ObservableObject
             _originalMotherSurname = motherSurname;
             _originalMotherPhone = motherPhone;
             _originalMotherEmail = motherEmail;
+            _originalPreferredPhoneSource = student.PreferredPhoneSource;
+            _originalPreferredEmailSource = student.PreferredEmailSource;
             _originalNotes = student.Notes ?? "";
 
             EditableStudentName = _originalStudentName;
@@ -876,6 +906,8 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableMotherSurname = _originalMotherSurname;
             EditableMotherPhone = _originalMotherPhone;
             EditableMotherEmail = _originalMotherEmail;
+            EditablePreferredPhoneSource = _originalPreferredPhoneSource;
+            EditablePreferredEmailSource = _originalPreferredEmailSource;
             EditableNotes = _originalNotes;
 
             DobLine = student.DateOfBirth.HasValue ? $"Ημ. γέννησης: {student.DateOfBirth:dd/MM/yyyy}" : "Ημ. γέννησης: —";
@@ -1118,6 +1150,97 @@ public partial class StudentProfileViewModel : ObservableObject
             _isLoading = false;
         }
     }
+
+    partial void OnEditablePreferredPhoneSourceChanged(PreferredPhoneSource value)
+    {
+        OnPropertyChanged(nameof(IsStudentPhonePreferred));
+        OnPropertyChanged(nameof(IsFatherPhonePreferred));
+        OnPropertyChanged(nameof(IsMotherPhonePreferred));
+    }
+
+    partial void OnEditablePreferredEmailSourceChanged(PreferredEmailSource value)
+    {
+        OnPropertyChanged(nameof(IsStudentEmailPreferred));
+        OnPropertyChanged(nameof(IsFatherEmailPreferred));
+        OnPropertyChanged(nameof(IsMotherEmailPreferred));
+    }
+
+    private void SelectPreferredPhone(PreferredPhoneSource source)
+    {
+        if (!IsEditing)
+            return;
+
+        EditablePreferredPhoneSource = source;
+    }
+
+    private void SelectPreferredEmail(PreferredEmailSource source)
+    {
+        if (!IsEditing)
+            return;
+
+        EditablePreferredEmailSource = source;
+    }
+
+    private PreferredPhoneSource ResolvePreferredPhoneSource()
+    {
+        return EditablePreferredPhoneSource switch
+        {
+            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherPhone) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherPhone) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditablePhone) && !string.IsNullOrWhiteSpace(EditableFatherPhone) => PreferredPhoneSource.Father,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditablePhone) && string.IsNullOrWhiteSpace(EditableFatherPhone) && !string.IsNullOrWhiteSpace(EditableMotherPhone) => PreferredPhoneSource.Mother,
+            _ => EditablePreferredPhoneSource
+        };
+    }
+
+    private PreferredEmailSource ResolvePreferredEmailSource()
+    {
+        return EditablePreferredEmailSource switch
+        {
+            PreferredEmailSource.Father when string.IsNullOrWhiteSpace(EditableFatherEmail) => PreferredEmailSource.Student,
+            PreferredEmailSource.Mother when string.IsNullOrWhiteSpace(EditableMotherEmail) => PreferredEmailSource.Student,
+            PreferredEmailSource.Student when string.IsNullOrWhiteSpace(EditableEmail) && !string.IsNullOrWhiteSpace(EditableFatherEmail) => PreferredEmailSource.Father,
+            PreferredEmailSource.Student when string.IsNullOrWhiteSpace(EditableEmail) && string.IsNullOrWhiteSpace(EditableFatherEmail) && !string.IsNullOrWhiteSpace(EditableMotherEmail) => PreferredEmailSource.Mother,
+            _ => EditablePreferredEmailSource
+        };
+    }
+
+    private static string BuildPreferredContactLine(Student student)
+    {
+        var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
+        var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
+
+        var phone = student.PreferredPhoneSource switch
+        {
+            PreferredPhoneSource.Father => fatherPhone,
+            PreferredPhoneSource.Mother => motherPhone,
+            _ => student.Phone
+        };
+
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            phone = !string.IsNullOrWhiteSpace(student.Phone) ? student.Phone
+                : !string.IsNullOrWhiteSpace(fatherPhone) ? fatherPhone
+                : motherPhone;
+        }
+
+        var email = student.PreferredEmailSource switch
+        {
+            PreferredEmailSource.Father => fatherEmail,
+            PreferredEmailSource.Mother => motherEmail,
+            _ => student.Email
+        };
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            email = !string.IsNullOrWhiteSpace(student.Email) ? student.Email
+                : !string.IsNullOrWhiteSpace(fatherEmail) ? fatherEmail
+                : motherEmail;
+        }
+
+        return $"{phone}  |  {email}".Trim(' ', '|');
+    }
+
     private static string BuildInstallmentAmountText(Enrollment e)
     {
         var schedule = InstallmentPlanHelper.GetInstallmentSchedule(e);
