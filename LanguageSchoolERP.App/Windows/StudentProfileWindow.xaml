@@ -32,7 +32,6 @@
 		</Style>
 
 		<Style x:Key="EditableTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
-			<Setter Property="Padding" Value="6,4"/>
 			<Setter Property="IsReadOnly" Value="True"/>
 			<Style.Triggers>
 				<DataTrigger Binding="{Binding IsEditing}" Value="True">
@@ -191,7 +190,6 @@
 				</StackPanel>
 
 				<StackPanel Grid.Column="4" Margin="18,0,0,0" VerticalAlignment="Center">
-					<TextBlock Text="{Binding ProgressText}" Foreground="#666666" FontSize="12"/>
 					<ProgressBar Height="14" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}" />
 				</StackPanel>
 			</Grid>

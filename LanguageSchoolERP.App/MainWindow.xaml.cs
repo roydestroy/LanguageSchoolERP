@@ -129,7 +129,6 @@ public partial class MainWindow : Window
         if (period is null)
         {
             YearProgressBar.Value = 0;
-            YearProgressText.Text = "Πρόοδος Έτους: 0%";
             YearLostRevenueText.Text = "Απώλειες διακοπών: 0,00 €";
             return;
         }
@@ -149,7 +148,6 @@ public partial class MainWindow : Window
         if (progress < 0) progress = 0;
 
         YearProgressBar.Value = progress;
-        YearProgressText.Text = $"Πρόοδος Έτους: {progress:0}%";
         YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
     }
 
