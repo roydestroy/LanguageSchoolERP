@@ -18,7 +18,17 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="ΕΥΡΩΓΝΩΣΗ ERP" Foreground="White" FontSize="21" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Image
+                    Source="pack://application:,,,/Assets/Images/logo.png"
+                    Height="36"
+                    Stretch="Uniform"
+                    SnapsToDevicePixels="True"
+                    UseLayoutRounding="True"
+                    RenderOptions.BitmapScalingMode="HighQuality"
+                    RenderOptions.EdgeMode="Aliased"/>
+
+
+
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock x:Name="YearProgressText" Text="Πρόοδος έτους: 0%" Foreground="#DCE7F4" FontSize="12"/>

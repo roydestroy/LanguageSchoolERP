@@ -9,9 +9,12 @@
 	<Version>1.0.0</Version>
 	<AssemblyVersion>1.0.0.0</AssemblyVersion>
 	<FileVersion>1.0.0.0</FileVersion>
+	<ApplicationIcon>Assets\Icons\logo.ico</ApplicationIcon>
   </PropertyGroup>
 
 	<ItemGroup>
+    <None Remove="Assets\Icons\logo.ico" />
+    <None Remove="Assets\Images\logo.png" />
     <None Remove="Templates\ΑΠΟΔΕΙΞΗ Ν.ΙΩΝΙΑ.xlsx" />
     <None Remove="Templates\ΑΠΟΔΕΙΞΗ ΦΙΛΟΘΕΗ.xlsx" />
     <None Remove="Templates\ΣΥΜΦΩΝΗΤΙΚΟ ΝΕΑ ΙΩΝΙΑ.docx" />
@@ -42,6 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Assets\Icons\logo.ico" />
     <Content Include="Templates\ΑΠΟΔΕΙΞΗ Ν.ΙΩΝΙΑ.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -97,6 +101,12 @@
 	<ItemGroup>
 		<!-- Build the updater project, but don't reference it as a library -->
 		<ProjectReference Include="..\LanguageSchoolERP.Updater\LanguageSchoolERP.Updater.csproj" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Resource Include="Assets\Icons\logo.ico" />
+	  <Resource Include="Assets\Images\logo.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 
 	<!-- Copy updater files next to the app after Build -->
