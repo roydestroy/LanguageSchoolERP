@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LanguageSchoolERP.Data.Migrations
 {
     [DbContext(typeof(SchoolDbContext))]
-    [Migration("20260217125115_AddEnrollmentStopFields")]
-    partial class AddEnrollmentStopFields
+    [Migration("20260218183104_AddPreferredContactSources")]
+    partial class AddPreferredContactSources
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -334,6 +334,12 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PreferredEmailSource")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredPhoneSource")
+                        .HasColumnType("int");
 
                     b.HasKey("StudentId");
 

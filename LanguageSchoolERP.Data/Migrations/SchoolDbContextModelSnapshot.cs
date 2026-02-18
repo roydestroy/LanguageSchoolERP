@@ -332,6 +332,12 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PreferredEmailSource")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredPhoneSource")
+                        .HasColumnType("int");
+
                     b.HasKey("StudentId");
 
                     b.ToTable("Students");
