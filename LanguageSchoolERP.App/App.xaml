@@ -11,6 +11,10 @@
         <SolidColorBrush x:Key="Brush.TextSecondary" Color="#5B6B7D"/>
         <SolidColorBrush x:Key="Brush.Accent" Color="#2F6EA6"/>
         <SolidColorBrush x:Key="Brush.AccentDark" Color="#265A87"/>
+        <SolidColorBrush x:Key="Brush.ScrollTrack" Color="#E6EDF5"/>
+        <SolidColorBrush x:Key="Brush.ScrollThumb" Color="#B6C4D4"/>
+        <SolidColorBrush x:Key="Brush.ScrollThumbHover" Color="#8EA4BB"/>
+        <SolidColorBrush x:Key="Brush.ScrollThumbDragging" Color="#738CA5"/>
 
         <Style TargetType="Window">
             <Setter Property="Background" Value="{StaticResource Brush.PageBackground}"/>
@@ -144,6 +148,82 @@
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="#DCEAF8"/>
                     <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="MinimalScrollRepeatButton" TargetType="RepeatButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Border Background="Transparent"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MinimalThumbStyle" TargetType="Thumb">
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border x:Name="ThumbVisual"
+                                Background="{StaticResource Brush.ScrollThumb}"
+                                CornerRadius="4"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ThumbVisual" Property="Background" Value="{StaticResource Brush.ScrollThumbHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsDragging" Value="True">
+                                <Setter TargetName="ThumbVisual" Property="Background" Value="{StaticResource Brush.ScrollThumbDragging}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="10"/>
+            <Setter Property="Height" Value="10"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid x:Name="Root" Background="Transparent" Margin="2">
+                            <Border CornerRadius="4" Background="{StaticResource Brush.ScrollTrack}"/>
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True"
+                                   Focusable="False">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource MinimalScrollRepeatButton}" Command="ScrollBar.LineUpCommand"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource MinimalThumbStyle}"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Style="{StaticResource MinimalScrollRepeatButton}" Command="ScrollBar.LineDownCommand"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Horizontal">
+                                <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+                                <Setter TargetName="Root" Property="Margin" Value="2,1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="10"/>
+                    <Setter Property="Width" Value="Auto"/>
+                </Trigger>
+                <Trigger Property="Orientation" Value="Vertical">
+                    <Setter Property="Width" Value="10"/>
+                    <Setter Property="Height" Value="Auto"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
