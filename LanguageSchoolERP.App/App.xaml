@@ -98,6 +98,20 @@
             </Setter>
         </Style>
 
+        <Style x:Key="ComboBoxToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="ComboBox">
             <Setter Property="MinHeight" Value="34"/>
             <Setter Property="Padding" Value="10,4"/>
@@ -129,18 +143,17 @@
                                                       ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                       ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                                       IsHitTestVisible="False"/>
-                                    <ToggleButton Grid.Column="1"
-                                                  Focusable="False"
-                                                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                                  Background="Transparent"
-                                                  BorderThickness="0">
-                                        <Path Width="10"
-                                              Height="6"
-                                              Fill="{StaticResource Brush.TextSecondary}"
-                                              Data="M 0 0 L 10 0 L 5 6 Z"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                                    </ToggleButton>
+                                    <ToggleButton Grid.ColumnSpan="2"
+                                                  Style="{StaticResource ComboBoxToggleButtonStyle}"
+                                                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                    <Path Grid.Column="1"
+                                          Width="10"
+                                          Height="6"
+                                          Fill="{StaticResource Brush.TextSecondary}"
+                                          Data="M 0 0 L 10 0 L 5 6 Z"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          IsHitTestVisible="False"/>
                                 </Grid>
                             </Border>
                             <Popup x:Name="PART_Popup"
@@ -210,16 +223,17 @@
                                                    BorderThickness="0"/>
                                 <Button x:Name="PART_Button"
                                         Grid.Column="1"
+                                        Style="{x:Null}"
                                         Background="Transparent"
                                         BorderThickness="0"
                                         Padding="0"
                                         Focusable="False">
-                                    <Path Width="10"
-                                          Height="6"
-                                          Fill="{StaticResource Brush.TextSecondary}"
-                                          Data="M 0 0 L 10 0 L 5 6 Z"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
+                                    <TextBlock FontFamily="Segoe MDL2 Assets"
+                                               Text="&#xE787;"
+                                               Foreground="{StaticResource Brush.TextSecondary}"
+                                               FontSize="14"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
                                 </Button>
                             </Grid>
                         </Border>
