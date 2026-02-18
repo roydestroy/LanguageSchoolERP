@@ -4,6 +4,39 @@
         Title="ΕΥΡΩΓΝΩΣΗ ERP" Height="720" Width="1240"
         WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+        <Style x:Key="YearProgressBarStyle" TargetType="ProgressBar" BasedOn="{StaticResource {x:Type ProgressBar}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border CornerRadius="6"
+                                Background="{TemplateBinding Background}">
+                            <Grid x:Name="PART_Track" ClipToBounds="True">
+                                <Border x:Name="PART_Indicator"
+                                        HorizontalAlignment="Left"
+                                        Background="{TemplateBinding Foreground}"
+                                        CornerRadius="6"/>
+                                <TextBlock Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, StringFormat={}{0:0}%}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="#102030"
+                                           FontSize="9"
+                                           FontWeight="SemiBold"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Orientation" Value="Vertical">
+                                <Setter TargetName="PART_Indicator" Property="HorizontalAlignment" Value="Stretch"/>
+                                <Setter TargetName="PART_Indicator" Property="VerticalAlignment" Value="Bottom"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+
     <DockPanel Background="{StaticResource Brush.PageBackground}">
         <Border DockPanel.Dock="Top" Padding="18,12" Background="{StaticResource Brush.AccentDark}">
             <Grid>
@@ -32,7 +65,7 @@
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock x:Name="YearLostRevenueText" Text="Απώλειες διακοπών: 0,00 €" Foreground="#DCE7F4" FontSize="12" Margin="0,2,0,0"/>
-                    <ProgressBar x:Name="YearProgressBar" Height="8" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0"/>
+                    <ProgressBar x:Name="YearProgressBar" Height="8" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0" Style="{StaticResource YearProgressBarStyle}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" Margin="0,0,12,0" VerticalAlignment="Center">

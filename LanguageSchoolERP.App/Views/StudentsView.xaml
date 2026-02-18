@@ -164,8 +164,8 @@
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="160"/>
+                                            <ColumnDefinition Width="120"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -196,12 +196,12 @@
                                         </StackPanel>
 
                                         <!-- Total payment progress -->
-                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" MinWidth="120" MaxWidth="160">
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Width="160">
                                             <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                         </StackPanel>
 
                                         <!-- Balance -->
-                                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center">
+                                        <StackPanel Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" Width="120">
                                             <TextBlock Text="Υπόλοιπο" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding BalanceText}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                         </StackPanel>
