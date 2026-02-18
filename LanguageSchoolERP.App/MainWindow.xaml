@@ -59,6 +59,7 @@
         <Border DockPanel.Dock="Top" Margin="18,10,18,0" Background="{StaticResource Brush.SurfaceAlt}" Padding="10" CornerRadius="10" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
             <WrapPanel Orientation="Horizontal" ItemHeight="34" VerticalAlignment="Center">
                 <Button x:Name="StudentsBtn" Content="Μαθητές" Height="34" MinWidth="130" Margin="0,0,8,0"/>
+                <Button x:Name="DailyPaymentsBtn" Content="Πληρωμές Ημέρας" Height="34" MinWidth="150" Margin="0,0,8,0"/>
                 <Button x:Name="ProgramsBtn" Content="Προγράμματα" Height="34" MinWidth="130" Margin="0,0,8,0" Click="ProgramsBtn_Click"/>
                 <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά έτη" Height="34" MinWidth="140" Margin="0,0,8,0"/>
                 <Button x:Name="StatisticsBtn" Content="Στατιστικά" Height="34" MinWidth="130" Margin="0,0,8,0"/>

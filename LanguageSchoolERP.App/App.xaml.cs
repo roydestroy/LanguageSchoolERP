@@ -36,6 +36,9 @@ public partial class App : Application
         services.AddSingleton<StatisticsViewModel>();
         services.AddSingleton<StatisticsView>();
 
+        services.AddTransient<DailyPaymentsViewModel>();
+        services.AddTransient<DailyPaymentsView>();
+
         services.AddTransient<NewStudentViewModel>();
         services.AddTransient<Windows.NewStudentWindow>();
 
@@ -61,6 +64,7 @@ public partial class App : Application
         services.AddSingleton<ExcelReceiptGenerator>();
         services.AddSingleton<ContractDocumentService>();
         services.AddSingleton<ContractBookmarkBuilder>();
+        services.AddSingleton<DailyPaymentsReportService>();
         services.AddTransient<IProgramService, ProgramService>();
         services.AddTransient<IDatabaseImportService, DatabaseImportService>();
 
