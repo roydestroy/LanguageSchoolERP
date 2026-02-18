@@ -75,7 +75,7 @@
                           Margin="0,14,0,0"
                           HorizontalAlignment="Left">
                     <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                             <Setter Property="Visibility" Value="Visible"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
@@ -137,7 +137,6 @@
                 <TextBlock Grid.Row="5" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
                 <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,14,0,0">
                     <ProgressBar Height="20" Minimum="0" Maximum="100" Value="{Binding ProgressValue}"/>
-                    <TextBlock Margin="0,6,0,0" Text="{Binding ProgressPercent, StringFormat=Progress: {0}%}"/>
                 </StackPanel>
 
                 <TextBox Grid.Row="6"

@@ -4,6 +4,15 @@
         Title="{Binding DialogTitle}" Height="668" Width="633"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
+	<Window.Resources>
+		<Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+			<Setter Property="Padding" Value="6,4"/>
+		</Style>
+		<DataTemplate x:Key="EnrollmentOptionTemplate">
+			<TextBlock Text="{Binding Label}"/>
+		</DataTemplate>
+	</Window.Resources>
+
 
 	<Grid Margin="16">
 		<Grid.RowDefinitions>
@@ -19,6 +28,8 @@
 				<TextBlock Text="Εγγραφή (υποχρεωτικό)"/>
 				<ComboBox Margin="0,4,0,12"
                           ItemsSource="{Binding EnrollmentOptions}"
+                          ItemTemplate="{StaticResource EnrollmentOptionTemplate}"
+                          Foreground="{StaticResource Brush.TextPrimary}"
                           SelectedItem="{Binding SelectedEnrollmentOption}"/>
 
 				<TextBlock Text="Ποσό (€)"/>

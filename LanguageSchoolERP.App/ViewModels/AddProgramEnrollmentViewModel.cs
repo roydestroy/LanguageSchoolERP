@@ -363,6 +363,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
             }
 
             await db.SaveChangesAsync();
+            _state.NotifyDataChanged();
             RequestClose?.Invoke(this, true);
         }
         catch (Exception ex)
