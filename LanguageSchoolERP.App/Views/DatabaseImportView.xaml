@@ -8,7 +8,6 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
@@ -73,78 +72,85 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Margin="0,14,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton Content="Φιλοθέη"
-                                 GroupName="StartupDb"
-                                 Margin="0,0,16,0"
-                                 VerticalAlignment="Center"
-                                 IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
-                    <RadioButton Content="Νέα Ιωνία"
-                                 GroupName="StartupDb"
-                                 VerticalAlignment="Center"
-                                 IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
-                    <Button Content="Αποθήκευση"
-                            Width="110"
-                            Height="30"
-                            Margin="20,0,0,0"
-                            Command="{Binding SaveStartupDatabaseCommand}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+            <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="2" Margin="0,14,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="160"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                    <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton Content="Φιλοθέη"
+                                     GroupName="StartupDb"
+                                     Margin="0,0,16,0"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
+                        <RadioButton Content="Νέα Ιωνία"
+                                     GroupName="StartupDb"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
+                        <Button Content="Αποθήκευση"
+                                Width="110"
+                                Height="30"
+                                Margin="20,0,0,0"
+                                Command="{Binding SaveStartupDatabaseCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-                <TextBlock Grid.ColumnSpan="2" Text="Backups" FontWeight="SemiBold" Margin="0,0,0,8"/>
+            <Border Grid.Column="2" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="10,8" Background="White" MinWidth="390">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="1" Text="Last backup:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupText}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.ColumnSpan="3" Text="Backups" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
-                <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="0,8,0,0" Text="{Binding LastBackupErrorText}" Foreground="#C62828">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding LastBackupErrorText}" Value="">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding LastBackupErrorText}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                    <TextBlock Grid.Row="1" Text="Last:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
 
-                <Button Grid.Row="3" Grid.Column="1"
-                        Margin="0,10,0,0"
-                        Width="120"
-                        Height="30"
-                        HorizontalAlignment="Left"
-                        Content="Backup now"
-                        Command="{Binding BackupNowCommand}"/>
-            </Grid>
-        </Border>
+                    <Button Grid.Row="1" Grid.Column="2"
+                            HorizontalAlignment="Right"
+                            Width="96"
+                            Height="28"
+                            Content="Backup now"
+                            Command="{Binding BackupNowCommand}"/>
 
-        <TextBlock Grid.Row="3" Margin="2,10,2,0" Foreground="#777"
+                    <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Margin="0,6,0,0" Text="{Binding LastBackupErrorText}" Foreground="#C62828" FontSize="11" TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LastBackupErrorText}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding LastBackupErrorText}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="2" Margin="2,10,2,0" Foreground="#777"
                    Text="Tip: όταν είναι ενεργοποιημένη η διαγραφή τοπικής βάσης, πρέπει να πληκτρολογήσετε IMPORT για να προχωρήσει η διαδικασία."/>
     </Grid>
 </UserControl>
