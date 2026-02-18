@@ -328,15 +328,15 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PreferredEmailSource")
                         .HasColumnType("int");
 
                     b.Property<int>("PreferredPhoneSource")
                         .HasColumnType("int");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("StudentId");
 

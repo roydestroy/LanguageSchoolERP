@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -35,6 +36,7 @@ namespace LanguageSchoolERP.Data.Migrations
             migrationBuilder.DropColumn(
                 name: "PreferredPhoneSource",
                 table: "Students");
+
         }
     }
 }

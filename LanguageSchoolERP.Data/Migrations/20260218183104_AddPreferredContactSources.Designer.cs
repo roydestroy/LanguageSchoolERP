@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LanguageSchoolERP.Data.Migrations
 {
     [DbContext(typeof(SchoolDbContext))]
-    [Migration("20260218101500_AddPreferredContactSources")]
+    [Migration("20260218183104_AddPreferredContactSources")]
     partial class AddPreferredContactSources
     {
         /// <inheritdoc />
@@ -331,15 +331,15 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PreferredEmailSource")
                         .HasColumnType("int");
 
                     b.Property<int>("PreferredPhoneSource")
                         .HasColumnType("int");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("StudentId");
 
