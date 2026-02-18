@@ -7,7 +7,7 @@
         SnapsToDevicePixels="True">
 
 	<Window.Resources>
-		<Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
+		<Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
 			<Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
 			<Setter Property="Foreground" Value="White"/>
 			<Setter Property="BorderBrush" Value="{StaticResource Brush.AccentDark}"/>
@@ -16,38 +16,7 @@
 			<Setter Property="MinHeight" Value="34"/>
 			<Setter Property="FontWeight" Value="SemiBold"/>
 			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="Template">
-				<Setter.Value>
-					<ControlTemplate TargetType="Button">
-						<Border x:Name="ButtonBorder"
-								CornerRadius="0"
-								SnapsToDevicePixels="False"
-								UseLayoutRounding="False"
-								Background="{TemplateBinding Background}"
-								BorderBrush="{TemplateBinding BorderBrush}"
-								BorderThickness="{TemplateBinding BorderThickness}">
-							<ContentPresenter HorizontalAlignment="Center"
-											  VerticalAlignment="Center"
-											  Margin="{TemplateBinding Padding}"/>
-						</Border>
-						<ControlTemplate.Triggers>
-							<Trigger Property="IsMouseOver" Value="True">
-								<Setter TargetName="ButtonBorder" Property="Background" Value="#3A78AE"/>
-								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#316A99"/>
-							</Trigger>
-							<Trigger Property="IsPressed" Value="True">
-								<Setter TargetName="ButtonBorder" Property="Background" Value="#2C6290"/>
-								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#26537A"/>
-							</Trigger>
-							<Trigger Property="IsEnabled" Value="False">
-								<Setter Property="Foreground" Value="#B9C4D0"/>
-								<Setter TargetName="ButtonBorder" Property="Background" Value="#EEF2F6"/>
-								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#D6DEE7"/>
-							</Trigger>
-						</ControlTemplate.Triggers>
-					</ControlTemplate>
-				</Setter.Value>
-			</Setter>
+
 		</Style>
 		<Style x:Key="DangerActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
 			<Setter Property="Background" Value="#C0392B"/>
@@ -55,45 +24,14 @@
 			<Setter Property="Foreground" Value="White"/>
 		</Style>
 
-		<Style x:Key="SecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+		<Style x:Key="SecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
 			<Setter Property="Background" Value="#EEF2F6"/>
 			<Setter Property="BorderBrush" Value="#D6DEE7"/>
 			<Setter Property="Foreground" Value="#2E3A47"/>
-			<Setter Property="Template">
-				<Setter.Value>
-					<ControlTemplate TargetType="Button">
-						<Border x:Name="ButtonBorder"
-								CornerRadius="0"
-								SnapsToDevicePixels="False"
-								UseLayoutRounding="False"
-								Background="{TemplateBinding Background}"
-								BorderBrush="{TemplateBinding BorderBrush}"
-								BorderThickness="{TemplateBinding BorderThickness}">
-							<ContentPresenter HorizontalAlignment="Center"
-											  VerticalAlignment="Center"
-											  Margin="{TemplateBinding Padding}"/>
-						</Border>
-						<ControlTemplate.Triggers>
-							<Trigger Property="IsMouseOver" Value="True">
-								<Setter TargetName="ButtonBorder" Property="Background" Value="#E2E8EF"/>
-								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#C9D3DF"/>
-							</Trigger>
-							<Trigger Property="IsPressed" Value="True">
-								<Setter TargetName="ButtonBorder" Property="Background" Value="#D4DCE5"/>
-								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#B8C4D2"/>
-							</Trigger>
-							<Trigger Property="IsEnabled" Value="False">
-								<Setter Property="Foreground" Value="#9AA8B6"/>
-								<Setter TargetName="ButtonBorder" Property="Background" Value="#F5F7FA"/>
-								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#E2E8EF"/>
-							</Trigger>
-						</ControlTemplate.Triggers>
-					</ControlTemplate>
-				</Setter.Value>
-			</Setter>
+
 		</Style>
 
-		<Style x:Key="EditableTextBoxStyle" TargetType="TextBox">
+		<Style x:Key="EditableTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
 			<Setter Property="IsReadOnly" Value="True"/>
 			<Style.Triggers>
 				<DataTrigger Binding="{Binding IsEditing}" Value="True">
@@ -120,7 +58,7 @@
 			</Style.Triggers>
 		</Style>
 
-		<Style x:Key="EditableDatePickerStyle" TargetType="DatePicker">
+		<Style x:Key="EditableDatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource {x:Type DatePicker}}">
 			<Setter Property="IsEnabled" Value="False"/>
 			<Style.Triggers>
 				<DataTrigger Binding="{Binding IsEditing}" Value="True">
