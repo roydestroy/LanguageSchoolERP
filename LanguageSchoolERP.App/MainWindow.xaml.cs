@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 using LanguageSchoolERP.Services;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageSchoolERP.App.Views;
@@ -152,6 +154,25 @@ public partial class MainWindow : Window
         YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
     }
 
+
+    private IReadOnlyList<Button> NavigationButtons => new[]
+    {
+        StudentsBtn,
+        DailyPaymentsBtn,
+        ProgramsBtn,
+        AcademicYearsBtn,
+        StatisticsBtn,
+        SettingsBtn
+    };
+
+    private void SetActiveNavigationButton(Button activeButton)
+    {
+        foreach (var button in NavigationButtons)
+        {
+            button.Tag = ReferenceEquals(button, activeButton) ? "Active" : null;
+        }
+    }
+
     private void OpenStartupOptions()
     {
         var win = App.Services.GetRequiredService<Windows.StartupDatabaseOptionsWindow>();
@@ -173,6 +194,7 @@ public partial class MainWindow : Window
     {
         var view = App.Services.GetRequiredService<StudentsView>();
         MainContent.Content = view;
+        SetActiveNavigationButton(StudentsBtn);
     }
 
 
@@ -180,30 +202,35 @@ public partial class MainWindow : Window
     {
         var view = App.Services.GetRequiredService<DailyPaymentsView>();
         MainContent.Content = view;
+        SetActiveNavigationButton(DailyPaymentsBtn);
     }
 
     private void NavigateToPrograms()
     {
         var view = App.Services.GetRequiredService<ProgramsView>();
         MainContent.Content = view;
+        SetActiveNavigationButton(ProgramsBtn);
     }
 
     private void NavigateToAcademicYears()
     {
         var view = App.Services.GetRequiredService<AcademicYearsView>();
         MainContent.Content = view;
+        SetActiveNavigationButton(AcademicYearsBtn);
     }
 
     private void NavigateToStatistics()
     {
         var view = App.Services.GetRequiredService<StatisticsView>();
         MainContent.Content = view;
+        SetActiveNavigationButton(StatisticsBtn);
     }
 
     private void NavigateToDatabaseImport()
     {
         var view = App.Services.GetRequiredService<DatabaseImportView>();
         MainContent.Content = view;
+        SetActiveNavigationButton(SettingsBtn);
     }
 
     private void SettingsBtn_Click(object sender, RoutedEventArgs e)
