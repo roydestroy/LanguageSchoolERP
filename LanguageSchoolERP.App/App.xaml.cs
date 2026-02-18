@@ -220,7 +220,12 @@ public partial class App : Application
                 return;
             }
 
-            await DownloadAndRunUpdaterAsync(result, owner);
+            var updaterStarted = await DownloadAndRunUpdaterAsync(result, owner);
+
+            if (!updaterStarted)
+            {
+                return;
+            }
 
             // Close the app so the updater can replace files
             UpdaterLog.Write("App", "Shutting down app for update.");
@@ -242,7 +247,7 @@ public partial class App : Application
         }
     }
 
-    private static async Task DownloadAndRunUpdaterAsync(UpdateCheckResult result, Window owner)
+    private static async Task<bool> DownloadAndRunUpdaterAsync(UpdateCheckResult result, Window owner)
     {
         var settingsProvider = Services.GetRequiredService<DatabaseAppSettingsProvider>();
         var settings = settingsProvider.Settings.Update;
@@ -278,6 +283,18 @@ public partial class App : Application
         // This keeps OTA deterministic (updates the current install).
         var installDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
 
+        if (!CanWriteToInstallDirectory(installDir, out var writeError))
+        {
+            UpdaterLog.Write("App", $"Insufficient permissions for install directory '{installDir}'. {writeError}");
+            MessageBox.Show(owner,
+                "Δεν υπάρχουν επαρκή δικαιώματα εγγραφής στον φάκελο εγκατάστασης για την ενημέρωση.\n\n" +
+                "Δοκιμάστε να εκτελέσετε την εφαρμογή ως διαχειριστής ή εγκαταστήστε την εφαρμογή σε φάκελο με δικαιώματα εγγραφής για τον χρήστη.",
+                "Ανεπαρκή δικαιώματα",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
+
         var args =
             $"--pid {Environment.ProcessId} " +
             $"--zip \"{zipPath}\" " +
@@ -293,6 +310,37 @@ public partial class App : Application
             UseShellExecute = true,
             WorkingDirectory = Path.GetDirectoryName(updaterExe) ?? installDir
         });
+
+        return true;
+    }
+
+    private static bool CanWriteToInstallDirectory(string installDir, out string? error)
+    {
+        var probeFilePath = Path.Combine(installDir, $".write-test-{Guid.NewGuid():N}.tmp");
+        try
+        {
+            File.WriteAllText(probeFilePath, "write-test");
+            File.Delete(probeFilePath);
+            error = null;
+            return true;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException)
+        {
+            error = ex.Message;
+            try
+            {
+                if (File.Exists(probeFilePath))
+                {
+                    File.Delete(probeFilePath);
+                }
+            }
+            catch
+            {
+                // ignore cleanup failures
+            }
+
+            return false;
+        }
     }
     private static async Task DownloadFileWithProgressAsync(
     string url,
