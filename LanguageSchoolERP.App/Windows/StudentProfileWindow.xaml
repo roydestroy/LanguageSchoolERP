@@ -272,7 +272,7 @@
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Τηλέφωνο" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectStudentPhonePreferredCommand}" Style="{StaticResource PreferredContactButtonStyle}">
+									<Button Command="{Binding SelectStudentPhonePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
 												<Setter Property="Content" Value="☆"/>
@@ -281,9 +281,6 @@
 													<DataTrigger Binding="{Binding IsStudentPhonePreferred}" Value="True">
 														<Setter Property="Content" Value="★"/>
 														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-													<DataTrigger Binding="{Binding IsEditing}" Value="False">
-														<Setter Property="IsEnabled" Value="False"/>
 													</DataTrigger>
 												</Style.Triggers>
 											</Style>
@@ -294,8 +291,19 @@
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Ηλ. ταχυδρομείο" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectStudentEmailPreferredCommand}" Style="{StaticResource PreferredContactButtonStyle}">
-										<Button.Style><Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}"><Setter Property="Content" Value="☆"/><Setter Property="Foreground" Value="#9AA7B4"/><Style.Triggers><DataTrigger Binding="{Binding IsStudentEmailPreferred}" Value="True"><Setter Property="Content" Value="★"/><Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/></DataTrigger><DataTrigger Binding="{Binding IsEditing}" Value="False"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers></Style></Button.Style>
+									<Button Command="{Binding SelectStudentEmailPreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsStudentEmailPreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
 									</Button>
 								</DockPanel>
 								<TextBox Text="{Binding EditableEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
@@ -313,10 +321,42 @@
 								<TextBlock Text="Επώνυμο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
 								<TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False"><TextBlock Text="Τηλέφωνο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/><Button Command="{Binding SelectFatherPhonePreferredCommand}" Style="{StaticResource PreferredContactButtonStyle}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}"><Setter Property="Content" Value="☆"/><Setter Property="Foreground" Value="#9AA7B4"/><Style.Triggers><DataTrigger Binding="{Binding IsFatherPhonePreferred}" Value="True"><Setter Property="Content" Value="★"/><Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/></DataTrigger><DataTrigger Binding="{Binding IsEditing}" Value="False"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers></Style></Button.Style></Button></DockPanel>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Τηλέφωνο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectFatherPhonePreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsFatherPhonePreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableFatherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False"><TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/><Button Command="{Binding SelectFatherEmailPreferredCommand}" Style="{StaticResource PreferredContactButtonStyle}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}"><Setter Property="Content" Value="☆"/><Setter Property="Foreground" Value="#9AA7B4"/><Style.Triggers><DataTrigger Binding="{Binding IsFatherEmailPreferred}" Value="True"><Setter Property="Content" Value="★"/><Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/></DataTrigger><DataTrigger Binding="{Binding IsEditing}" Value="False"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers></Style></Button.Style></Button></DockPanel>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectFatherEmailPreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsFatherEmailPreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<TextBlock Text="Όνομα μητέρας" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
@@ -325,10 +365,42 @@
 								<TextBlock Text="Επώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
 								<TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False"><TextBlock Text="Τηλέφωνο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/><Button Command="{Binding SelectMotherPhonePreferredCommand}" Style="{StaticResource PreferredContactButtonStyle}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}"><Setter Property="Content" Value="☆"/><Setter Property="Foreground" Value="#9AA7B4"/><Style.Triggers><DataTrigger Binding="{Binding IsMotherPhonePreferred}" Value="True"><Setter Property="Content" Value="★"/><Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/></DataTrigger><DataTrigger Binding="{Binding IsEditing}" Value="False"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers></Style></Button.Style></Button></DockPanel>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Τηλέφωνο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectMotherPhonePreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsMotherPhonePreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableMotherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False"><TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/><Button Command="{Binding SelectMotherEmailPreferredCommand}" Style="{StaticResource PreferredContactButtonStyle}"><Button.Style><Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}"><Setter Property="Content" Value="☆"/><Setter Property="Foreground" Value="#9AA7B4"/><Style.Triggers><DataTrigger Binding="{Binding IsMotherEmailPreferred}" Value="True"><Setter Property="Content" Value="★"/><Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/></DataTrigger><DataTrigger Binding="{Binding IsEditing}" Value="False"><Setter Property="IsEnabled" Value="False"/></DataTrigger></Style.Triggers></Style></Button.Style></Button></DockPanel>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectMotherEmailPreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsMotherEmailPreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 							</StackPanel>
 						</Grid>
