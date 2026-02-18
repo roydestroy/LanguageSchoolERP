@@ -106,74 +106,6 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="UseLayoutRounding" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <Border x:Name="ComboBorder"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="8">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="36"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ContentPresenter x:Name="ContentSite"
-                                                      Margin="10,2,6,2"
-                                                      VerticalAlignment="Center"
-                                                      HorizontalAlignment="Left"
-                                                      Content="{TemplateBinding SelectionBoxItem}"
-                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                                      IsHitTestVisible="False"/>
-                                    <Path Grid.Column="1"
-                                          Width="10"
-                                          Height="6"
-                                          Fill="{StaticResource Brush.TextSecondary}"
-                                          Data="M 0 0 L 10 0 L 5 6 Z"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                            <Popup x:Name="PART_Popup"
-                                   Placement="Bottom"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True"
-                                   Focusable="False"
-                                   PopupAnimation="Slide">
-                                <Border Margin="0,4,0,0"
-                                        Background="{StaticResource Brush.Surface}"
-                                        BorderBrush="{StaticResource Brush.Border}"
-                                        BorderThickness="1"
-                                        CornerRadius="8">
-                                    <ScrollViewer Margin="4"
-                                                  SnapsToDevicePixels="True"
-                                                  MaxHeight="280">
-                                        <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="HasItems" Value="False">
-                                <Setter TargetName="ContentSite" Property="Content" Value=""/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#AFC3D8"/>
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="{StaticResource Brush.Accent}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="ComboBorder" Property="Background" Value="#F2F5F8"/>
-                                <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#D9E2EC"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <Style TargetType="DatePicker">
@@ -184,7 +116,7 @@
             <Setter Property="Padding" Value="8,2"/>
         </Style>
 
-        <Style TargetType="DatePickerTextBox">
+        <Style x:Key="{x:Type DatePickerTextBox}" TargetType="DatePickerTextBox">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DatePickerTextBox">
@@ -278,29 +210,28 @@
         </Style>
 
         <Style TargetType="TabItem">
-            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
             <Setter Property="Padding" Value="14,8"/>
-            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="UseLayoutRounding" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="TabBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{StaticResource Brush.Border}"
-                                BorderThickness="1"
-                                CornerRadius="10"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="0,0,0,2"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter ContentSource="Header" HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="#EDF4FC"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#AFC3D8"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource Brush.AccentLight}"/>
                                 <Setter Property="Foreground" Value="{StaticResource Brush.AccentDark}"/>
                                 <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource Brush.Accent}"/>
                             </Trigger>
