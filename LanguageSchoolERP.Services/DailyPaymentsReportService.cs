@@ -1,5 +1,6 @@
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
+using PdfSharpCore;
 
 namespace LanguageSchoolERP.Services;
 
