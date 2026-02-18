@@ -3,6 +3,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True">
+
+    <UserControl.Resources>
+
+        <!-- Center cell content -->
+        <Style x:Key="CenterCellText" TargetType="TextBlock">
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Center column headers -->
+        <Style x:Key="CenterHeader"
+           TargetType="DataGridColumnHeader"
+           BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+    </UserControl.Resources>
+
     <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -88,20 +107,48 @@
                 </Grid.RowDefinitions>
 
                 <DataGrid ItemsSource="{Binding ProgramStatistics}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          CanUserAddRows="False"
-                          Margin="0,0,0,8">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramName}" Width="*"/>
-                        <DataGridTextColumn Header="Μαθητές" Binding="{Binding StudentsCount}" Width="100"/>
-                        <DataGridTextColumn Header="Εγγραφές" Binding="{Binding EnrollmentsCount}" Width="100"/>
-                        <DataGridTextColumn Header="Συμφωνηθέν" Binding="{Binding AgreementTotal, StringFormat={}{0:0.00} €}" Width="150"/>
-                        <DataGridTextColumn Header="Εισπραχθέν" Binding="{Binding CollectedTotal, StringFormat={}{0:0.00} €}" Width="150"/>
-                        <DataGridTextColumn Header="Υπόλοιπο" Binding="{Binding OutstandingTotal, StringFormat={}{0:0.00} €}" Width="130"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+          AutoGenerateColumns="False"
+          IsReadOnly="True"
+          CanUserAddRows="False"
+          Margin="0,0,0,8">
 
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Πρόγραμμα"
+                        Binding="{Binding ProgramName}"
+                        Width="*"/>
+
+                        <DataGridTextColumn Header="Μαθητές"
+                        Binding="{Binding StudentsCount}"
+                        Width="100"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+
+                        <DataGridTextColumn Header="Εγγραφές"
+                        Binding="{Binding EnrollmentsCount}"
+                        Width="100"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+
+                        <DataGridTextColumn Header="Συμφωνηθέν"
+                        Binding="{Binding AgreementTotal, StringFormat={}{0:0.00} €}"
+                        Width="150"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+
+                        <DataGridTextColumn Header="Εισπραχθέν"
+                        Binding="{Binding CollectedTotal, StringFormat={}{0:0.00} €}"
+                        Width="150"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+
+                        <DataGridTextColumn Header="Υπόλοιπο"
+                        Binding="{Binding OutstandingTotal, StringFormat={}{0:0.00} €}"
+                        Width="130"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+                    </DataGrid.Columns>
+
+                </DataGrid>
                 <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="IndianRed"/>
             </Grid>
         </Border>
