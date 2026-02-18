@@ -362,7 +362,7 @@
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
                                   HeadersVisibility="Column"
-                                  CanUserAddRows="False" Margin="0,10,0,-10">
+                                  CanUserAddRows="False" Margin="0,10,0,0">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="Τύπος" Binding="{Binding TypeText}" Width="140"/>
 							<DataGridTextColumn Header="Ημερομηνία" Binding="{Binding DateText}" Width="140"/>
