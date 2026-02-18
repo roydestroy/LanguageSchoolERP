@@ -24,9 +24,13 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private double progressValue;
     [ObservableProperty] private int progressPercent;
     [ObservableProperty] private bool isBusy;
+    [ObservableProperty] private string startupLocalDatabaseName = "FilotheiSchoolERP";
+    [ObservableProperty] private bool startupFilotheiSelected;
+    [ObservableProperty] private bool startupNeaIoniaSelected;
 
     public IAsyncRelayCommand ImportCommand { get; }
     public IAsyncRelayCommand CancelCommand { get; }
+    public IRelayCommand SaveStartupDatabaseCommand { get; }
 
     public DatabaseImportViewModel(
         DatabaseAppSettingsProvider settingsProvider,
@@ -39,6 +43,11 @@ public partial class DatabaseImportViewModel : ObservableObject
 
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
         CancelCommand = new AsyncRelayCommand(CancelAsync, () => IsBusy);
+        SaveStartupDatabaseCommand = new RelayCommand(SaveStartupDatabase);
+
+        StartupLocalDatabaseName = string.IsNullOrWhiteSpace(_appState.StartupLocalDatabaseName)
+            ? "FilotheiSchoolERP"
+            : _appState.StartupLocalDatabaseName;
 
         foreach (var option in _settingsProvider.RemoteDatabases)
             RemoteDatabases.Add(option);
@@ -57,6 +66,35 @@ public partial class DatabaseImportViewModel : ObservableObject
         ImportCommand?.NotifyCanExecuteChanged();
     }
 
+
+
+    partial void OnStartupLocalDatabaseNameChanged(string value)
+    {
+        StartupFilotheiSelected = value == "FilotheiSchoolERP";
+        StartupNeaIoniaSelected = value == "NeaIoniaSchoolERP";
+    }
+
+    partial void OnStartupFilotheiSelectedChanged(bool value)
+    {
+        if (value)
+            StartupLocalDatabaseName = "FilotheiSchoolERP";
+    }
+
+    partial void OnStartupNeaIoniaSelectedChanged(bool value)
+    {
+        if (value)
+            StartupLocalDatabaseName = "NeaIoniaSchoolERP";
+    }
+
+    private void SaveStartupDatabase()
+    {
+        _appState.SaveStartupLocalDatabase(StartupLocalDatabaseName);
+        MessageBox.Show(
+            "Η προεπιλεγμένη βάση εκκίνησης αποθηκεύτηκε.",
+            "Ρυθμίσεις",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
 
     private bool CanImport() => !IsBusy && SelectedRemoteDatabaseOption is not null;
 
