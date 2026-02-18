@@ -8,6 +8,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
@@ -19,19 +20,19 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Database Import" FontSize="24" FontWeight="SemiBold"/>
-                    <TextBlock Text="Import from Remote (_View) to local database" Margin="0,6,0,0" Foreground="#555"/>
+                    <TextBlock Text="Εισαγωγή Βάσης" FontSize="24" FontWeight="SemiBold"/>
+                    <TextBlock Text="Εισαγωγή από απομακρυσμένη βάση στην τοπική" Margin="0,6,0,0" Foreground="#555"/>
                 </StackPanel>
 
                 <Button Grid.Column="1"
-                        Content="Import from Remote"
+                        Content="Εισαγωγή"
                         Width="170"
                         Height="34"
                         Margin="0,0,10,0"
                         Command="{Binding ImportCommand}"/>
 
                 <Button Grid.Column="2"
-                        Content="Cancel"
+                        Content="Ακύρωση"
                         Width="100"
                         Height="34"
                         Command="{Binding CancelCommand}"/>
@@ -51,7 +52,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Remote database" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <ComboBox Grid.Column="1"
                           ItemsSource="{Binding RemoteDatabases}"
                           SelectedItem="{Binding SelectedRemoteDatabaseOption, Mode=TwoWay}"
@@ -60,13 +61,13 @@
                           Width="240"
                           HorizontalAlignment="Left"/>
 
-                <TextBlock Grid.Row="1" Text="Wipe local database first" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <TextBlock Grid.Row="1" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0"/>
                 <CheckBox Grid.Row="1" Grid.Column="1"
                           Margin="0,14,0,0"
                           IsChecked="{Binding WipeLocalFirst, Mode=TwoWay}"
                           VerticalAlignment="Center"/>
 
-                <TextBlock Grid.Row="2" Text="Progress" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <TextBlock Grid.Row="2" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
                 <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,14,0,0">
                     <ProgressBar Height="20" Minimum="0" Maximum="100" Value="{Binding ProgressValue}"/>
                     <TextBlock Margin="0,6,0,0" Text="{Binding ProgressPercent, StringFormat=Progress: {0}%}"/>
@@ -83,7 +84,35 @@
             </Grid>
         </Border>
 
-        <TextBlock Grid.Row="2" Margin="2,10,2,0" Foreground="#777"
-                   Text="Tip: when 'wipe local' is enabled, you must type IMPORT to confirm before the process starts."/>
+
+        <Border Grid.Row="2" Margin="0,14,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <RadioButton Content="Φιλοθέη"
+                                 GroupName="StartupDb"
+                                 Margin="0,0,16,0"
+                                 VerticalAlignment="Center"
+                                 IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
+                    <RadioButton Content="Νέα Ιωνία"
+                                 GroupName="StartupDb"
+                                 VerticalAlignment="Center"
+                                 IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
+                    <Button Content="Αποθήκευση"
+                            Width="110"
+                            Height="30"
+                            Margin="20,0,0,0"
+                            Command="{Binding SaveStartupDatabaseCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="3" Margin="2,10,2,0" Foreground="#777"
+                   Text="Tip: όταν είναι ενεργοποιημένη η διαγραφή τοπικής βάσης, πρέπει να πληκτρολογήσετε IMPORT για να προχωρήσει η διαδικασία."/>
     </Grid>
 </UserControl>
