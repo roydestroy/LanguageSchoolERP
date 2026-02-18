@@ -82,6 +82,7 @@ public partial class MainWindow : Window
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
+        StatisticsBtn.Click += (_, __) => NavigateToStatistics();
         SettingsBtn.Click += (_, __) => NavigateToDatabaseImport();
         CheckUpdatesBtn.Click += async (_, __) => await App.CheckForUpdatesInteractiveAsync(this, userInitiated: true);
 
@@ -183,6 +184,12 @@ public partial class MainWindow : Window
     private void NavigateToAcademicYears()
     {
         var view = App.Services.GetRequiredService<AcademicYearsView>();
+        MainContent.Content = view;
+    }
+
+    private void NavigateToStatistics()
+    {
+        var view = App.Services.GetRequiredService<StatisticsView>();
         MainContent.Content = view;
     }
 

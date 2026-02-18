@@ -33,6 +33,9 @@ public partial class App : Application
         services.AddSingleton<AcademicYearsViewModel>();
         services.AddSingleton<AcademicYearsView>();
 
+        services.AddSingleton<StatisticsViewModel>();
+        services.AddSingleton<StatisticsView>();
+
         services.AddTransient<NewStudentViewModel>();
         services.AddTransient<Windows.NewStudentWindow>();
 
