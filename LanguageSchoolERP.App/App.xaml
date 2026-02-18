@@ -33,7 +33,7 @@
 
         <Style TargetType="TextBox">
             <Setter Property="MinHeight" Value="34"/>
-            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Padding" Value="6,4"/>
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -257,7 +257,8 @@
                                    AllowsTransparency="True"
                                    Focusable="False"
                                    IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
-                                   PopupAnimation="Fade">
+                                   PopupAnimation="Fade"
+                                   StaysOpen="False">
                                 <Border Margin="0,4,0,0"
                                         Background="{StaticResource Brush.Surface}"
                                         BorderBrush="{StaticResource Brush.Border}"
@@ -381,8 +382,9 @@
         <Style TargetType="TabItem">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
-            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Padding" Value="14,8,14,4"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Bottom"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="UseLayoutRounding" Value="True"/>
             <Setter Property="Template">
@@ -393,7 +395,7 @@
                                 BorderBrush="Transparent"
                                 BorderThickness="0,0,0,2"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center"/>
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
