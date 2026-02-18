@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using LanguageSchoolERP.App.Extensions;
 using CommunityToolkit.Mvvm.Input;
 using System.Globalization;
 using System.IO;
@@ -1028,7 +1029,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     TypeText = "Πληρωμή",
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{row.Payment.Amount:0.00} €",
-                    Method = row.Payment.Method.ToString(),
+                    Method = row.Payment.Method.ToGreekLabel(),
                     ReasonText = ParseReason(row.Payment.Notes),
                     Notes = ParseAdditionalNotes(row.Payment.Notes)
                 });
@@ -1047,7 +1048,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     NumberText = x.r.ReceiptNumber.ToString(),
                     DateText = x.r.IssueDate.ToString("dd/MM/yyyy"),
                     AmountText = $"{x.p.Amount:0.00} €",
-                    MethodText = x.p.Method.ToString(),
+                    MethodText = x.p.Method.ToGreekLabel(),
                     ReasonText = ParseReason(x.p.Notes),
                     ProgramText = ProgramLabel(x.e),
                     HasPdf = !string.IsNullOrWhiteSpace(x.r.PdfPath),

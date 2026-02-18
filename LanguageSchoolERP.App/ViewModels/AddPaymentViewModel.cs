@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using LanguageSchoolERP.App.Extensions;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Services;
@@ -19,6 +20,11 @@ public record EnrollmentOption(Guid EnrollmentId, string Label, decimal Suggeste
     public override string ToString() => Label;
 }
 
+public record PaymentMethodOption(PaymentMethod Value, string Label)
+{
+    public override string ToString() => Label;
+}
+
 public record AddPaymentInit(Guid StudentId, string AcademicYear, Guid? PaymentId = null, Guid? EnrollmentId = null, bool IsQuickPrintFlow = false);
 
 public partial class AddPaymentViewModel : ObservableObject
@@ -35,10 +41,17 @@ public partial class AddPaymentViewModel : ObservableObject
     [ObservableProperty] private EnrollmentOption? selectedEnrollmentOption;
     [ObservableProperty] private string dialogTitle = "Προσθήκη πληρωμής";
 
-    public IReadOnlyList<PaymentMethod> PaymentMethods { get; } =
-        new[] { PaymentMethod.Cash, PaymentMethod.Card, PaymentMethod.BankTransfer, PaymentMethod.IRIS, PaymentMethod.Other };
+    public IReadOnlyList<PaymentMethodOption> PaymentMethods { get; } =
+        new[]
+        {
+            new PaymentMethodOption(PaymentMethod.Cash, PaymentMethod.Cash.ToGreekLabel()),
+            new PaymentMethodOption(PaymentMethod.Card, PaymentMethod.Card.ToGreekLabel()),
+            new PaymentMethodOption(PaymentMethod.BankTransfer, PaymentMethod.BankTransfer.ToGreekLabel()),
+            new PaymentMethodOption(PaymentMethod.IRIS, PaymentMethod.IRIS.ToGreekLabel()),
+            new PaymentMethodOption(PaymentMethod.Other, PaymentMethod.Other.ToGreekLabel())
+        };
 
-    [ObservableProperty] private PaymentMethod selectedPaymentMethod = PaymentMethod.Cash;
+    [ObservableProperty] private PaymentMethodOption? selectedPaymentMethod;
 
     public IReadOnlyList<string> PaymentReasons { get; } =
     [
@@ -114,7 +127,7 @@ public partial class AddPaymentViewModel : ObservableObject
         Notes = "";
         AmountText = "";
         PaymentDate = DateTime.Today;
-        SelectedPaymentMethod = PaymentMethod.Cash;
+        SelectedPaymentMethod = PaymentMethods.First();
         SelectedReason = "ΔΙΔΑΚΤΡΑ";
 
         EnrollmentOptions.Clear();
@@ -173,7 +186,7 @@ public partial class AddPaymentViewModel : ObservableObject
                                       ?? EnrollmentOptions.FirstOrDefault();
             AmountText = payment.Amount.ToString("0.##", CultureInfo.InvariantCulture);
             PaymentDate = payment.PaymentDate.Date;
-            SelectedPaymentMethod = payment.Method;
+            SelectedPaymentMethod = PaymentMethods.FirstOrDefault(x => x.Value == payment.Method) ?? PaymentMethods.First();
             SelectedReason = ParseReason(payment.Notes);
             Notes = ParseAdditionalNotes(payment.Notes);
         }
@@ -232,6 +245,12 @@ public partial class AddPaymentViewModel : ObservableObject
             return;
         }
 
+        if (SelectedPaymentMethod is null)
+        {
+            ErrorMessage = "Παρακαλώ επιλέξτε τρόπο πληρωμής.";
+            return;
+        }
+
         try
         {
             IsSaving = true;
@@ -254,7 +273,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 payment.EnrollmentId = SelectedEnrollmentOption.EnrollmentId;
                 payment.PaymentDate = PaymentDate.Value.Date;
                 payment.Amount = amount;
-                payment.Method = SelectedPaymentMethod;
+                payment.Method = SelectedPaymentMethod!.Value;
                 payment.Notes = BuildStoredNotes(SelectedReason, Notes);
 
                 var receipts = await db.Receipts
@@ -280,7 +299,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 EnrollmentId = SelectedEnrollmentOption.EnrollmentId,
                 PaymentDate = PaymentDate.Value.Date,
                 Amount = amount,
-                Method = SelectedPaymentMethod,
+                Method = SelectedPaymentMethod!.Value,
                 Notes = BuildStoredNotes(SelectedReason, Notes)
             };
 
@@ -317,7 +336,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 StudentPhone: student.Phone ?? "",
                 StudentEmail: student.Email ?? "",
                 Amount: newPayment.Amount,
-                PaymentMethod: newPayment.Method.ToString(),
+                PaymentMethod: newPayment.Method.ToGreekLabel(),
                 ProgramLabel: enrollment.Program?.Name ?? "—",
                 AcademicYear: academicYear,
                 Notes: newPayment.Notes ?? ""
