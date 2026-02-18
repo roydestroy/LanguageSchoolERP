@@ -78,8 +78,8 @@
                     <ControlTemplate TargetType="ComboBoxItem">
                         <Border x:Name="ItemBorder"
                                 Background="{TemplateBinding Background}"
-                                Margin="3,2"
-                                CornerRadius="6">
+                                Margin="0"
+                                CornerRadius="4">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Left"/>
@@ -164,11 +164,12 @@
                                    PopupAnimation="Slide">
                                 <Grid MinWidth="{TemplateBinding ActualWidth}" MaxHeight="280">
                                     <Border Margin="0,4,0,0"
+                                            Padding="4"
                                             Background="{StaticResource Brush.Surface}"
                                             BorderBrush="{StaticResource Brush.Border}"
                                             BorderThickness="1"
                                             CornerRadius="8"/>
-                                    <ScrollViewer Margin="4"
+                                    <ScrollViewer Margin="4,8,4,4"
                                                   SnapsToDevicePixels="True">
                                         <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
                                     </ScrollViewer>
@@ -190,6 +191,22 @@
                                 <Setter TargetName="ComboBorder" Property="BorderBrush" Value="#D9E2EC"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DatePickerCalendarToggleStyle" TargetType="ToggleButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -221,20 +238,18 @@
                                                    VerticalContentAlignment="Center"
                                                    Background="Transparent"
                                                    BorderThickness="0"/>
-                                <Button x:Name="PART_Button"
-                                        Grid.Column="1"
-                                        Style="{x:Null}"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="0"
-                                        Focusable="False">
+                                <ToggleButton x:Name="PART_Button"
+                                              Grid.Column="1"
+                                              Style="{StaticResource DatePickerCalendarToggleStyle}"
+                                              IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                              Padding="0">
                                     <TextBlock FontFamily="Segoe MDL2 Assets"
                                                Text="&#xE787;"
                                                Foreground="{StaticResource Brush.TextSecondary}"
                                                FontSize="14"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"/>
-                                </Button>
+                                </ToggleButton>
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
