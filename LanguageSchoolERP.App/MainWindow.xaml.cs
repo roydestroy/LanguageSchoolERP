@@ -193,4 +193,10 @@ public partial class MainWindow : Window
         var view = App.Services.GetRequiredService<DatabaseImportView>();
         MainContent.Content = view;
     }
+
+    private void SettingsBtn_Click(object sender, RoutedEventArgs e)
+    {
+        // open settings window here
+    }
+
 }
