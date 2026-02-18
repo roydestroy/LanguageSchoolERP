@@ -8,6 +8,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
@@ -228,7 +229,34 @@
             </Border>
         </Grid>
 
-        <TextBlock Grid.Row="2" Margin="2,10,2,0" Foreground="#777"
+
+        <Border Grid.Row="2" Margin="0,14,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Ρυθμίσεις" FontWeight="SemiBold" VerticalAlignment="Center"/>
+
+                <Button Grid.Column="1"
+                        Width="170"
+                        Height="32"
+                        Content="Εισαγωγή (Διαχειριστής)"
+                        Command="{Binding ImportCommand}"/>
+
+                <Button Grid.Column="3"
+                        x:Name="CheckUpdatesBtn"
+                        Width="170"
+                        Height="32"
+                        Content="Έλεγχος ενημερώσεων"
+                        Click="CheckUpdatesBtn_Click"/>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="3" Margin="2,10,2,0" Foreground="#777"
                    Text="Tip: απαιτείται πάντα επιβεβαίωση IMPORT πριν από import/restore στη τοπική βάση."/>
     </Grid>
 </UserControl>
