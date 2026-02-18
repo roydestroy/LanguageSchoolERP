@@ -3,6 +3,20 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="ΕΥΡΩΓΝΩΣΗ ERP" Height="720" Width="1240"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style x:Key="NavigationButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource Brush.Surface}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="Active">
+                    <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource Brush.AccentDark}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <DockPanel Background="{StaticResource Brush.PageBackground}">
         <Border DockPanel.Dock="Top" Padding="18,12" Background="{StaticResource Brush.AccentDark}">
             <Grid>
@@ -58,12 +72,12 @@
 
         <Border DockPanel.Dock="Top" Margin="18,10,18,0" Background="{StaticResource Brush.SurfaceAlt}" Padding="10" CornerRadius="10" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
             <WrapPanel Orientation="Horizontal" ItemHeight="34" VerticalAlignment="Center">
-                <Button x:Name="StudentsBtn" Content="Μαθητές" Height="34" MinWidth="130" Margin="0,0,8,0"/>
-                <Button x:Name="DailyPaymentsBtn" Content="Πληρωμές Ημέρας" Height="34" MinWidth="150" Margin="0,0,8,0"/>
-                <Button x:Name="ProgramsBtn" Content="Προγράμματα" Height="34" MinWidth="130" Margin="0,0,8,0" Click="ProgramsBtn_Click"/>
-                <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά έτη" Height="34" MinWidth="140" Margin="0,0,8,0"/>
-                <Button x:Name="StatisticsBtn" Content="Στατιστικά" Height="34" MinWidth="130" Margin="0,0,8,0"/>
-                <Button x:Name="SettingsBtn" Content="Ρυθμίσεις" Height="34" MinWidth="120" Margin="0,0,8,0" Click="SettingsBtn_Click"/>
+                <Button x:Name="StudentsBtn" Content="Μαθητές" Height="34" MinWidth="130" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
+                <Button x:Name="DailyPaymentsBtn" Content="Πληρωμές Ημέρας" Height="34" MinWidth="150" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
+                <Button x:Name="ProgramsBtn" Content="Προγράμματα" Height="34" MinWidth="130" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}" Click="ProgramsBtn_Click"/>
+                <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά έτη" Height="34" MinWidth="140" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
+                <Button x:Name="StatisticsBtn" Content="Στατιστικά" Height="34" MinWidth="130" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
+                <Button x:Name="SettingsBtn" Content="Ρυθμίσεις" Height="34" MinWidth="120" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}" Click="SettingsBtn_Click"/>
             </WrapPanel>
         </Border>
 
