@@ -97,9 +97,11 @@
                     <RadioButton Content="Filothei"
                                  GroupName="StartupDb"
                                  Margin="0,0,16,0"
+                                 VerticalAlignment="Center"
                                  IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
                     <RadioButton Content="Nea Ionia"
                                  GroupName="StartupDb"
+                                 VerticalAlignment="Center"
                                  IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
                     <Button Content="Save"
                             Width="90"
