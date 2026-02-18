@@ -144,7 +144,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         if (_editingEnrollmentId.HasValue)
         {
             DialogTitle = "Επεξεργασία Εγγραφής";
-            SaveButtonText = "Αποθήκευση αλλαγών";
+            SaveButtonText = "Αποθήκευση";
             FormTitle = "Επεξεργασία εγγραφής προγράμματος";
 
             try
