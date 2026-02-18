@@ -25,6 +25,21 @@ public static class BackupTaskRunner
 
             Directory.CreateDirectory(s.Backup.LocalBackupDir);
 
+            var shareConnectivity = RemoteConnectivityDiagnostics.CheckRemoteShare(
+                s.Backup.RemoteShareDir,
+                s.Backup.RemoteShareUser,
+                s.Backup.RemoteSharePassword);
+
+            if (!shareConnectivity.IsSuccess)
+            {
+                var diagnostics = string.IsNullOrWhiteSpace(shareConnectivity.Details)
+                    ? shareConnectivity.UserMessage ?? "remote share unavailable"
+                    : $"{shareConnectivity.UserMessage}: {shareConnectivity.Details}";
+
+                BackupStatusStore.TryWriteFailure(diagnostics);
+                return Task.FromResult(1);
+            }
+
             var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var db = s.Local.Database;
 
