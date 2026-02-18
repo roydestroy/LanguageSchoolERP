@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -37,6 +38,7 @@ public partial class StudentsViewModel : ObservableObject
 
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
+    private int _loadGeneration;
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
@@ -193,10 +195,10 @@ public partial class StudentsViewModel : ObservableObject
 
     private async Task LoadAsync()
     {
+        var generation = Interlocked.Increment(ref _loadGeneration);
+
         try
         {
-            Students.Clear();
-
             using var db = _dbFactory.Create();
             System.Diagnostics.Debug.WriteLine("DB=" + db.Database.GetDbConnection().DataSource + " | " + db.Database.GetDbConnection().Database);
 
@@ -379,11 +381,20 @@ public partial class StudentsViewModel : ObservableObject
                 _ => rows.OrderBy(r => r.FullName)
             };
 
+            // Ignore stale completion from older overlapping loads.
+            if (generation != Volatile.Read(ref _loadGeneration))
+                return;
+
+            Students.Clear();
             foreach (var row in sortedRows)
                 Students.Add(row);
         }
         catch (Exception ex)
         {
+            // Ignore stale completion from older overlapping loads.
+            if (generation != Volatile.Read(ref _loadGeneration))
+                return;
+
             var msg = ex.InnerException?.Message ?? ex.Message;
             System.Diagnostics.Debug.WriteLine(ex.ToString());
             System.Windows.MessageBox.Show(msg, "Αποτυχία φόρτωσης μαθητών");
