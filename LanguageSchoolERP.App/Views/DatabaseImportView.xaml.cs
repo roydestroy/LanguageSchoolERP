@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using LanguageSchoolERP.App.ViewModels;
 
@@ -9,5 +10,11 @@ public partial class DatabaseImportView : UserControl
     {
         InitializeComponent();
         DataContext = vm;
+    }
+
+    private async void CheckUpdatesBtn_Click(object sender, RoutedEventArgs e)
+    {
+        var owner = Window.GetWindow(this);
+        await App.CheckForUpdatesInteractiveAsync(owner, userInitiated: true);
     }
 }

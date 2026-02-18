@@ -84,7 +84,6 @@ public partial class MainWindow : Window
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
         StatisticsBtn.Click += (_, __) => NavigateToStatistics();
         SettingsBtn.Click += (_, __) => NavigateToDatabaseImport();
-        CheckUpdatesBtn.Click += async (_, __) => await App.CheckForUpdatesInteractiveAsync(this, userInitiated: true);
 
         _ = RefreshAcademicYearProgressAsync();
     }
