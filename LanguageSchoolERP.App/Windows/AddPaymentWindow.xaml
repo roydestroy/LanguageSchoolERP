@@ -8,6 +8,9 @@
 		<Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
 			<Setter Property="Padding" Value="6,4"/>
 		</Style>
+		<DataTemplate x:Key="EnrollmentOptionTemplate">
+			<TextBlock Text="{Binding Label}"/>
+		</DataTemplate>
 	</Window.Resources>
 
 
@@ -25,7 +28,7 @@
 				<TextBlock Text="Εγγραφή (υποχρεωτικό)"/>
 				<ComboBox Margin="0,4,0,12"
                           ItemsSource="{Binding EnrollmentOptions}"
-                          DisplayMemberPath="Label"
+                          ItemTemplate="{StaticResource EnrollmentOptionTemplate}"
                           Foreground="{StaticResource Brush.TextPrimary}"
                           SelectedItem="{Binding SelectedEnrollmentOption}"/>
 
