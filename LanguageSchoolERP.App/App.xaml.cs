@@ -16,8 +16,9 @@ public partial class App : Application
 {
     public static ServiceProvider Services { get; private set; } = null!;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
+        // 1) Build DI first (same container for both modes)
         var services = new ServiceCollection();
 
         // Views / ViewModels
@@ -65,10 +66,40 @@ public partial class App : Application
         services.AddSingleton<IGitHubUpdateService, GitHubUpdateService>();
         services.AddSingleton<DbContextFactory>();
 
+        // TODO: Add your backup services/runners when you create them, e.g.
+        // services.AddSingleton<BackupTaskRunner>();
+        // services.AddSingleton<BackupBootstrapper>();
+
         // Main window
         services.AddSingleton<MainWindow>();
 
         Services = services.BuildServiceProvider();
+
+        // 2) Headless mode for Scheduled Task (NO UI)
+        if (e.Args.Any(a => string.Equals(a, "--run-backup", StringComparison.OrdinalIgnoreCase)))
+        {
+            try
+            {
+                // Prefer DI-resolved runner if you have it:
+                // var runner = Services.GetRequiredService<BackupTaskRunner>();
+                // var exitCode = await runner.RunAsync();
+
+                // Or if your runner is static:
+                var force = e.Args.Any(a => a.Equals("--force", StringComparison.OrdinalIgnoreCase));
+                var exitCode = await BackupTaskRunner.RunAsync();
+                Environment.Exit(exitCode);
+            }
+            catch (Exception ex)
+            {
+                // If you have logging, log here
+                // UpdaterLog.Write("Backup", "Headless backup failed.", ex);
+                Environment.Exit(2);
+            }
+            return;
+        }
+
+        // 3) Normal startup (UI)
+        base.OnStartup(e);
 
         var mainWindow = Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
@@ -76,7 +107,16 @@ public partial class App : Application
         // Fire-and-forget startup check (silent if not user-initiated)
         _ = CheckForUpdatesInteractiveAsync(mainWindow, userInitiated: false);
 
-        base.OnStartup(e);
+        // 4) Bootstrap backups once (folders + scheduled task)
+        try
+        {
+            await BackupBootstrapper.TryBootstrapAsync();
+        }
+        catch
+        {
+            // Do NOT crash the app if bootstrap fails.
+            // Optionally log.
+        }
     }
 
     /// <summary>

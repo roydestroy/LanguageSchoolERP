@@ -96,8 +96,7 @@
   </Target>
 	<ItemGroup>
 		<!-- Build the updater project, but don't reference it as a library -->
-		<ProjectReference Include="..\LanguageSchoolERP.Updater\LanguageSchoolERP.Updater.csproj"
-						  ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\LanguageSchoolERP.Updater\LanguageSchoolERP.Updater.csproj" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<!-- Copy updater files next to the app after Build -->
@@ -113,10 +112,7 @@
 			<UpdaterFiles Include="$(UpdaterOut)LanguageSchoolERP.Updater.runtimeconfig.json" />
 		</ItemGroup>
 
-		<Copy SourceFiles="@(UpdaterFiles)"
-			  DestinationFolder="$(OutDir)"
-			  SkipUnchangedFiles="true"
-			  Condition="Exists('$(UpdaterOut)LanguageSchoolERP.Updater.exe')" />
+		<Copy SourceFiles="@(UpdaterFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="Exists('$(UpdaterOut)LanguageSchoolERP.Updater.exe')" />
 	</Target>
 
 	<!-- Copy updater files into the Publish folder too -->
@@ -132,10 +128,7 @@
 			<UpdaterFiles Include="$(UpdaterOut)LanguageSchoolERP.Updater.runtimeconfig.json" />
 		</ItemGroup>
 
-		<Copy SourceFiles="@(UpdaterFiles)"
-			  DestinationFolder="$(PublishDir)"
-			  SkipUnchangedFiles="true"
-			  Condition=" '$(PublishDir)' != '' AND Exists('$(UpdaterOut)LanguageSchoolERP.Updater.exe')" />
+		<Copy SourceFiles="@(UpdaterFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" Condition=" '$(PublishDir)' != '' AND Exists('$(UpdaterOut)LanguageSchoolERP.Updater.exe')" />
 	</Target>
 
 </Project>

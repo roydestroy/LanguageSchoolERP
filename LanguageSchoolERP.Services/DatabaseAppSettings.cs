@@ -1,8 +1,10 @@
+using LanguageSchoolERP.Core.Configuration;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Text.Json;
-using Microsoft.Data.SqlClient;
 
 namespace LanguageSchoolERP.Services;
+
 
 public sealed class DatabaseAppSettingsProvider
 {
@@ -88,7 +90,8 @@ public sealed class DatabaseAppSettingsProvider
             IncludePrerelease = false,
             AssetName = "LanguageSchoolERP-win-x64.zip",
             InstallFolder = @"C:\Apps\LanguageSchoolERP"
-        }
+        },
+        Backup = new BackupSettings()
     };
 
     private static void Normalize(DatabaseAppSettings settings)
@@ -97,6 +100,8 @@ public sealed class DatabaseAppSettingsProvider
         settings.Remote ??= new RemoteDatabaseSettings();
         settings.Startup ??= new StartupDatabaseSettings();
         settings.Update ??= new UpdateSettings();
+        settings.Backup ??= new BackupSettings();
+
 
         if (string.IsNullOrWhiteSpace(settings.Local.Server))
             settings.Local.Server = @".\SQLEXPRESS";
@@ -209,6 +214,7 @@ public sealed class DatabaseAppSettings
     public RemoteDatabaseSettings Remote { get; set; } = new();
     public StartupDatabaseSettings Startup { get; set; } = new();
     public UpdateSettings Update { get; set; } = new();
+    public BackupSettings Backup { get; set; } = new();
 }
 
 public sealed class LocalDatabaseSettings
