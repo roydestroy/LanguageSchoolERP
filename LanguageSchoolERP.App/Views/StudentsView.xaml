@@ -129,11 +129,11 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <ComboBox Grid.Column="0" Width="128"
+                <ComboBox Grid.Column="0" Width="200"
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentStatusFilters}"
                           SelectedItem="{Binding SelectedStudentStatusFilter, Mode=TwoWay}"/>
-                <ComboBox Grid.Column="2" Width="176"
+                <ComboBox Grid.Column="2" Width="200"
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentSortOptions}"
                           SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>

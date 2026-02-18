@@ -209,12 +209,12 @@
 						<DockPanel Grid.Row="0" Margin="0,0,0,12">
 							<StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
 								<Button Content="Επεξεργασία"
-                                        Width="95"
+                                        Width="105"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource EditButtonStyle}"
                                         Command="{Binding EditProfileCommand}"/>
 								<Button Content="Αποθήκευση"
-                                        Width="95"
+                                        Width="105"
                                         Margin="0,0,8,0"
                                         Style="{StaticResource EditModeButtonStyle}"
                                         Command="{Binding SaveProfileCommand}"/>
