@@ -8,12 +8,23 @@
         </Grid.RowDefinitions>
 
         <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Ακαδημαϊκά έτη" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                <TextBox Width="210" Margin="20,0,10,0" VerticalContentAlignment="Center" Text="{Binding NewAcademicYearName, UpdateSourceTrigger=PropertyChanged}"/>
-                <Button x:Name="AddAcademicYearButton" Content="Νέο ακαδημαϊκό έτος" Width="170" Margin="0,0,10,0" Click="AddAcademicYearButton_Click"/>
-                <Button Content="Διαγραφή" Width="95" Command="{Binding DeleteAcademicYearCommand}" Background="#A64949" BorderBrush="#8F3939"/>
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Ακαδημαϊκά έτη" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="2" Width="230" VerticalContentAlignment="Center" Text="{Binding NewAcademicYearName, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Button Grid.Column="4" x:Name="AddAcademicYearButton" Content="Νέο ακαδημαϊκό έτος" Width="170" Click="AddAcademicYearButton_Click" HorizontalAlignment="Right"/>
+                <Button Grid.Column="6" Content="Διαγραφή" Width="95" Command="{Binding DeleteAcademicYearCommand}" Background="#A64949" BorderBrush="#8F3939" HorizontalAlignment="Right"/>
+            </Grid>
         </Border>
 
         <Border Grid.Row="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">

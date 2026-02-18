@@ -8,26 +8,33 @@ namespace LanguageSchoolERP.App.ViewModels;
 public partial class ProgramsListViewModel : ObservableObject
 {
     private readonly IProgramService _programService;
+    private readonly List<StudyProgram> _allPrograms = new();
 
     public ObservableCollection<StudyProgram> Programs { get; } = new();
 
     [ObservableProperty] private StudyProgram? selectedProgram;
     [ObservableProperty] private string errorMessage = string.Empty;
+    [ObservableProperty] private string searchText = string.Empty;
 
     public ProgramsListViewModel(IProgramService programService)
     {
         _programService = programService;
     }
 
+    partial void OnSearchTextChanged(string value)
+    {
+        ApplyFilter();
+    }
+
     public async Task LoadAsync(CancellationToken ct)
     {
         ErrorMessage = string.Empty;
         var programs = await _programService.GetAllAsync(ct);
-        Programs.Clear();
-        foreach (var program in programs)
-        {
-            Programs.Add(program);
-        }
+
+        _allPrograms.Clear();
+        _allPrograms.AddRange(programs);
+
+        ApplyFilter();
     }
 
     public async Task AddAsync(StudyProgram program, CancellationToken ct)
@@ -51,5 +58,28 @@ public partial class ProgramsListViewModel : ObservableObject
 
         await _programService.DeleteAsync(SelectedProgram.Id, ct);
         await LoadAsync(ct);
+    }
+
+    private void ApplyFilter()
+    {
+        var selectedId = SelectedProgram?.Id;
+
+        IEnumerable<StudyProgram> filtered = _allPrograms;
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            var term = SearchText.Trim();
+            filtered = filtered.Where(p => p.Name.Contains(term, StringComparison.CurrentCultureIgnoreCase));
+        }
+
+        Programs.Clear();
+        foreach (var program in filtered)
+        {
+            Programs.Add(program);
+        }
+
+        SelectedProgram = selectedId.HasValue
+            ? Programs.FirstOrDefault(p => p.Id == selectedId.Value)
+            : null;
     }
 }
