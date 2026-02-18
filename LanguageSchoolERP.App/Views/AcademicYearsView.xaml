@@ -30,12 +30,28 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <DataGrid ItemsSource="{Binding AcademicYears}" SelectedItem="{Binding SelectedAcademicYear}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+        <Border Grid.Row="1"
+        BorderBrush="{StaticResource Brush.Border}"
+        BorderThickness="1"
+        CornerRadius="10"
+        Padding="12"
+        Background="White">
+
+            <DataGrid ItemsSource="{Binding AcademicYears}"
+              SelectedItem="{Binding SelectedAcademicYear}"
+              AutoGenerateColumns="False"
+              IsReadOnly="True"
+              CanUserAddRows="False">
+
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Όνομα" Binding="{Binding Name}" Width="*"/>
-                    <DataGridCheckBoxColumn Header="Τρέχον" Binding="{Binding IsCurrent}" Width="100"/>
+
+                    <DataGridCheckBoxColumn Header="Τρέχον"
+                                    Binding="{Binding IsCurrent}"
+                                    Width="100"
+                                    HeaderStyle="{StaticResource LeftHeaderStyle}"/>
                 </DataGrid.Columns>
+
             </DataGrid>
         </Border>
     </Grid>

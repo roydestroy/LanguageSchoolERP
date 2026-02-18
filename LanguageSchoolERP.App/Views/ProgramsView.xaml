@@ -43,21 +43,35 @@
                 </Grid.RowDefinitions>
 
                 <DataGrid ItemsSource="{Binding Programs}"
-                          SelectedItem="{Binding SelectedProgram, Mode=TwoWay}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          CanUserAddRows="False"
-                          Margin="0,0,0,8">
+                  SelectedItem="{Binding SelectedProgram, Mode=TwoWay}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  Margin="0,0,0,8">
+
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Όνομα" Binding="{Binding Name}" Width="*"/>
-                        <DataGridCheckBoxColumn Header="Μεταφορά" Binding="{Binding HasTransport}" Width="130"/>
-                        <DataGridCheckBoxColumn Header="Study Lab" Binding="{Binding HasStudyLab}" Width="130"/>
-                        <DataGridCheckBoxColumn Header="Βιβλία" Binding="{Binding HasBooks}" Width="120"/>
+
+                        <DataGridCheckBoxColumn Header="Μεταφορά"
+                                        Binding="{Binding HasTransport}"
+                                        Width="130"
+                                        HeaderStyle="{StaticResource LeftHeaderStyle}"/>
+
+                        <DataGridCheckBoxColumn Header="Study Lab"
+                                        Binding="{Binding HasStudyLab}"
+                                        Width="130"
+                                        HeaderStyle="{StaticResource LeftHeaderStyle}"/>
+
+                        <DataGridCheckBoxColumn Header="Βιβλία"
+                                        Binding="{Binding HasBooks}"
+                                        Width="120"
+                                        HeaderStyle="{StaticResource LeftHeaderStyle}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
                 <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="IndianRed"/>
             </Grid>
         </Border>
+
     </Grid>
 </UserControl>

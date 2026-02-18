@@ -93,6 +93,15 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        
+        <Style x:Key="LeftHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+        </Style>
 
         <Style TargetType="DataGrid">
             <Setter Property="RowHeight" Value="32"/>
@@ -111,12 +120,19 @@
             <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Padding" Value="2,6"/>
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+
+            <!-- the important bits -->
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
+
 
         <Style TargetType="DataGridCell">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Padding" Value="8,0"/>
             <Setter Property="BorderThickness" Value="0"/>
