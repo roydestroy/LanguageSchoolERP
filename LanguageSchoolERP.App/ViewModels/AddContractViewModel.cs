@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.IO;
 
@@ -22,7 +23,7 @@ public partial class AddContractViewModel : ObservableObject
 
     public event EventHandler<bool>? RequestClose;
 
-    public List<EnrollmentOption> EnrollmentOptions { get; } = new();
+    public ObservableCollection<EnrollmentOption> EnrollmentOptions { get; } = new();
 
     [ObservableProperty] private EnrollmentOption? selectedEnrollment;
 

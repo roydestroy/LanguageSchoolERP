@@ -4,6 +4,7 @@ using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -29,7 +30,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
     public event EventHandler<bool>? RequestClose;
 
-    public List<EnrollmentOption> EnrollmentOptions { get; } = new();
+    public ObservableCollection<EnrollmentOption> EnrollmentOptions { get; } = new();
 
     [ObservableProperty] private EnrollmentOption? selectedEnrollmentOption;
     [ObservableProperty] private string dialogTitle = "Προσθήκη πληρωμής";
