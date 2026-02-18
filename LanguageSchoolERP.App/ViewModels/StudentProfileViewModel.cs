@@ -1167,16 +1167,22 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private void SelectPreferredPhone(PreferredPhoneSource source)
     {
-        if (!IsEditing)
+        if (!CanWrite())
             return;
+
+        if (!IsEditing)
+            IsEditing = true;
 
         EditablePreferredPhoneSource = source;
     }
 
     private void SelectPreferredEmail(PreferredEmailSource source)
     {
-        if (!IsEditing)
+        if (!CanWrite())
             return;
+
+        if (!IsEditing)
+            IsEditing = true;
 
         EditablePreferredEmailSource = source;
     }
