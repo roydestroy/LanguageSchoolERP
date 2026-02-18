@@ -80,6 +80,7 @@ public partial class MainWindow : Window
         NavigateToStudents();
 
         StudentsBtn.Click += (_, __) => NavigateToStudents();
+        DailyPaymentsBtn.Click += (_, __) => NavigateToDailyPayments();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
         StatisticsBtn.Click += (_, __) => NavigateToStatistics();
@@ -171,6 +172,13 @@ public partial class MainWindow : Window
     private void NavigateToStudents()
     {
         var view = App.Services.GetRequiredService<StudentsView>();
+        MainContent.Content = view;
+    }
+
+
+    private void NavigateToDailyPayments()
+    {
+        var view = App.Services.GetRequiredService<DailyPaymentsView>();
         MainContent.Content = view;
     }
 
