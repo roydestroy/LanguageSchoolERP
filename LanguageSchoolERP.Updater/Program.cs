@@ -62,12 +62,89 @@ try
     return 0;
 
 }
+catch (UnauthorizedAccessException ex)
+{
+    Log("Update failed due to insufficient permissions.", ex);
+    WriteActionablePermissionError(installDir, ex);
+
+    if (TryRequestElevation(exeArg, zipPath, installDir, pid))
+    {
+        return 0;
+    }
+
+    return 1;
+}
 catch (Exception ex)
 {
     Log("Update failed.", ex);
     return 1;
 }
 
+
+static void WriteActionablePermissionError(string installDir, Exception ex)
+{
+    var lines = new[]
+    {
+        "LanguageSchoolERP updater cannot write to the installation folder.",
+        $"Install folder: {installDir}",
+        "Action: Run the app/updater as Administrator, or reinstall under a user-writable folder (e.g. %LocalAppData%).",
+        $"Technical details: {ex.Message}"
+    };
+
+    foreach (var line in lines)
+    {
+        Log(line);
+    }
+
+    Console.Error.WriteLine(string.Join(Environment.NewLine, lines));
+}
+
+static bool TryRequestElevation(string exeArg, string zipPath, string installDir, int pid)
+{
+    if (!OperatingSystem.IsWindows())
+        return false;
+
+    try
+    {
+        Console.Write("Insufficient permissions detected. Relaunch updater elevated now? (y/N): ");
+        var response = Console.ReadLine();
+        if (!string.Equals(response, "y", StringComparison.OrdinalIgnoreCase))
+        {
+            Log("User declined elevated updater relaunch.");
+            return false;
+        }
+
+        var updaterPath = Process.GetCurrentProcess().MainModule?.FileName;
+        if (string.IsNullOrWhiteSpace(updaterPath) || !File.Exists(updaterPath))
+        {
+            Log("Could not determine updater executable path for elevation.");
+            return false;
+        }
+
+        var arguments =
+            $"--pid {pid} " +
+             $"--zip \"{zipPath}\" " +
+            $"--installDir \"{installDir}\" " +
+            $"--exe \"{exeArg}\"";
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = updaterPath,
+            Arguments = arguments,
+            UseShellExecute = true,
+            Verb = "runas",
+            WorkingDirectory = Path.GetDirectoryName(updaterPath) ?? installDir
+        });
+
+        Log("Spawned elevated updater process after explicit confirmation.");
+        return true;
+    }
+    catch (Exception ex)
+    {
+        Log("Failed to relaunch updater with elevation.", ex);
+        return false;
+    }
+}
 static Dictionary<string, string> ParseArgs(string[] args)
 {
     var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
