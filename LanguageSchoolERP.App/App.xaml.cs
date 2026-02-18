@@ -86,7 +86,7 @@ public partial class App : Application
 
                 // Or if your runner is static:
                 var force = e.Args.Any(a => a.Equals("--force", StringComparison.OrdinalIgnoreCase));
-                var exitCode = await BackupTaskRunner.RunAsync();
+                var exitCode = await BackupTaskRunner.RunAsync(force);
                 Environment.Exit(exitCode);
             }
             catch (Exception ex)

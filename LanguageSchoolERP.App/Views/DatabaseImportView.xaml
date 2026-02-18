@@ -5,43 +5,15 @@
              SnapsToDevicePixels="True">
     <Grid Margin="2">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel>
-                    <TextBlock Text="Εισαγωγή Βάσης" FontSize="24" FontWeight="SemiBold"/>
-                    <TextBlock Text="Εισαγωγή από απομακρυσμένη βάση στην τοπική" Margin="0,6,0,0" Foreground="#555"/>
-                </StackPanel>
-
-                <Button Grid.Column="1"
-                        Content="Εισαγωγή"
-                        Width="170"
-                        Height="34"
-                        Margin="0,0,10,0"
-                        Command="{Binding ImportCommand}"/>
-
-                <Button Grid.Column="2"
-                        Content="Ακύρωση"
-                        Width="100"
-                        Height="34"
-                        Command="{Binding CancelCommand}"/>
-            </Grid>
-        </Border>
-
-        <Border Grid.Row="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+        <Border Grid.Row="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -50,10 +22,13 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="220"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <ComboBox Grid.Column="1"
+                <TextBlock Grid.ColumnSpan="3" Text="Εισαγωγή Βάσης" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,14"/>
+
+                <TextBlock Grid.Row="1" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <ComboBox Grid.Row="1" Grid.Column="1"
                           ItemsSource="{Binding RemoteDatabases}"
                           SelectedItem="{Binding SelectedRemoteDatabaseOption, Mode=TwoWay}"
                           DisplayMemberPath="Key"
@@ -61,20 +36,33 @@
                           Width="240"
                           HorizontalAlignment="Left"/>
 
-                <TextBlock Grid.Row="1" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0"/>
-                <CheckBox Grid.Row="1" Grid.Column="1"
+                <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0">
+                    <Button Content="Εισαγωγή"
+                            Width="170"
+                            Height="34"
+                            Margin="0,0,10,0"
+                            Command="{Binding ImportCommand}"/>
+
+                    <Button Content="Ακύρωση"
+                            Width="100"
+                            Height="34"
+                            Command="{Binding CancelCommand}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="2" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <CheckBox Grid.Row="2" Grid.Column="1"
                           Margin="0,14,0,0"
                           IsChecked="{Binding WipeLocalFirst, Mode=TwoWay}"
                           VerticalAlignment="Center"/>
 
-                <TextBlock Grid.Row="2" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
-                <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,14,0,0">
+                <TextBlock Grid.Row="3" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,14,0,0">
                     <ProgressBar Height="20" Minimum="0" Maximum="100" Value="{Binding ProgressValue}"/>
                     <TextBlock Margin="0,6,0,0" Text="{Binding ProgressPercent, StringFormat=Progress: {0}%}"/>
                 </StackPanel>
 
-                <TextBox Grid.Row="3"
-                         Grid.ColumnSpan="2"
+                <TextBox Grid.Row="4"
+                         Grid.ColumnSpan="3"
                          Margin="0,14,0,0"
                          Text="{Binding Log}"
                          IsReadOnly="True"
@@ -84,35 +72,85 @@
             </Grid>
         </Border>
 
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="2" Margin="0,14,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton Content="Φιλοθέη"
-                                 GroupName="StartupDb"
-                                 Margin="0,0,16,0"
-                                 VerticalAlignment="Center"
-                                 IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
-                    <RadioButton Content="Νέα Ιωνία"
-                                 GroupName="StartupDb"
-                                 VerticalAlignment="Center"
-                                 IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
-                    <Button Content="Αποθήκευση"
-                            Width="110"
-                            Height="30"
-                            Margin="20,0,0,0"
-                            Command="{Binding SaveStartupDatabaseCommand}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+                    <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton Content="Φιλοθέη"
+                                     GroupName="StartupDb"
+                                     Margin="0,0,16,0"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
+                        <RadioButton Content="Νέα Ιωνία"
+                                     GroupName="StartupDb"
+                                     VerticalAlignment="Center"
+                                     IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
+                        <Button Content="Αποθήκευση"
+                                Width="110"
+                                Height="30"
+                                Margin="20,0,0,0"
+                                Command="{Binding SaveStartupDatabaseCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-        <TextBlock Grid.Row="3" Margin="2,10,2,0" Foreground="#777"
+            <Border Grid.Column="2" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="10,8" Background="White" MinWidth="390">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.ColumnSpan="3" Text="Backups" FontWeight="SemiBold" Margin="0,0,0,6"/>
+
+                    <TextBlock Grid.Row="1" Text="Last:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+
+                    <Button Grid.Row="1" Grid.Column="2"
+                            HorizontalAlignment="Right"
+                            Width="96"
+                            Height="28"
+                            Content="Backup now"
+                            Command="{Binding BackupNowCommand}"/>
+
+                    <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Margin="0,6,0,0" Text="{Binding LastBackupErrorText}" Foreground="#C62828" FontSize="11" TextTrimming="CharacterEllipsis">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding LastBackupErrorText}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding LastBackupErrorText}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="2" Margin="2,10,2,0" Foreground="#777"
                    Text="Tip: όταν είναι ενεργοποιημένη η διαγραφή τοπικής βάσης, πρέπει να πληκτρολογήσετε IMPORT για να προχωρήσει η διαδικασία."/>
     </Grid>
 </UserControl>
