@@ -53,7 +53,18 @@
                             Command="{Binding CancelCommand}"/>
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <TextBlock Grid.Row="2" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,14,10,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
                 <ComboBox Grid.Row="2" Grid.Column="1"
                           ItemsSource="{Binding RemoteDatabases}"
                           SelectedItem="{Binding SelectedRemoteDatabaseOption, Mode=TwoWay}"
@@ -74,13 +85,25 @@
                     </ComboBox.Style>
                 </ComboBox>
 
-                <TextBlock Grid.Row="3" Text="Restore από .bak" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <TextBlock Grid.Row="3" Text="Εισαγωγή από .bak" VerticalAlignment="Center" Margin="0,14,10,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
                 <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,14,0,0">
                     <TextBox Width="320" Height="30" Text="{Binding BackupFilePath, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
-                    <Button Content="Browse" Width="90" Height="30" Margin="8,0,0,0" Command="{Binding BrowseBackupFileCommand}"/>
+                    <Button Content="Αναζήτηση" Width="90" Height="30" Margin="8,0,0,0" Command="{Binding BrowseBackupFileCommand}"/>
                     <ComboBox Width="170" Height="30" Margin="12,0,0,0"
                               ItemsSource="{Binding LocalRestoreDatabases}"
-                              SelectedItem="{Binding SelectedLocalRestoreDatabase, Mode=TwoWay}"/>
+                              SelectedItem="{Binding SelectedLocalRestoreDatabaseOption, Mode=TwoWay}"
+                              DisplayMemberPath="Key"/>
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -176,14 +199,14 @@
 
                     <TextBlock Grid.ColumnSpan="3" Text="Backups" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
-                    <TextBlock Grid.Row="1" Text="Last:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Grid.Row="1" Text="Τελευταίο:" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
 
                     <Button Grid.Row="1" Grid.Column="2"
                             HorizontalAlignment="Right"
                             Width="96"
                             Height="28"
-                            Content="Backup now"
+                            Content="Δημιουργία Backup"
                             Command="{Binding BackupNowCommand}"/>
 
                     <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Margin="0,6,0,0" Text="{Binding LastBackupErrorText}" Foreground="#C62828" FontSize="11" TextTrimming="CharacterEllipsis">

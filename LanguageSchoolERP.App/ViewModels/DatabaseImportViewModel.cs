@@ -25,11 +25,11 @@ public partial class DatabaseImportViewModel : ObservableObject
     private CancellationTokenSource? _cts;
 
     public ObservableCollection<RemoteDatabaseOption> RemoteDatabases { get; } = [];
-    public ObservableCollection<string> LocalRestoreDatabases { get; } = [];
+    public ObservableCollection<RemoteDatabaseOption> LocalRestoreDatabases { get; } = [];
 
     [ObservableProperty] private DatabaseImportSource selectedImportSource = DatabaseImportSource.RemoteDatabase;
     [ObservableProperty] private RemoteDatabaseOption? selectedRemoteDatabaseOption;
-    [ObservableProperty] private string? selectedLocalRestoreDatabase;
+    [ObservableProperty] private RemoteDatabaseOption? selectedLocalRestoreDatabaseOption;
     [ObservableProperty] private string backupFilePath = string.Empty;
     [ObservableProperty] private bool wipeLocalFirst = true;
     [ObservableProperty] private string log = string.Empty;
@@ -39,7 +39,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private string startupLocalDatabaseName = "FilotheiSchoolERP";
     [ObservableProperty] private bool startupFilotheiSelected;
     [ObservableProperty] private bool startupNeaIoniaSelected;
-    [ObservableProperty] private string lastBackupText = "Never";
+    [ObservableProperty] private string lastBackupText = "Ποτέ";
     [ObservableProperty] private string lastBackupErrorText = string.Empty;
     [ObservableProperty] private bool isBackupRunning;
 
@@ -90,11 +90,11 @@ public partial class DatabaseImportViewModel : ObservableObject
         foreach (var option in _settingsProvider.RemoteDatabases)
             RemoteDatabases.Add(option);
 
-        LocalRestoreDatabases.Add("FilotheiSchoolERP");
-        LocalRestoreDatabases.Add("NeaIoniaSchoolERP");
+        LocalRestoreDatabases.Add(new RemoteDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP" });
+        LocalRestoreDatabases.Add(new RemoteDatabaseOption { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" });
 
         SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
-        SelectedLocalRestoreDatabase = StartupLocalDatabaseName;
+        SelectedLocalRestoreDatabaseOption = LocalRestoreDatabases.FirstOrDefault(x => string.Equals(x.Database, StartupLocalDatabaseName, StringComparison.OrdinalIgnoreCase));
 
         RefreshBackupStatus();
     }
@@ -130,7 +130,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         ImportCommand?.NotifyCanExecuteChanged();
     }
 
-    partial void OnSelectedLocalRestoreDatabaseChanged(string? value)
+    partial void OnSelectedLocalRestoreDatabaseOptionChanged(RemoteDatabaseOption? value)
     {
         ImportCommand?.NotifyCanExecuteChanged();
     }
@@ -140,9 +140,9 @@ public partial class DatabaseImportViewModel : ObservableObject
         StartupFilotheiSelected = value == "FilotheiSchoolERP";
         StartupNeaIoniaSelected = value == "NeaIoniaSchoolERP";
 
-        if (string.IsNullOrWhiteSpace(SelectedLocalRestoreDatabase))
+        if (SelectedLocalRestoreDatabaseOption is null)
         {
-            SelectedLocalRestoreDatabase = value;
+            SelectedLocalRestoreDatabaseOption = LocalRestoreDatabases.FirstOrDefault(x => string.Equals(x.Database, value, StringComparison.OrdinalIgnoreCase));
         }
     }
 
@@ -176,7 +176,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         return SelectedImportSource switch
         {
             DatabaseImportSource.RemoteDatabase => SelectedRemoteDatabaseOption is not null,
-            DatabaseImportSource.BackupFile => !string.IsNullOrWhiteSpace(SelectedLocalRestoreDatabase) && !string.IsNullOrWhiteSpace(BackupFilePath),
+            DatabaseImportSource.BackupFile => SelectedLocalRestoreDatabaseOption is not null && !string.IsNullOrWhiteSpace(BackupFilePath),
             _ => false
         };
     }
@@ -218,13 +218,13 @@ public partial class DatabaseImportViewModel : ObservableObject
 
             if (SelectedImportSource == DatabaseImportSource.BackupFile)
             {
-                if (string.IsNullOrWhiteSpace(SelectedLocalRestoreDatabase))
+                if (SelectedLocalRestoreDatabaseOption is null)
                     throw new InvalidOperationException("Local restore database is required.");
 
                 if (string.IsNullOrWhiteSpace(BackupFilePath))
                     throw new InvalidOperationException("Backup file path is required.");
 
-                localDbName = SelectedLocalRestoreDatabase;
+                localDbName = SelectedLocalRestoreDatabaseOption.Database;
                 successTitle = "Import from Backup";
 
                 var localConnection = ConnectionStringHelpers.ReplaceDatabase(settings.Local.ConnectionString, localDbName);
@@ -375,17 +375,17 @@ public partial class DatabaseImportViewModel : ObservableObject
         {
             var local = successUtc.ToLocalTime();
             var result = string.IsNullOrWhiteSpace(status.LastResult) ? "Unknown" : status.LastResult;
-            LastBackupText = $"Last backup: {local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
+            LastBackupText = $"{local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
         }
         else if (status?.LastAttemptUtc is DateTime attemptUtc)
         {
             var local = attemptUtc.ToLocalTime();
             var result = string.IsNullOrWhiteSpace(status.LastResult) ? "Unknown" : status.LastResult;
-            LastBackupText = $"Last backup: {local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
+            LastBackupText = $"{local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
         }
         else
         {
-            LastBackupText = "Never";
+            LastBackupText = "Ποτέ";
         }
 
         LastBackupErrorText = status is not null && string.Equals(status.LastResult, "Failed", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(status.LastError)
