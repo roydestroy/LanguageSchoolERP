@@ -254,6 +254,19 @@ public partial class DatabaseImportViewModel : ObservableObject
                 AppendLog($"Remote source: {remoteDbName}");
                 AppendLog($"Local target: {localDbName}");
 
+                var connectivity = await RemoteConnectivityDiagnostics.CheckRemoteSqlAsync(remoteConnection, _cts.Token);
+                if (!connectivity.IsSuccess)
+                {
+                    var details = string.IsNullOrWhiteSpace(connectivity.Details) ? string.Empty : $"\n\n{connectivity.Details}";
+                    AppendLog($"Connectivity check failed: {connectivity.UserMessage}. {connectivity.Details}");
+                    MessageBox.Show(
+                        $"{connectivity.UserMessage}{details}",
+                        "Import",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
                 await _databaseImportService.ImportFromRemoteAsync(
                     remoteConnection,
                     localConnection,
