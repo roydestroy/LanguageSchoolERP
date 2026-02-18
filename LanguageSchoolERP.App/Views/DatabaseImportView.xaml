@@ -17,6 +17,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
@@ -27,14 +29,16 @@
 
                 <TextBlock Grid.ColumnSpan="3" Text="Εισαγωγή Βάσης" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,14"/>
 
-                <TextBlock Grid.Row="1" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <ComboBox Grid.Row="1" Grid.Column="1"
-                          ItemsSource="{Binding RemoteDatabases}"
-                          SelectedItem="{Binding SelectedRemoteDatabaseOption, Mode=TwoWay}"
-                          DisplayMemberPath="Key"
-                          Height="30"
-                          Width="240"
-                          HorizontalAlignment="Left"/>
+                <TextBlock Grid.Row="1" Text="Πηγή Import" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <RadioButton Content="Remote DB"
+                                 GroupName="ImportSource"
+                                 Margin="0,0,16,0"
+                                 IsChecked="{Binding IsRemoteImportSelected, Mode=TwoWay}"/>
+                    <RadioButton Content=".bak αρχείο"
+                                 GroupName="ImportSource"
+                                 IsChecked="{Binding IsBackupImportSelected, Mode=TwoWay}"/>
+                </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Margin="12,0,0,0">
                     <Button Content="Εισαγωγή"
@@ -49,19 +53,94 @@
                             Command="{Binding CancelCommand}"/>
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0"/>
-                <CheckBox Grid.Row="2" Grid.Column="1"
+                <TextBlock Grid.Row="2" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,14,10,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <ComboBox Grid.Row="2" Grid.Column="1"
+                          ItemsSource="{Binding RemoteDatabases}"
+                          SelectedItem="{Binding SelectedRemoteDatabaseOption, Mode=TwoWay}"
+                          DisplayMemberPath="Key"
+                          Height="30"
+                          VerticalContentAlignment="Center"
+                          Width="240"
+                          Margin="0,14,0,0"
+                          HorizontalAlignment="Left">
+                    <ComboBox.Style>
+                        <Style TargetType="ComboBox">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ComboBox.Style>
+                </ComboBox>
+
+                <TextBlock Grid.Row="3" Text="Εισαγωγή από .bak" VerticalAlignment="Center" Margin="0,14,10,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,14,0,0">
+                    <TextBox Width="320" Height="30" Text="{Binding BackupFilePath, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
+                    <Button Content="Αναζήτηση" Width="90" Height="30" Margin="8,0,0,0" Command="{Binding BrowseBackupFileCommand}"/>
+                    <ComboBox Width="170" Height="30" Margin="12,0,0,0"
+                              ItemsSource="{Binding LocalRestoreDatabases}"
+                              SelectedItem="{Binding SelectedLocalRestoreDatabaseOption, Mode=TwoWay}"
+                              DisplayMemberPath="Key"/>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                </StackPanel>
+
+                <TextBlock Grid.Row="4" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <CheckBox Grid.Row="4" Grid.Column="1"
                           Margin="0,14,0,0"
                           IsChecked="{Binding WipeLocalFirst, Mode=TwoWay}"
-                          VerticalAlignment="Center"/>
+                          VerticalAlignment="Center">
+                    <CheckBox.Style>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </CheckBox.Style>
+                </CheckBox>
 
-                <TextBlock Grid.Row="3" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
-                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,14,0,0">
+                <TextBlock Grid.Row="5" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
+                <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,14,0,0">
                     <ProgressBar Height="20" Minimum="0" Maximum="100" Value="{Binding ProgressValue}"/>
                     <TextBlock Margin="0,6,0,0" Text="{Binding ProgressPercent, StringFormat=Progress: {0}%}"/>
                 </StackPanel>
 
-                <TextBox Grid.Row="4"
+                <TextBox Grid.Row="6"
                          Grid.ColumnSpan="3"
                          Margin="0,14,0,0"
                          Text="{Binding Log}"
@@ -121,14 +200,14 @@
 
                     <TextBlock Grid.ColumnSpan="3" Text="Backups" FontWeight="SemiBold" Margin="0,0,0,6"/>
 
-                    <TextBlock Grid.Row="1" Text="Last:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Grid.Row="1" Text="Τελευταίο:" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding LastBackupText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
 
                     <Button Grid.Row="1" Grid.Column="2"
                             HorizontalAlignment="Right"
-                            Width="96"
-                            Height="28"
-                            Content="Backup now"
+                            Width="140"
+                            Height="32"
+                            Content="Δημιουργία Backup"
                             Command="{Binding BackupNowCommand}"/>
 
                     <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Margin="0,6,0,0" Text="{Binding LastBackupErrorText}" Foreground="#C62828" FontSize="11" TextTrimming="CharacterEllipsis">
@@ -151,6 +230,6 @@
         </Grid>
 
         <TextBlock Grid.Row="2" Margin="2,10,2,0" Foreground="#777"
-                   Text="Tip: όταν είναι ενεργοποιημένη η διαγραφή τοπικής βάσης, πρέπει να πληκτρολογήσετε IMPORT για να προχωρήσει η διαδικασία."/>
+                   Text="Tip: απαιτείται πάντα επιβεβαίωση IMPORT πριν από import/restore στη τοπική βάση."/>
     </Grid>
 </UserControl>

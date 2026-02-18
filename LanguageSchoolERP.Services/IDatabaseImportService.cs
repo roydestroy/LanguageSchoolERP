@@ -15,4 +15,10 @@ public interface IDatabaseImportService
         bool wipeLocalFirst,
         IProgress<ImportProgress>? progress,
         CancellationToken cancellationToken);
+
+    Task ImportFromBackupAsync(
+        string backupFilePath,
+        string localConnectionString,
+        IProgress<ImportProgress>? progress,
+        CancellationToken cancellationToken);
 }

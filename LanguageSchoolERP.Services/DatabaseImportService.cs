@@ -65,6 +65,67 @@ public sealed class DatabaseImportService : IDatabaseImportService
         }
     }
 
+
+
+    public async Task ImportFromBackupAsync(
+        string backupFilePath,
+        string localConnectionString,
+        IProgress<ImportProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(backupFilePath))
+            throw new ArgumentException("Backup file path is required.", nameof(backupFilePath));
+
+        if (!File.Exists(backupFilePath))
+            throw new FileNotFoundException("Backup file not found.", backupFilePath);
+
+        var builder = new SqlConnectionStringBuilder(localConnectionString);
+        var databaseName = builder.InitialCatalog;
+
+        if (string.IsNullOrWhiteSpace(databaseName))
+            throw new InvalidOperationException("Local connection string has no database name.");
+
+        progress?.Report(new ImportProgress("Validating backup source...", 1, 3));
+
+        var backupPathLiteral = backupFilePath.Replace("'", "''", StringComparison.Ordinal);
+        var databaseNameLiteral = databaseName.Replace("]", "]]", StringComparison.Ordinal);
+
+        var setSingleUserSql = $"""
+USE [master];
+IF DB_ID(N'{databaseNameLiteral}') IS NOT NULL
+BEGIN
+    ALTER DATABASE [{databaseNameLiteral}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+END
+""";
+
+        var restoreSql = $"""
+USE [master];
+RESTORE DATABASE [{databaseNameLiteral}]
+FROM DISK = N'{backupPathLiteral}'
+WITH REPLACE, RECOVERY;
+""";
+
+        var setMultiUserSql = $"""
+USE [master];
+IF DB_ID(N'{databaseNameLiteral}') IS NOT NULL
+BEGIN
+    ALTER DATABASE [{databaseNameLiteral}] SET MULTI_USER;
+END
+""";
+
+        await ExecuteOnMasterAsync(localConnectionString, setSingleUserSql, progress, 2, 3, "Preparing target database for restore...", cancellationToken);
+
+        try
+        {
+            await ExecuteOnMasterAsync(localConnectionString, restoreSql, progress, 3, 3, "Restoring database from backup...", cancellationToken);
+        }
+        finally
+        {
+            await ExecuteOnMasterAsync(localConnectionString, setMultiUserSql, progress, 3, 3, "Finalizing database restore...", CancellationToken.None);
+        }
+
+        progress?.Report(new ImportProgress("Backup restore completed successfully.", 3, 3));
+    }
     private static SchoolDbContext CreateDbContext(string connectionString)
     {
         var options = new DbContextOptionsBuilder<SchoolDbContext>()
@@ -74,6 +135,31 @@ public sealed class DatabaseImportService : IDatabaseImportService
         return new SchoolDbContext(options);
     }
 
+
+
+    private static async Task ExecuteOnMasterAsync(
+        string connectionString,
+        string sql,
+        IProgress<ImportProgress>? progress,
+        int step,
+        int totalSteps,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        progress?.Report(new ImportProgress(message, step, totalSteps));
+
+        var builder = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = "master"
+        };
+
+        await using var conn = new SqlConnection(builder.ConnectionString);
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+    }
     private static async Task EnsureDatabaseExistsAsync(string localConnectionString, CancellationToken ct)
     {
         var builder = new SqlConnectionStringBuilder(localConnectionString);
