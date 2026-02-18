@@ -105,6 +105,7 @@
             <Setter Property="SelectionMode" Value="Single"/>
             <Setter Property="CanUserResizeRows" Value="False"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
@@ -113,11 +114,14 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
         </Style>
 
         <Style TargetType="DataGridCell">
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="Padding" Value="8,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
