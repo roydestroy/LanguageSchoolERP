@@ -132,7 +132,7 @@ public partial class MainWindow : Window
         if (period is null)
         {
             YearProgressBar.Value = 0;
-            YearLostRevenueText.Text = "Απώλειες διακοπών: 0,00 €";
+            YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0,00 € / 0,00 €";
             return;
         }
 
@@ -144,14 +144,13 @@ public partial class MainWindow : Window
 
         decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
         decimal paidSum = enrollments.Sum(e => e.DownPayment + e.Payments.Sum(p => p.Amount));
-        decimal lostRevenue = enrollments.Sum(InstallmentPlanHelper.GetLostAmount);
 
         var progress = agreementSum <= 0 ? 0d : (double)(paidSum / agreementSum * 100m);
         if (progress > 100) progress = 100;
         if (progress < 0) progress = 0;
 
         YearProgressBar.Value = progress;
-        YearLostRevenueText.Text = $"Απώλειες διακοπών: {lostRevenue:0.00} €";
+        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum:0.00} € / {agreementSum:0.00} €";
     }
 
 
