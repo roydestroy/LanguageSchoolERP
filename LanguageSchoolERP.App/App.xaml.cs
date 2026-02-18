@@ -11,6 +11,7 @@ using LanguageSchoolERP.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
+using Microsoft.Data.Sql;
 
 namespace LanguageSchoolERP.App;
 
