@@ -399,6 +399,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
             db.Enrollments.Remove(enrollment);
             await db.SaveChangesAsync();
+            _state.NotifyDataChanged();
             await LoadAsync();
         }
         catch (Exception ex)

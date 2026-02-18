@@ -19,6 +19,8 @@
 				<TextBlock Text="Εγγραφή (υποχρεωτικό)"/>
 				<ComboBox Margin="0,4,0,12"
                           ItemsSource="{Binding EnrollmentOptions}"
+                          DisplayMemberPath="Label"
+                          Foreground="{StaticResource Brush.TextPrimary}"
                           SelectedItem="{Binding SelectedEnrollmentOption}"/>
 
 				<TextBlock Text="Ποσό (€)"/>
