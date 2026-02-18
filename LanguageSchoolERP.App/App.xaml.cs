@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -7,13 +8,16 @@ using System.Windows;
 using LanguageSchoolERP.App.ViewModels;
 using LanguageSchoolERP.App.Views;
 using LanguageSchoolERP.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
+using Microsoft.Data.Sql;
 
 namespace LanguageSchoolERP.App;
 
 public partial class App : Application
 {
+    private const string DefaultLocalSqlServer = @".\SQLEXPRESS";
     public static ServiceProvider Services { get; private set; } = null!;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -55,6 +59,7 @@ public partial class App : Application
         services.AddTransient<Windows.AddContractWindow>();
 
         services.AddTransient<Windows.StartupDatabaseOptionsWindow>();
+        services.AddTransient<Windows.LocalSqlServerPickerWindow>();
 
         services.AddTransient<DatabaseImportViewModel>();
         services.AddTransient<DatabaseImportView>();
@@ -105,6 +110,14 @@ public partial class App : Application
             return;
         }
 
+        var settingsProvider = Services.GetRequiredService<DatabaseAppSettingsProvider>();
+        var isValid = await EnsureLocalServerSelectionAsync(settingsProvider);
+        if (!isValid)
+        {
+            Shutdown();
+            return;
+        }
+
         // 3) Normal startup (UI)
         base.OnStartup(e);
 
@@ -124,6 +137,105 @@ public partial class App : Application
             // Do NOT crash the app if bootstrap fails.
             // Optionally log.
         }
+    }
+
+    private static async Task<bool> EnsureLocalServerSelectionAsync(DatabaseAppSettingsProvider settingsProvider)
+    {
+        var settings = settingsProvider.Settings;
+        var localDatabase = string.IsNullOrWhiteSpace(settings.Startup.LocalDatabase)
+            ? settings.Local.Database
+            : settings.Startup.LocalDatabase;
+
+        if (await CanConnectAsync(settings.Local.Server, localDatabase))
+            return true;
+
+        var sqlExpressUnavailable = string.Equals(settings.Local.Server, DefaultLocalSqlServer, StringComparison.OrdinalIgnoreCase);
+        var availableServers = DiscoverLocalSqlServers();
+
+        if (!sqlExpressUnavailable)
+        {
+            MessageBox.Show(
+                $"Δεν ήταν δυνατή η σύνδεση με τον SQL Server '{settings.Local.Server}'.\nΕλέγξτε τη ρύθμιση και δοκιμάστε ξανά.",
+                "Σύνδεση Βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return false;
+        }
+
+        if (availableServers.Count == 0)
+        {
+            MessageBox.Show(
+                "Δεν βρέθηκε διαθέσιμο local SQL instance.\nΕγκαταστήστε SQL Server/SQLEXPRESS και επανεκκινήστε την εφαρμογή.",
+                "Σύνδεση Βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
+
+        var picker = Services.GetRequiredService<Windows.LocalSqlServerPickerWindow>();
+        picker.Initialize(availableServers, settings.Local.Server);
+        var result = picker.ShowDialog();
+        if (result != true || string.IsNullOrWhiteSpace(picker.SelectedServer))
+            return false;
+
+        settingsProvider.UpdateLocalServer(picker.SelectedServer);
+
+        if (await CanConnectAsync(picker.SelectedServer, localDatabase))
+            return true;
+
+        MessageBox.Show(
+            $"Αποτυχία σύνδεσης με τον SQL Server '{picker.SelectedServer}'.\nΕλέγξτε ότι η βάση '{localDatabase}' υπάρχει και ο server είναι προσβάσιμος.",
+            "Σύνδεση Βάσης",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+
+        return false;
+    }
+
+    private static async Task<bool> CanConnectAsync(string server, string database)
+    {
+        try
+        {
+            var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, database);
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static List<string> DiscoverLocalSqlServers()
+    {
+        var servers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var sources = SqlDataSourceEnumerator.Instance.GetDataSources();
+            foreach (DataRow row in sources.Rows)
+            {
+                var serverName = row["ServerName"]?.ToString();
+                var instanceName = row["InstanceName"]?.ToString();
+
+                if (string.IsNullOrWhiteSpace(serverName))
+                    continue;
+
+                var fullName = string.IsNullOrWhiteSpace(instanceName)
+                    ? serverName.Trim()
+                    : $"{serverName.Trim()}\\{instanceName.Trim()}";
+
+                servers.Add(fullName);
+            }
+        }
+        catch
+        {
+            // Ignore discovery errors and return whatever we have.
+        }
+
+        servers.Add(DefaultLocalSqlServer);
+        return servers.OrderBy(x => x).ToList();
     }
 
     /// <summary>

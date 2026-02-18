@@ -22,6 +22,16 @@ public sealed class DatabaseAppSettingsProvider
 
     public IReadOnlyList<RemoteDatabaseOption> RemoteDatabases => Settings.Remote.Databases;
 
+    public void UpdateLocalServer(string server)
+    {
+        if (string.IsNullOrWhiteSpace(server))
+            throw new ArgumentException("Server is required.", nameof(server));
+
+        Settings.Local.Server = server.Trim();
+        Settings.Local.ConnectionString = BuildTrustedConnectionString(Settings.Local.Server, Settings.Local.Database);
+        Save();
+    }
+
     public void Save()
     {
         Normalize(Settings);
@@ -159,7 +169,7 @@ public sealed class DatabaseAppSettingsProvider
             settings.Update.InstallFolder = @"C:\Apps\LanguageSchoolERP";
     }
 
-    private static string BuildTrustedConnectionString(string server, string database)
+    public static string BuildTrustedConnectionString(string server, string database)
     {
         var builder = new SqlConnectionStringBuilder
         {
