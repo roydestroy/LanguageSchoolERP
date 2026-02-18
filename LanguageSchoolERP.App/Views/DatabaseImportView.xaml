@@ -30,13 +30,13 @@
 
                 <TextBlock Grid.ColumnSpan="3" Text="Εισαγωγή Βάσης" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,14"/>
 
-                <TextBlock Grid.Row="1" Text="Πηγή Import" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Grid.Row="1" Text="Πηγή" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton Content="Remote DB"
+                    <RadioButton Content="Απομακρυσμένη DB"
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"
                                  IsChecked="{Binding IsRemoteImportSelected, Mode=TwoWay}"/>
-                    <RadioButton Content=".bak αρχείο"
+                    <RadioButton Content="Αρχείο .bak"
                                  GroupName="ImportSource"
                                  IsChecked="{Binding IsBackupImportSelected, Mode=TwoWay}"/>
                 </StackPanel>
