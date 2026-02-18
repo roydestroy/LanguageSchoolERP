@@ -138,6 +138,17 @@
             </Style.Triggers>
         </Style>
 
+
+        <Style x:Key="DataGridTextColumnElementStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Left"/>
+        </Style>
+
+        <Style TargetType="DataGridTextColumn">
+            <Setter Property="ElementStyle" Value="{StaticResource DataGridTextColumnElementStyle}"/>
+        </Style>
+
         <Style TargetType="DataGridRow">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
