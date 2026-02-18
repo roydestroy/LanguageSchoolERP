@@ -524,7 +524,7 @@
 							<DataGrid.Columns>
 								<DataGridTextColumn Header="Ημ/νία δημιουργίας" Binding="{Binding CreatedAtText}" Width="180"/>
 								<DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramText}" Width="*"/>
-								<DataGridTextColumn Header="Εκκρεμεί" Binding="{Binding IsPendingPrint}" Width="90"/>
+								<DataGridTextColumn Header="Εκκρεμεί" Binding="{Binding IsPendingPrintText}" Width="90"/>
 							</DataGrid.Columns>
 						</DataGrid>
 					</Border>

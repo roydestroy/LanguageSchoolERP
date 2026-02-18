@@ -6,6 +6,7 @@ public class ContractRowVm
     public string CreatedAtText { get; set; } = "";
     public string ProgramText { get; set; } = "";
     public bool IsPendingPrint { get; set; }
+    public string IsPendingPrintText => IsPendingPrint ? "Ναι" : "Όχι";
     public string? DocxPath { get; set; }
     public string? PdfPath { get; set; }
 }
