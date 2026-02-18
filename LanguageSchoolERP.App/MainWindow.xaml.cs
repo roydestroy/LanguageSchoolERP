@@ -199,4 +199,8 @@ public partial class MainWindow : Window
         // open settings window here
     }
 
+    private void ProgramsBtn_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
 }
