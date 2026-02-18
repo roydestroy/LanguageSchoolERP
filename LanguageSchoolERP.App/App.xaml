@@ -196,14 +196,15 @@
             </Setter>
         </Style>
 
-        <Style x:Key="DatePickerCalendarToggleStyle" TargetType="ToggleButton">
+        <Style x:Key="DatePickerCalendarButtonStyle" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
+                    <ControlTemplate TargetType="Button">
                         <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -221,37 +222,54 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DatePicker">
-                        <Border x:Name="DatePickerBorder"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8"
-                                Padding="0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="34"/>
-                                </Grid.ColumnDefinitions>
-                                <DatePickerTextBox x:Name="PART_TextBox"
-                                                   Margin="0"
-                                                   Padding="{TemplateBinding Padding}"
-                                                   VerticalContentAlignment="Center"
-                                                   Background="Transparent"
-                                                   BorderThickness="0"/>
-                                <ToggleButton x:Name="PART_Button"
-                                              Grid.Column="1"
-                                              Style="{StaticResource DatePickerCalendarToggleStyle}"
-                                              IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                                              Padding="0">
-                                    <TextBlock FontFamily="Segoe MDL2 Assets"
-                                               Text="&#xE787;"
-                                               Foreground="{StaticResource Brush.TextSecondary}"
-                                               FontSize="14"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"/>
-                                </ToggleButton>
-                            </Grid>
-                        </Border>
+                        <Grid>
+                            <Border x:Name="DatePickerBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8"
+                                    Padding="0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="34"/>
+                                    </Grid.ColumnDefinitions>
+                                    <DatePickerTextBox x:Name="PART_TextBox"
+                                                       Margin="0"
+                                                       Padding="{TemplateBinding Padding}"
+                                                       VerticalContentAlignment="Center"
+                                                       Background="Transparent"
+                                                       BorderThickness="0"/>
+                                    <Button x:Name="PART_Button"
+                                            Grid.Column="1"
+                                            Style="{StaticResource DatePickerCalendarButtonStyle}">
+                                        <TextBlock FontFamily="Segoe MDL2 Assets"
+                                                   Text="&#xE787;"
+                                                   Foreground="{StaticResource Brush.TextSecondary}"
+                                                   FontSize="14"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   PopupAnimation="Fade">
+                                <Border Margin="0,4,0,0"
+                                        Background="{StaticResource Brush.Surface}"
+                                        BorderBrush="{StaticResource Brush.Border}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="8">
+                                    <Calendar x:Name="PART_Calendar"
+                                              Background="{StaticResource Brush.Surface}"
+                                              BorderThickness="0"/>
+                                </Border>
+                            </Popup>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="DatePickerBorder" Property="BorderBrush" Value="#AFC3D8"/>

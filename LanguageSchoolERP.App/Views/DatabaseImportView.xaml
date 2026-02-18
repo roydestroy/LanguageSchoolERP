@@ -75,7 +75,7 @@
                           Margin="0,14,0,0"
                           HorizontalAlignment="Left">
                     <ComboBox.Style>
-                        <Style TargetType="ComboBox">
+                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                             <Setter Property="Visibility" Value="Visible"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
