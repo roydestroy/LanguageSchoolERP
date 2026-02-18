@@ -32,6 +32,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private Guid _studentId;
     private bool _isLoading;
+    private bool _isRevertingAcademicYear;
+    private string _lastAcademicYear = "";
 
     private string _originalStudentName = "";
     private string _originalStudentSurname = "";
@@ -225,6 +227,25 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         EditPaymentCommand.NotifyCanExecuteChanged();
         DeletePaymentCommand.NotifyCanExecuteChanged();
+    }
+
+
+    public bool ConfirmDiscardUnsavedProfileChanges()
+    {
+        if (!IsEditing)
+            return true;
+
+        var result = System.Windows.MessageBox.Show(
+            "Υπάρχουν μη αποθηκευμένες αλλαγές στο προφίλ. Θέλετε να τις απορρίψετε;",
+            "Μη αποθηκευμένες αλλαγές",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes)
+            return false;
+
+        CancelEdit();
+        return true;
     }
 
     private void StartEdit()
@@ -442,6 +463,7 @@ public partial class StudentProfileViewModel : ObservableObject
         _studentId = studentId;
 
         // Local selector defaults to global selection on open
+        _lastAcademicYear = _state.SelectedAcademicYear;
         LocalAcademicYear = _state.SelectedAcademicYear;
 
         _ = LoadAvailableYearsAsync();
@@ -802,6 +824,18 @@ public partial class StudentProfileViewModel : ObservableObject
 
     partial void OnLocalAcademicYearChanged(string value)
     {
+        if (_isRevertingAcademicYear)
+            return;
+
+        if (IsEditing && !ConfirmDiscardUnsavedProfileChanges())
+        {
+            _isRevertingAcademicYear = true;
+            LocalAcademicYear = _lastAcademicYear;
+            _isRevertingAcademicYear = false;
+            return;
+        }
+
+        _lastAcademicYear = value;
         _ = LoadAsync();
     }
 

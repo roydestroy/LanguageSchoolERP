@@ -59,7 +59,14 @@
 			</Style.Triggers>
 		</Style>
 
-
+		<Style x:Key="EditModePrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryActionButtonStyle}">
+			<Setter Property="Visibility" Value="Collapsed"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding IsEditing}" Value="True">
+					<Setter Property="Visibility" Value="Visible"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
 
 		<Style x:Key="PreferredContactButtonStyle" TargetType="Button">
 			<Setter Property="Padding" Value="0"/>
@@ -220,7 +227,7 @@
 		</Border>
 
 		<!-- Tabs -->
-		<TabControl Grid.Row="2">
+		<TabControl Grid.Row="2" x:Name="MainTabControl" SelectionChanged="MainTabControl_SelectionChanged">
 			<TabItem Header="Προφίλ">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
 					<Grid Margin="12">
@@ -239,7 +246,7 @@
 								<Button Content="Αποθήκευση"
                                         Width="105"
                                         Margin="0,0,8,0"
-                                        Style="{StaticResource EditModeButtonStyle}"
+                                        Style="{StaticResource EditModePrimaryButtonStyle}"
                                         Command="{Binding SaveProfileCommand}"/>
 								<Button Content="Ακύρωση"
                                         Width="90"
