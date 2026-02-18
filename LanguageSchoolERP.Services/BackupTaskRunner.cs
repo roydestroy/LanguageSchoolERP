@@ -10,6 +10,8 @@ public static class BackupTaskRunner
 {
     public static Task<int> RunAsync(bool force = false)
     {
+        BackupStatusStore.TryWriteAttempt(DateTime.UtcNow);
+
         try
         {
             var provider = new DatabaseAppSettingsProvider();
@@ -38,10 +40,12 @@ public static class BackupTaskRunner
 
             CleanupOldBackups(s.Backup.LocalBackupDir, $"{db}_*.bak", days: 7);
 
+            BackupStatusStore.TryWriteSuccess(DateTime.UtcNow);
             return Task.FromResult(0);
         }
-        catch
+        catch (Exception ex)
         {
+            BackupStatusStore.TryWriteFailure(ex.Message);
             return Task.FromResult(1);
         }
     }

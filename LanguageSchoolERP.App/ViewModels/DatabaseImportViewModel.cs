@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,10 +28,14 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private string startupLocalDatabaseName = "FilotheiSchoolERP";
     [ObservableProperty] private bool startupFilotheiSelected;
     [ObservableProperty] private bool startupNeaIoniaSelected;
+    [ObservableProperty] private string lastBackupText = "Never";
+    [ObservableProperty] private string lastBackupErrorText = string.Empty;
+    [ObservableProperty] private bool isBackupRunning;
 
     public IAsyncRelayCommand ImportCommand { get; }
     public IAsyncRelayCommand CancelCommand { get; }
     public IRelayCommand SaveStartupDatabaseCommand { get; }
+    public IAsyncRelayCommand BackupNowCommand { get; }
 
     public DatabaseImportViewModel(
         DatabaseAppSettingsProvider settingsProvider,
@@ -44,6 +49,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
         CancelCommand = new AsyncRelayCommand(CancelAsync, () => IsBusy);
         SaveStartupDatabaseCommand = new RelayCommand(SaveStartupDatabase);
+        BackupNowCommand = new AsyncRelayCommand(BackupNowAsync, () => !IsBackupRunning);
 
         StartupLocalDatabaseName = string.IsNullOrWhiteSpace(_appState.StartupLocalDatabaseName)
             ? "FilotheiSchoolERP"
@@ -53,12 +59,19 @@ public partial class DatabaseImportViewModel : ObservableObject
             RemoteDatabases.Add(option);
 
         SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
+
+        RefreshBackupStatus();
     }
 
     partial void OnIsBusyChanged(bool value)
     {
         ImportCommand.NotifyCanExecuteChanged();
         CancelCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsBackupRunningChanged(bool value)
+    {
+        BackupNowCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedRemoteDatabaseOptionChanged(RemoteDatabaseOption? value)
@@ -185,6 +198,84 @@ public partial class DatabaseImportViewModel : ObservableObject
             _cts = null;
             IsBusy = false;
         }
+    }
+
+    private async Task BackupNowAsync()
+    {
+        IsBackupRunning = true;
+
+        try
+        {
+            var exitCode = await BackupTaskRunner.RunAsync(force: true);
+            RefreshBackupStatus();
+
+            if (exitCode == 0)
+            {
+                MessageBox.Show(
+                    "Το backup ολοκληρώθηκε επιτυχώς.",
+                    "Backups",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var status = BackupStatusStore.TryRead();
+            var error = string.IsNullOrWhiteSpace(status?.LastError)
+                ? "Το backup απέτυχε. Ελέγξτε δικαιώματα πρόσβασης και ρυθμίσεις backup."
+                : $"Το backup απέτυχε. {status.LastError}";
+
+            MessageBox.Show(
+                error,
+                "Backups",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            MessageBox.Show(
+                "Δεν υπάρχουν επαρκή δικαιώματα για εκτέλεση backup από τον τρέχοντα χρήστη. Δοκιμάστε εκτέλεση ως διαχειριστής.",
+                "Backups",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Δεν ήταν δυνατή η εκτέλεση backup. {ex.Message}",
+                "Backups",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsBackupRunning = false;
+            RefreshBackupStatus();
+        }
+    }
+
+    private void RefreshBackupStatus()
+    {
+        var status = BackupStatusStore.TryRead();
+        if (status?.LastSuccessUtc is DateTime successUtc)
+        {
+            var local = successUtc.ToLocalTime();
+            var result = string.IsNullOrWhiteSpace(status.LastResult) ? "Unknown" : status.LastResult;
+            LastBackupText = $"Last backup: {local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
+        }
+        else if (status?.LastAttemptUtc is DateTime attemptUtc)
+        {
+            var local = attemptUtc.ToLocalTime();
+            var result = string.IsNullOrWhiteSpace(status.LastResult) ? "Unknown" : status.LastResult;
+            LastBackupText = $"Last backup: {local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
+        }
+        else
+        {
+            LastBackupText = "Never";
+        }
+
+        LastBackupErrorText = status is not null && string.Equals(status.LastResult, "Failed", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(status.LastError)
+            ? status.LastError
+            : string.Empty;
     }
 
     private bool ConfirmImport()
