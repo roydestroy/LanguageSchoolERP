@@ -8,14 +8,20 @@ namespace LanguageSchoolERP.Services;
 
 public static class BackupTaskRunner
 {
-    public static Task<int> RunAsync(bool force = false)
+    public static Task<int> RunAsync(bool force = false, string? localDatabaseName = null)
     {
-        BackupStatusStore.TryWriteAttempt(DateTime.UtcNow);
+        string? db = null;
 
         try
         {
             var provider = new DatabaseAppSettingsProvider();
             var s = provider.Settings;
+
+            db = string.IsNullOrWhiteSpace(localDatabaseName)
+                ? s.Local.Database
+                : localDatabaseName.Trim();
+
+            BackupStatusStore.TryWriteAttempt(DateTime.UtcNow, db);
 
             if (!s.Backup.Enabled)
                 return Task.FromResult(0);
@@ -36,12 +42,11 @@ public static class BackupTaskRunner
                     ? shareConnectivity.UserMessage ?? "remote share unavailable"
                     : $"{shareConnectivity.UserMessage}: {shareConnectivity.Details}";
 
-                BackupStatusStore.TryWriteFailure(diagnostics);
+                BackupStatusStore.TryWriteFailure(diagnostics, db);
                 return Task.FromResult(1);
             }
 
             var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var db = s.Local.Database;
 
             var localBak = Path.Combine(s.Backup.LocalBackupDir, $"{db}_{ts}.bak");
             BackupLocalDatabaseWithSmo(s.Local.Server, db, localBak);
@@ -55,12 +60,12 @@ public static class BackupTaskRunner
 
             CleanupOldBackups(s.Backup.LocalBackupDir, $"{db}_*.bak", days: 7);
 
-            BackupStatusStore.TryWriteSuccess(DateTime.UtcNow);
+            BackupStatusStore.TryWriteSuccess(DateTime.UtcNow, db);
             return Task.FromResult(0);
         }
         catch (Exception ex)
         {
-            BackupStatusStore.TryWriteFailure(ex.Message);
+            BackupStatusStore.TryWriteFailure(ex.Message, db);
             return Task.FromResult(1);
         }
     }

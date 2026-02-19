@@ -10,6 +10,7 @@ public sealed class BackupStatusSnapshot
     public DateTime? LastSuccessUtc { get; set; }
     public string? LastResult { get; set; }
     public string? LastError { get; set; }
+    public string? LastDatabaseName { get; set; }
 }
 
 public static class BackupStatusStore
@@ -38,30 +39,33 @@ public static class BackupStatusStore
         }
     }
 
-    public static void TryWriteAttempt(DateTime attemptUtc)
+    public static void TryWriteAttempt(DateTime attemptUtc, string? databaseName = null)
     {
         TryUpdate(snapshot =>
         {
             snapshot.LastAttemptUtc = attemptUtc;
+            snapshot.LastDatabaseName = NormalizeDatabaseName(databaseName);
         });
     }
 
-    public static void TryWriteSuccess(DateTime successUtc)
+    public static void TryWriteSuccess(DateTime successUtc, string? databaseName = null)
     {
         TryUpdate(snapshot =>
         {
             snapshot.LastSuccessUtc = successUtc;
             snapshot.LastResult = "Success";
             snapshot.LastError = null;
+            snapshot.LastDatabaseName = NormalizeDatabaseName(databaseName);
         });
     }
 
-    public static void TryWriteFailure(string? error)
+    public static void TryWriteFailure(string? error, string? databaseName = null)
     {
         TryUpdate(snapshot =>
         {
             snapshot.LastResult = "Failed";
             snapshot.LastError = Truncate(error, 500);
+            snapshot.LastDatabaseName = NormalizeDatabaseName(databaseName);
         });
     }
 
@@ -91,5 +95,12 @@ public static class BackupStatusStore
         return value.Length <= maxLength
             ? value
             : value[..maxLength];
+    }
+
+    private static string? NormalizeDatabaseName(string? databaseName)
+    {
+        return string.IsNullOrWhiteSpace(databaseName)
+            ? null
+            : databaseName.Trim();
     }
 }
