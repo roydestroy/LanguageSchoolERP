@@ -137,11 +137,39 @@
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentSortOptions}"
                           SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
-                <TextBox Grid.Column="4"
-                         Height="32"
-                         VerticalAlignment="Center"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         ToolTip="Αναζήτηση με όνομα, τηλέφωνο, ηλ. ταχυδρομείο"/>
+                <Grid Grid.Column="4" Height="32" VerticalAlignment="Center">
+                    <TextBox x:Name="StudentSearchTextBox"
+                             Height="32"
+                             VerticalAlignment="Center"
+                             Padding="10,6,30,6"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Αναζήτηση με όνομα, τηλέφωνο, ηλ. ταχυδρομείο"/>
+                    <Button Width="20"
+                            Height="20"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"
+                            Click="ClearStudentSearch_Click"
+                            Content="✕"
+                            FontSize="11"
+                            FontWeight="SemiBold"
+                            ToolTip="Καθαρισμός αναζήτησης"
+                            Cursor="Hand"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Foreground="{StaticResource Brush.TextSecondary}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=StudentSearchTextBox}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
                 <Button Grid.Column="6" Content="&#xE710;" ToolTip="Νέος μαθητής"
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
