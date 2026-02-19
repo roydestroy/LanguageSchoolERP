@@ -105,21 +105,44 @@ public sealed class DailyPaymentsReportService
             var rect = new XRect(offset, y, columns[i].Width, 16);
             gfx.DrawRectangle(XPens.LightGray, rect);
             var textRect = new XRect(offset + 2, y + 1, columns[i].Width - 4, 14);
-            gfx.DrawString(Truncate(values[i], columns[i].Width), font, XBrushes.Black, textRect, XStringFormats.TopLeft);
+
+            var state = gfx.Save();
+            gfx.IntersectClip(textRect);
+            gfx.DrawString(TruncateToFit(gfx, font, values[i], textRect.Width), font, XBrushes.Black, textRect, XStringFormats.TopLeft);
+            gfx.Restore(state);
+
             offset += columns[i].Width;
         }
     }
 
-    private static string Truncate(string text, double width)
+    private static string TruncateToFit(XGraphics gfx, XFont font, string text, double maxWidth)
     {
         if (string.IsNullOrWhiteSpace(text))
             return string.Empty;
 
-        var maxChars = Math.Max(4, (int)(width / 5));
-        if (text.Length <= maxChars)
+        if (gfx.MeasureString(text, font).Width <= maxWidth)
             return text;
 
-        return text[..(maxChars - 1)] + "…";
+        const string ellipsis = "…";
+        var ellipsisWidth = gfx.MeasureString(ellipsis, font).Width;
+        if (ellipsisWidth >= maxWidth)
+            return string.Empty;
+
+        var low = 0;
+        var high = text.Length;
+
+        while (low < high)
+        {
+            var mid = (low + high + 1) / 2;
+            var candidate = text[..mid] + ellipsis;
+            var candidateWidth = gfx.MeasureString(candidate, font).Width;
+            if (candidateWidth <= maxWidth)
+                low = mid;
+            else
+                high = mid - 1;
+        }
+
+        return low <= 0 ? ellipsis : text[..low] + ellipsis;
     }
 
     private sealed record ColumnDefinition(string Title, double Width);
