@@ -21,4 +21,11 @@ public interface IDatabaseImportService
         string localConnectionString,
         IProgress<ImportProgress>? progress,
         CancellationToken cancellationToken);
+
+    Task ImportFromExcelAsync(
+        IReadOnlyCollection<string> excelFilePaths,
+        string localConnectionString,
+        bool dryRun,
+        IProgress<ImportProgress>? progress,
+        CancellationToken cancellationToken);
 }

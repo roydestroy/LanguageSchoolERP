@@ -71,6 +71,8 @@ public partial class App : Application
         services.AddSingleton<ContractBookmarkBuilder>();
         services.AddSingleton<DailyPaymentsReportService>();
         services.AddTransient<IProgramService, ProgramService>();
+        services.AddSingleton<IExcelImportRouter, FilenamePatternExcelImportRouter>();
+        services.AddSingleton<IExcelWorkbookParser, ExcelInteropWorkbookParser>();
         services.AddTransient<IDatabaseImportService, DatabaseImportService>();
 
         services.AddSingleton<DatabaseAppSettingsProvider>();

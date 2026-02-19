@@ -15,7 +15,8 @@ namespace LanguageSchoolERP.App.ViewModels;
 public enum DatabaseImportSource
 {
     RemoteDatabase,
-    BackupFile
+    BackupFile,
+    ExcelFiles
 }
 
 public partial class DatabaseImportViewModel : ObservableObject
@@ -33,6 +34,11 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private RemoteDatabaseOption? selectedRemoteDatabaseOption;
     [ObservableProperty] private RemoteDatabaseOption? selectedLocalRestoreDatabaseOption;
     [ObservableProperty] private string backupFilePath = string.Empty;
+    [ObservableProperty] private string selectedExcelFilesText = string.Empty;
+    [ObservableProperty] private string selectedExcelTargetDatabaseName = "FilotheiSchoolERP";
+    [ObservableProperty] private bool excelTargetFilotheiSelected = true;
+    [ObservableProperty] private bool excelTargetNeaIoniaSelected;
+    [ObservableProperty] private bool excelDryRunMode;
     [ObservableProperty] private bool wipeLocalFirst = true;
     [ObservableProperty] private string log = string.Empty;
     [ObservableProperty] private double progressValue;
@@ -66,6 +72,18 @@ public partial class DatabaseImportViewModel : ObservableObject
         {
             if (value)
                 SelectedImportSource = DatabaseImportSource.BackupFile;
+        }
+    }
+
+    public ObservableCollection<string> ExcelFilePaths { get; } = [];
+
+    public bool IsExcelImportSelected
+    {
+        get => SelectedImportSource == DatabaseImportSource.ExcelFiles;
+        set
+        {
+            if (value)
+                SelectedImportSource = DatabaseImportSource.ExcelFiles;
         }
     }
 
@@ -131,6 +149,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsRemoteImportSelected));
         OnPropertyChanged(nameof(IsBackupImportSelected));
+        OnPropertyChanged(nameof(IsExcelImportSelected));
         ImportCommand?.NotifyCanExecuteChanged();
     }
 
@@ -142,6 +161,30 @@ public partial class DatabaseImportViewModel : ObservableObject
     partial void OnSelectedLocalRestoreDatabaseOptionChanged(RemoteDatabaseOption? value)
     {
         ImportCommand?.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedExcelFilesTextChanged(string value)
+    {
+        ImportCommand?.NotifyCanExecuteChanged();
+    }
+
+    partial void OnSelectedExcelTargetDatabaseNameChanged(string value)
+    {
+        ExcelTargetFilotheiSelected = string.Equals(value, "FilotheiSchoolERP", StringComparison.OrdinalIgnoreCase);
+        ExcelTargetNeaIoniaSelected = string.Equals(value, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase);
+        ImportCommand?.NotifyCanExecuteChanged();
+    }
+
+    partial void OnExcelTargetFilotheiSelectedChanged(bool value)
+    {
+        if (value)
+            SelectedExcelTargetDatabaseName = "FilotheiSchoolERP";
+    }
+
+    partial void OnExcelTargetNeaIoniaSelectedChanged(bool value)
+    {
+        if (value)
+            SelectedExcelTargetDatabaseName = "NeaIoniaSchoolERP";
     }
 
     partial void OnStartupLocalDatabaseNameChanged(string value)
@@ -205,6 +248,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         {
             DatabaseImportSource.RemoteDatabase => SelectedRemoteDatabaseOption is not null,
             DatabaseImportSource.BackupFile => SelectedLocalRestoreDatabaseOption is not null && !string.IsNullOrWhiteSpace(BackupFilePath),
+            DatabaseImportSource.ExcelFiles => ExcelFilePaths.Count > 0 && !string.IsNullOrWhiteSpace(SelectedExcelTargetDatabaseName),
             _ => false
         };
     }
@@ -263,6 +307,27 @@ public partial class DatabaseImportViewModel : ObservableObject
                 await _databaseImportService.ImportFromBackupAsync(
                     BackupFilePath,
                     localConnection,
+                    progress,
+                    _cts.Token);
+            }
+            else if (SelectedImportSource == DatabaseImportSource.ExcelFiles)
+            {
+                if (ExcelFilePaths.Count == 0)
+                    throw new InvalidOperationException("At least one Excel file is required.");
+
+                localDbName = SelectedExcelTargetDatabaseName;
+                successTitle = "Import from Excel";
+
+                var localConnection = ConnectionStringHelpers.ReplaceDatabase(settings.Local.ConnectionString, localDbName);
+
+                AppendLog($"Excel source files: {string.Join(", ", ExcelFilePaths)}");
+                AppendLog($"Local target: {localDbName}");
+                AppendLog($"Dry run: {ExcelDryRunMode}");
+
+                await _databaseImportService.ImportFromExcelAsync(
+                    ExcelFilePaths,
+                    localConnection,
+                    ExcelDryRunMode,
                     progress,
                     _cts.Token);
             }
@@ -353,6 +418,28 @@ public partial class DatabaseImportViewModel : ObservableObject
         if (dialog.ShowDialog() == true)
         {
             BackupFilePath = dialog.FileName;
+        }
+    }
+
+
+    [RelayCommand]
+    private void BrowseExcelFiles()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Excel Files (*.xlsx;*.xlsm)|*.xlsx;*.xlsm",
+            CheckFileExists = true,
+            Multiselect = true,
+            Title = "Επιλογή αρχείων Excel"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            ExcelFilePaths.Clear();
+            foreach (var fileName in dialog.FileNames)
+                ExcelFilePaths.Add(fileName);
+
+            SelectedExcelFilesText = string.Join("; ", dialog.FileNames);
         }
     }
 
@@ -449,7 +536,7 @@ public partial class DatabaseImportViewModel : ObservableObject
 
     private bool ConfirmImport()
     {
-        if (SelectedImportSource == DatabaseImportSource.BackupFile || WipeLocalFirst)
+        if (SelectedImportSource != DatabaseImportSource.RemoteDatabase || WipeLocalFirst)
         {
             var dialog = new ConfirmImportDialog
             {
