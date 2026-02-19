@@ -57,7 +57,7 @@
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock x:Name="YearRevenueSummaryText" Text="Εισπράξεις έτους: 0,00 € / 0,00 €" Foreground="#DCE7F4" FontSize="12" Margin="0,2,0,0"/>
-                    <ProgressBar x:Name="YearProgressBar" Height="8" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0"/>
+                    <ProgressBar x:Name="YearProgressBar" Height="12" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" Margin="0,0,12,0" VerticalAlignment="Center">
