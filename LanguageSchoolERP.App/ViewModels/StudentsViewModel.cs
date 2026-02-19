@@ -309,9 +309,21 @@ public partial class StudentsViewModel : ObservableObject
                                 ? ProgressGreenBrush
                                 : ProgressBlueBrush;
 
-                var enrollmentSummaryText = yearEnrollments.Count == 0
+                var activeEnrollmentSummaryItems = yearEnrollments
+                    .Where(en => !en.IsStopped)
+                    .OrderBy(en => en.Program?.Name)
+                    .Select(en =>
+                    {
+                        var programName = en.Program?.Name ?? "—";
+                        return string.IsNullOrWhiteSpace(en.LevelOrClass)
+                            ? programName
+                            : $"{programName} ({en.LevelOrClass})";
+                    })
+                    .ToList();
+
+                var enrollmentSummaryText = activeEnrollmentSummaryItems.Count == 0
                     ? "Προγράμματα: —"
-                    : $"Προγράμματα: {string.Join(" · ", yearEnrollments.OrderBy(en => en.Program?.Name).Select(en => { var programName = en.Program?.Name ?? "—"; return string.IsNullOrWhiteSpace(en.LevelOrClass) ? programName : $"{programName} ({en.LevelOrClass})"; }))}";
+                    : $"Προγράμματα: {string.Join(" · ", activeEnrollmentSummaryItems)}";
 
                 var row = new StudentRowVm
                 {
@@ -333,7 +345,7 @@ public partial class StudentsViewModel : ObservableObject
                     IsExpanded = false
                 };
 
-                foreach (var en in yearEnrollments.OrderBy(x => x.Program.Name))
+                foreach (var en in yearEnrollments.OrderBy(x => x.Program?.Name))
                 {
                     var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
                     var enBalance = en.AgreementTotal - enPaid;

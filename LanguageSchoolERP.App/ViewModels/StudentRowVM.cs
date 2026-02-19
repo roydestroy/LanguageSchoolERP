@@ -41,7 +41,7 @@ public partial class StudentRowVm : ObservableObject
     public Brush StoppedBadgeBackground => new SolidColorBrush(Color.FromRgb(253, 237, 237));
     public Brush StoppedBadgeForeground => new SolidColorBrush(Color.FromRgb(177, 38, 38));
     public Brush StoppedBadgeBorder => new SolidColorBrush(Color.FromRgb(244, 198, 198));
-    public Visibility StoppedBadgeVisibility => HasStoppedProgram ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility StoppedBadgeVisibility => HasOnlyStoppedPrograms ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool hasPendingContract;
     public string PendingContractBadgeText => "ΣΥΜΦΩΝΗΤΙΚΟ";
@@ -65,7 +65,10 @@ public partial class StudentRowVm : ObservableObject
         => OnPropertyChanged(nameof(StoppedBadgeVisibility));
 
     partial void OnHasOnlyStoppedProgramsChanged(bool value)
-        => OnPropertyChanged(nameof(ActiveStatusText));
+    {
+        OnPropertyChanged(nameof(ActiveStatusText));
+        OnPropertyChanged(nameof(StoppedBadgeVisibility));
+    }
 
     partial void OnIsOverdueChanged(bool value)
         => OnPropertyChanged(nameof(OverdueBadgeVisibility));
