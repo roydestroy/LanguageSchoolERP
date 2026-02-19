@@ -90,7 +90,7 @@ public partial class StatisticsViewModel : ObservableObject
             DiscontinuedEnrollmentsCount = enrollments.Count(e => e.IsStopped);
 
             AgreementsTotal = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
-            CollectedTotal = enrollments.Sum(e => e.DownPayment + e.Payments.Sum(p => p.Amount));
+            CollectedTotal = enrollments.Sum(e => e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments));
             OutstandingTotal = Math.Max(0m, AgreementsTotal - CollectedTotal);
             LostRevenueTotal = enrollments.Sum(InstallmentPlanHelper.GetLostAmount);
 
@@ -102,8 +102,8 @@ public partial class StatisticsViewModel : ObservableObject
                     StudentsCount = g.Select(x => x.StudentId).Distinct().Count(),
                     EnrollmentsCount = g.Count(),
                     AgreementTotal = g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal),
-                    CollectedTotal = g.Sum(x => x.DownPayment + x.Payments.Sum(p => p.Amount)),
-                    OutstandingTotal = Math.Max(0m, g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal) - g.Sum(x => x.DownPayment + x.Payments.Sum(p => p.Amount)))
+                    CollectedTotal = g.Sum(x => x.DownPayment + PaymentAgreementHelper.SumAgreementPayments(x.Payments)),
+                    OutstandingTotal = Math.Max(0m, g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal) - g.Sum(x => x.DownPayment + PaymentAgreementHelper.SumAgreementPayments(x.Payments)))
                 })
                 .OrderByDescending(x => x.StudentsCount)
                 .ThenBy(x => x.ProgramName)

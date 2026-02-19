@@ -81,6 +81,7 @@ public partial class AddPaymentViewModel : ObservableObject
     [ObservableProperty] private string amountText = "";
     [ObservableProperty] private DateTime? paymentDate = DateTime.Today;
     [ObservableProperty] private string notes = "";
+    [ObservableProperty] private bool isExcludedFromAgreement;
 
     [ObservableProperty] private string errorMessage = "";
     [ObservableProperty] private string saveButtonText = "Αποθήκευση";
@@ -129,6 +130,7 @@ public partial class AddPaymentViewModel : ObservableObject
         PaymentDate = DateTime.Today;
         SelectedPaymentMethod = PaymentMethods.First();
         SelectedReason = "ΔΙΔΑΚΤΡΑ";
+        IsExcludedFromAgreement = false;
 
         EnrollmentOptions.Clear();
         _suggestedAmountsByEnrollment.Clear();
@@ -187,6 +189,7 @@ public partial class AddPaymentViewModel : ObservableObject
             AmountText = payment.Amount.ToString("0.##", CultureInfo.InvariantCulture);
             PaymentDate = payment.PaymentDate.Date;
             SelectedPaymentMethod = PaymentMethods.FirstOrDefault(x => x.Value == payment.Method) ?? PaymentMethods.First();
+            IsExcludedFromAgreement = PaymentAgreementHelper.IsExcludedFromAgreement(payment.Notes);
             SelectedReason = ParseReason(payment.Notes);
             Notes = ParseAdditionalNotes(payment.Notes);
         }
@@ -274,7 +277,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 payment.PaymentDate = PaymentDate.Value.Date;
                 payment.Amount = amount;
                 payment.Method = SelectedPaymentMethod!.Value;
-                payment.Notes = BuildStoredNotes(SelectedReason, Notes);
+                payment.Notes = BuildStoredNotes(SelectedReason, Notes, IsExcludedFromAgreement);
 
                 var receipts = await db.Receipts
                     .Where(r => r.PaymentId == payment.PaymentId)
@@ -300,7 +303,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 PaymentDate = PaymentDate.Value.Date,
                 Amount = amount,
                 Method = SelectedPaymentMethod!.Value,
-                Notes = BuildStoredNotes(SelectedReason, Notes)
+                Notes = BuildStoredNotes(SelectedReason, Notes, IsExcludedFromAgreement)
             };
 
             db.Payments.Add(newPayment);
@@ -339,7 +342,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 PaymentMethod: newPayment.Method.ToGreekLabel(),
                 ProgramLabel: enrollment.Program?.Name ?? "—",
                 AcademicYear: academicYear,
-                Notes: newPayment.Notes ?? ""
+                Notes: PaymentAgreementHelper.RemoveExcludeMarker(newPayment.Notes)
             );
 
             _excelReceiptGenerator.GenerateReceiptPdf(templatePath, pdfPath, data);
@@ -418,7 +421,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
     private static string ParseReason(string? notes)
     {
-        var raw = (notes ?? "").Trim();
+        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
         if (string.IsNullOrWhiteSpace(raw))
             return "ΔΙΔΑΚΤΡΑ";
 
@@ -431,7 +434,7 @@ public partial class AddPaymentViewModel : ObservableObject
 
     private static string ParseAdditionalNotes(string? notes)
     {
-        var raw = (notes ?? "").Trim();
+        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
         if (string.IsNullOrWhiteSpace(raw))
             return "";
 
@@ -442,18 +445,20 @@ public partial class AddPaymentViewModel : ObservableObject
         return raw[(pipe + 1)..].Trim();
     }
 
-    private static string BuildStoredNotes(string reason, string? notes)
+    private static string BuildStoredNotes(string reason, string? notes, bool isExcludedFromAgreement)
     {
         var safeReason = (reason ?? "").Trim();
         var safeNotes = (notes ?? "").Trim();
 
-        if (string.IsNullOrWhiteSpace(safeReason))
-            return safeNotes;
+        var stored = string.IsNullOrWhiteSpace(safeReason)
+            ? safeNotes
+            : string.IsNullOrWhiteSpace(safeNotes)
+                ? safeReason
+                : $"{safeReason} | {safeNotes}";
 
-        if (string.IsNullOrWhiteSpace(safeNotes))
-            return safeReason;
-
-        return $"{safeReason} | {safeNotes}";
+        return isExcludedFromAgreement
+            ? PaymentAgreementHelper.AddExcludeMarker(stored)
+            : stored;
     }
 
     private static bool TryParseMoney(string text, out decimal value)

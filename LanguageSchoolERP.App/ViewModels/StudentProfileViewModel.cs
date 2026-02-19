@@ -985,9 +985,9 @@ public partial class StudentProfileViewModel : ObservableObject
             var activeEnrollments = enrollments.Where(e => !e.IsStopped).ToList();
             decimal agreementSum = activeEnrollments.Sum(e => e.AgreementTotal);
             decimal downSum = activeEnrollments.Sum(e => e.DownPayment);
-            decimal paidSum = activeEnrollments.Sum(e => e.Payments.Sum(p => p.Amount));
+            decimal paidSum = activeEnrollments.Sum(e => PaymentAgreementHelper.SumAgreementPayments(e.Payments));
             decimal paidTotal = downSum + paidSum;
-            decimal balance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
+            decimal balance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
 
             string BuildEnrollmentExtras(Enrollment e)
             {
@@ -1040,8 +1040,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
             var hasOnlyStoppedPrograms = enrollments.Count > 0 && enrollments.All(e => e.IsStopped);
             var anyActiveOverdue = activeEnrollments.Any(e => InstallmentPlanHelper.IsEnrollmentOverdue(e, DateTime.Today));
-            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + e.Payments.Sum(p => p.Amount)) > e.AgreementTotal + 0.009m);
-            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + e.Payments.Sum(p => p.Amount)) + 0.009m >= e.AgreementTotal);
+            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) > e.AgreementTotal + 0.009m);
+            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) + 0.009m >= e.AgreementTotal);
 
             ProgressBrush = hasOnlyStoppedPrograms
                 ? ProgressStoppedRedBrush

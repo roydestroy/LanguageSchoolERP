@@ -263,7 +263,7 @@ public partial class StudentsViewModel : ObservableObject
 
                 decimal activeAgreementSum = activeEnrollments.Sum(e => e.AgreementTotal);
                 decimal activeDownSum = activeEnrollments.Sum(en => en.DownPayment);
-                decimal activePaidSum = activeEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
+                decimal activePaidSum = activeEnrollments.Sum(en => PaymentAgreementHelper.SumAgreementPayments(en.Payments));
 
                 var totalProgress = activeAgreementSum <= 0 ? 0d : (double)((activeDownSum + activePaidSum) / activeAgreementSum * 100m);
                 if (totalProgress > 100) totalProgress = 100;
@@ -294,10 +294,10 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
                     continue;
 
-                var activeBalance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
+                var activeBalance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
                 var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
-                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) > en.AgreementTotal + 0.009m);
-                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) + 0.009m >= en.AgreementTotal);
+                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) > en.AgreementTotal + 0.009m);
+                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) + 0.009m >= en.AgreementTotal);
 
                 var studentProgressBrush = hasOnlyStoppedPrograms
                     ? ProgressStoppedRedBrush
@@ -347,7 +347,7 @@ public partial class StudentsViewModel : ObservableObject
 
                 foreach (var en in yearEnrollments.OrderBy(x => x.Program?.Name))
                 {
-                    var enPaid = en.Payments.Sum(p => p.Amount) + en.DownPayment;
+                    var enPaid = PaymentAgreementHelper.SumAgreementPayments(en.Payments) + en.DownPayment;
                     var enBalance = en.AgreementTotal - enPaid;
                     var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
                     var enOverpaid = enPaid > en.AgreementTotal + 0.009m;

@@ -125,13 +125,7 @@ public static class InstallmentPlanHelper
 
     private static decimal SumPayments(Enrollment e)
     {
-        decimal sum = 0;
-        if (e.Payments != null)
-        {
-            foreach (var p in e.Payments)
-                sum += p.Amount;
-        }
-        return sum;
+        return PaymentAgreementHelper.SumAgreementPayments(e.Payments);
     }
 
     private static int MonthsBetweenInclusive(DateTime startMonth, DateTime endMonth)
