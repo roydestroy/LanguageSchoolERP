@@ -983,11 +983,11 @@ public partial class StudentProfileViewModel : ObservableObject
 
             // Summary across active enrollments for top-right metrics
             var activeEnrollments = enrollments.Where(e => !e.IsStopped).ToList();
-            decimal agreementSum = activeEnrollments.Sum(e => e.AgreementTotal);
+            decimal agreementSum = activeEnrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
             decimal downSum = activeEnrollments.Sum(e => e.DownPayment);
             decimal paidSum = activeEnrollments.Sum(e => PaymentAgreementHelper.SumAgreementPayments(e.Payments));
             decimal paidTotal = downSum + paidSum;
-            decimal balance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
+            decimal balance = activeEnrollments.Sum(e => InstallmentPlanHelper.GetEffectiveAgreementTotal(e) - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
 
             string BuildEnrollmentExtras(Enrollment e)
             {
@@ -1040,8 +1040,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
             var hasOnlyStoppedPrograms = enrollments.Count > 0 && enrollments.All(e => e.IsStopped);
             var anyActiveOverdue = activeEnrollments.Any(e => InstallmentPlanHelper.IsEnrollmentOverdue(e, DateTime.Today));
-            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) > e.AgreementTotal + 0.009m);
-            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) + 0.009m >= e.AgreementTotal);
+            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) > InstallmentPlanHelper.GetEffectiveAgreementTotal(e) + 0.009m);
+            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(e));
 
             ProgressBrush = hasOnlyStoppedPrograms
                 ? ProgressStoppedRedBrush
@@ -1394,7 +1394,11 @@ public partial class StudentProfileViewModel : ObservableObject
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 1) return (parts[0], "");
 
-        return (parts[0], string.Join(" ", parts.Skip(1)));
+        // Prefer last token as surname so multi-word first names remain intact
+        // (e.g. "DAN ALEXANDER JAHRE" -> Name="DAN ALEXANDER", Surname="JAHRE").
+        var surname = parts[^1];
+        var name = string.Join(" ", parts[..^1]);
+        return (name, surname);
     }
 
     private static string JoinName(string? name, string? surname)

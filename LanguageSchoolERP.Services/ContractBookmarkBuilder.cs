@@ -34,7 +34,16 @@ public sealed class ContractBookmarkBuilder
         else if (payload.IncludesStudyLab)
         {
             values["slab"] = "Για την συμμετοχή στο πρόγραμμα Study Lab το συμφωνηθέν ποσό καθορίζεται ως εξής:";
-            values["slabc"] = $"{(payload.StudyLabMonthlyPrice ?? 0m):0.##}€/μήνα";
+            var studyLabTotal = payload.StudyLabMonthlyPrice ?? 0m;
+            if (payload.InstallmentCount > 0)
+            {
+                var studyLabPerMonth = studyLabTotal / payload.InstallmentCount;
+                values["slabc"] = $"{studyLabPerMonth:0.##}€/μήνα";
+            }
+            else
+            {
+                values["slabc"] = $"{studyLabTotal:0.##}€";
+            }
         }
         else
         {
@@ -74,7 +83,7 @@ public sealed class ContractBookmarkBuilder
         if (enrollment.InstallmentCount <= 0 || financed <= 0 || enrollment.InstallmentStartMonth is null)
             return;
 
-        var schedule = InstallmentPlanHelper.GetInstallmentSchedule(enrollment);
+        var schedule = GetContractInstallmentSchedule(enrollment);
         var start = new DateTime(enrollment.InstallmentStartMonth.Value.Year, enrollment.InstallmentStartMonth.Value.Month, 1);
         var day = enrollment.InstallmentDayOfMonth <= 0 ? 1 : enrollment.InstallmentDayOfMonth;
 
@@ -89,6 +98,32 @@ public sealed class ContractBookmarkBuilder
             values[$"dat{index}"] = date.ToString("d/M/yyyy", CultureInfo.InvariantCulture);
             values[$"dos{index}"] = $"{schedule[i]:0.##}€";
         }
+    }
+
+    private static IReadOnlyList<decimal> GetContractInstallmentSchedule(Enrollment enrollment)
+    {
+        var result = new List<decimal>();
+
+        if (enrollment.InstallmentCount <= 0)
+            return result;
+
+        // Contract table installments must be based on the core program amount only
+        // (exclude Study Lab from program installments).
+        var financedAmount = enrollment.AgreementTotal - enrollment.DownPayment;
+        if (financedAmount <= 0)
+            return result;
+
+        var roundedFinancedAmount = Math.Round(financedAmount, 0, MidpointRounding.AwayFromZero);
+        var baseAmount = Math.Floor(roundedFinancedAmount / enrollment.InstallmentCount);
+
+        for (var i = 0; i < enrollment.InstallmentCount - 1; i++)
+            result.Add(baseAmount);
+
+        var used = baseAmount * Math.Max(0, enrollment.InstallmentCount - 1);
+        var lastAmount = roundedFinancedAmount - used;
+        result.Add(lastAmount);
+
+        return result;
     }
 
     private static string BuildGreekLongDate(DateTime date)

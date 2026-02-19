@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace LanguageSchoolERP.Services;
@@ -59,9 +60,12 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var motherPhoneCol = FindColumn(headerMap, "ΜΑΜΑ");
                     var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
+                    var levelCol = FindLevelColumn(headerMap, defaultProgramName);
                     var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
-                    var transportationCol = FindColumn(headerMap, "ΜΕΤΑΦΟΡ");
+                    var transportationCol = FindTransportationColumn(headerMap, headerRow);
+                    var studyLabCol = FindStudyLabColumn(headerMap, headerRow);
+                    var booksCol = FindBooksColumn(headerMap, headerRow);
                     var discontinuedCol = FindColumn(headerMap, "ΔΙΑΚΟΠ", "STOP", "DISCONT");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
@@ -100,16 +104,22 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             continue;
                         }
 
-                        var programName = programCol.HasValue
-                            ? ReadText(used.Cells[row, programCol.Value])
+                        var levelOrClass = levelCol.HasValue
+                            ? ReadText(used.Cells[row, levelCol.Value]).Trim()
                             : string.Empty;
 
-                        if (string.IsNullOrWhiteSpace(programName))
-                            programName = defaultProgramName;
+                        var programName = ResolveProgramName(
+                            programCol.HasValue ? ReadText(used.Cells[row, programCol.Value]) : string.Empty,
+                            levelOrClass,
+                            defaultProgramName);
 
-                        var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
+                        var agreementCell = agreementCol.HasValue ? (Excel.Range)used.Cells[row, agreementCol.Value] : null;
+                        var agreementTotal = agreementCell is not null ? ReadDecimal(agreementCell) : 0m;
+                        var installmentCount = agreementCell is not null ? TryExtractInstallmentCountFromAgreementComment(agreementCell) : 0;
+                        DateTime? installmentStartMonth = installmentCount > 0 ? new DateTime(2025, 10, 1) : null;
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
                         var transportationMonthlyCost = transportationCol.HasValue ? ReadDecimal(used.Cells[row, transportationCol.Value]) : 0m;
+                        var studyLabMonthlyCost = studyLabCol.HasValue ? ReadDecimal(used.Cells[row, studyLabCol.Value]) : 0m;
                         var isDiscontinued = discontinuedCol.HasValue && IsTruthyYes(ReadText(used.Cells[row, discontinuedCol.Value]));
                         var collection = collectionCol.HasValue ? ReadDecimal(used.Cells[row, collectionCol.Value]) : 0m;
 
@@ -162,11 +172,18 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             sourceMotherPhone,
                             normalizedYearLabel,
                             programName.Trim(),
+                            levelOrClass,
                             agreementTotal,
                             downPayment,
                             transportationMonthlyCost,
+                            studyLabMonthlyCost,
+                            transportationCol.HasValue,
+                            studyLabCol.HasValue,
+                            booksCol.HasValue,
                             isDiscontinued,
                             monthlySignals,
+                            installmentCount,
+                            installmentStartMonth,
                             confirmedCollected,
                             paymentDate,
                             Path.GetFileName(workbookPath)));
@@ -231,6 +248,98 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
     }
 
 
+
+    private static int? FindTransportationColumn(IReadOnlyDictionary<int, string> headers, int headerRow)
+    {
+        // Import variant uses row 3 headers for addons.
+        if (headerRow == 3)
+            return FindColumn(headers, "ΜΕΤΑΦΟΡΑ", "ΜΕΤΑΦΟΡ");
+
+        return FindColumn(headers, "ΜΕΤΑΦΟΡ");
+    }
+
+    private static int? FindStudyLabColumn(IReadOnlyDictionary<int, string> headers, int headerRow)
+    {
+        if (headerRow == 3)
+            return FindColumn(headers, "ΜΕΛΕΤΗ", "STUDYLAB", "STUDY");
+
+        return FindColumn(headers, "ΜΕΛΕΤΗ", "STUDYLAB", "STUDY");
+    }
+
+    private static int? FindBooksColumn(IReadOnlyDictionary<int, string> headers, int headerRow)
+    {
+        if (headerRow == 3)
+            return FindColumn(headers, "ΒΙΒΛΙΑ", "BOOK");
+
+        return FindColumn(headers, "ΒΙΒΛΙΑ", "BOOK");
+    }
+
+    private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers, string defaultProgramName)
+    {
+        // Language enrollment workbooks use an explicit "ΕΠΙΠΕΔΟ" header (commonly on row 3).
+        // Do not treat column D as level/class unless this header exists.
+        var levelColumn = FindColumn(headers, "ΕΠΙΠΕΔΟ", "LEVEL");
+        if (levelColumn.HasValue)
+            return levelColumn;
+
+        // Study support workbook (ΣΧΟΛΙΚΗ ΜΕΛΕΤΗ) stores class in a dedicated "ΤΑΞΗ" column.
+        if (defaultProgramName.Contains("ΣΧΟΛΙΚΗ ΜΕΛΕΤΗ", StringComparison.OrdinalIgnoreCase))
+            return FindColumn(headers, "ΤΑΞΗ", "ΤΑΞ", "CLASS");
+
+        return null;
+    }
+
+    private static string ResolveProgramName(string explicitProgramName, string levelOrClass, string defaultProgramName)
+    {
+        var explicitNormalized = NormalizeProgramAlias(explicitProgramName);
+        if (!string.IsNullOrWhiteSpace(explicitNormalized))
+            return explicitNormalized;
+
+        if (!defaultProgramName.Contains("ΣΧΟΛΙΚΗ ΜΕΛΕΤΗ", StringComparison.OrdinalIgnoreCase))
+        {
+            var mapped = MapLanguageProgramFromLevel(levelOrClass);
+            if (!string.IsNullOrWhiteSpace(mapped))
+                return mapped;
+        }
+
+        return defaultProgramName;
+    }
+
+    private static string? NormalizeProgramAlias(string? explicitProgramName)
+    {
+        if (string.IsNullOrWhiteSpace(explicitProgramName))
+            return null;
+
+        var normalized = explicitProgramName.Trim();
+        if (normalized.Equals("KIDS", StringComparison.OrdinalIgnoreCase))
+            return "ΑΓΓΛΙΚΗ ΓΛΩΣΣΑ";
+
+        return normalized;
+    }
+
+    private static string? MapLanguageProgramFromLevel(string? levelOrClass)
+    {
+        if (string.IsNullOrWhiteSpace(levelOrClass))
+            return null;
+
+        var normalized = levelOrClass.Trim().ToUpperInvariant();
+        if (normalized.StartsWith("KIDS", StringComparison.OrdinalIgnoreCase))
+            return "ΑΓΓΛΙΚΗ ΓΛΩΣΣΑ";
+
+        var firstChar = normalized[0];
+
+        if (firstChar is 'E' or 'Ε')
+            return "ΑΓΓΛΙΚΗ ΓΛΩΣΣΑ";
+
+        if (firstChar is 'F' or 'Φ')
+            return "ΓΑΛΛΙΚΗ ΓΛΩΣΣΑ";
+
+        if (firstChar is 'G' or 'Γ')
+            return "ΓΕΡΜΑΝΙΚΗ ΓΛΩΣΣΑ";
+
+        return null;
+    }
+
     private static int? FindAgreementColumn(IReadOnlyDictionary<int, string> headers)
     {
         // Prefer explicit agreement columns, avoid "ΣΥΜΦΩΝΗΤΙΚΟ" boolean/signature columns.
@@ -269,6 +378,36 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
     private static string NormalizeHeader(string value)
         => value.Replace(" ", string.Empty, StringComparison.Ordinal).Trim().ToUpperInvariant();
+
+    private static int TryExtractInstallmentCountFromAgreementComment(Excel.Range cell)
+    {
+        var commentText = ReadCommentText(cell);
+        if (string.IsNullOrWhiteSpace(commentText))
+            return 0;
+
+        // Example comments: 65+140*8, (65+140)*8, 65+140 x 8.
+        var match = Regex.Match(commentText, @"[\*xX×]\s*(\d+)");
+        if (!match.Success)
+            return 0;
+
+        return int.TryParse(match.Groups[1].Value, out var count) && count > 0 ? count : 0;
+    }
+
+    private static string ReadCommentText(Excel.Range cell)
+    {
+        var comment = cell?.Comment;
+        if (comment is null)
+            return string.Empty;
+
+        try
+        {
+            return comment.Text() ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(comment);
+        }
+    }
 
     private static string ReadText(Excel.Range cell)
     {

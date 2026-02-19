@@ -116,8 +116,9 @@ public partial class StatisticsViewModel : ObservableObject
                 {
                     var agreementTotal = g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
                     var collectedTotal = g.Sum(x => x.DownPayment + PaymentAgreementHelper.SumAgreementPayments(x.Payments));
-                    var discontinuedRemainingByProgram = g.Where(x => x.IsStopped).Sum(InstallmentPlanHelper.GetOutstandingAmount);
-                    var collectibleTotal = Math.Max(0m, agreementTotal - discontinuedRemainingByProgram);
+                    var discontinuedCount = g.Count(x => x.IsStopped);
+                    var lostAmount = g.Sum(InstallmentPlanHelper.GetLostAmount);
+                    var collectibleTotal = Math.Max(0m, agreementTotal - lostAmount);
 
                     return new ProgramStatisticsRowVm
                     {
@@ -126,6 +127,8 @@ public partial class StatisticsViewModel : ObservableObject
                         EnrollmentsCount = g.Count(),
                         AgreementTotal = agreementTotal,
                         CollectedTotal = collectedTotal,
+                        DiscontinuedCount = discontinuedCount,
+                        LostAmount = lostAmount,
                         OutstandingTotal = Math.Max(0m, collectibleTotal - collectedTotal)
                     };
                 })

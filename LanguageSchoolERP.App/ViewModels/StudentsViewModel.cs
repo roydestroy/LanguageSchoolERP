@@ -20,8 +20,8 @@ namespace LanguageSchoolERP.App.ViewModels;
 public partial class StudentsViewModel : ObservableObject
 {
     private const string AllStudentsFilter = "Όλοι οι μαθητές";
-    private const string ActiveStudentsFilter = "Μόνο ενεργοί";
-    private const string InactiveStudentsFilter = "Μόνο ανενεργοί";
+    private const string ActiveStudentsFilter = "Ενεργοί";
+    private const string InactiveStudentsFilter = "Ανενεργοί";
     private const string ContractPendingFilter = "Εκκρεμεί συμφωνητικό";
     private const string OverdueFilter = "Ληξιπρόθεσμα";
     private const string DiscontinuedFilter = "Με διακοπή";
@@ -43,12 +43,12 @@ public partial class StudentsViewModel : ObservableObject
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
     [
-        AllStudentsFilter,
         ActiveStudentsFilter,
         InactiveStudentsFilter,
         ContractPendingFilter,
         OverdueFilter,
-        DiscontinuedFilter
+        DiscontinuedFilter,
+        AllStudentsFilter
     ];
 
     public ObservableCollection<string> StudentSortOptions { get; } =
@@ -59,7 +59,7 @@ public partial class StudentsViewModel : ObservableObject
     ];
 
     [ObservableProperty] private string searchText = "";
-    [ObservableProperty] private string selectedStudentStatusFilter = AllStudentsFilter;
+    [ObservableProperty] private string selectedStudentStatusFilter = ActiveStudentsFilter;
     [ObservableProperty] private string selectedStudentSortOption = SortByName;
 
     public IRelayCommand RefreshCommand { get; }
@@ -240,7 +240,12 @@ public partial class StudentsViewModel : ObservableObject
                 baseQuery = baseQuery.Where(s =>
                     s.FullName.Contains(st) ||
                     s.Phone.Contains(st) ||
-                    s.Email.Contains(st));
+                    s.Email.Contains(st) ||
+                    db.Enrollments.Any(e =>
+                        e.StudentId == s.StudentId &&
+                        (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
+                        e.LevelOrClass != null &&
+                        e.LevelOrClass.Contains(st)));
             }
 
             var students = await baseQuery
@@ -294,10 +299,10 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
                     continue;
 
-                var activeBalance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
+                var activeBalance = activeEnrollments.Sum(e => InstallmentPlanHelper.GetEffectiveAgreementTotal(e) - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
                 var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
-                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) > en.AgreementTotal + 0.009m);
-                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) + 0.009m >= en.AgreementTotal);
+                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) > InstallmentPlanHelper.GetEffectiveAgreementTotal(en) + 0.009m);
+                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(en));
 
                 var studentProgressBrush = hasOnlyStoppedPrograms
                     ? ProgressStoppedRedBrush
@@ -328,7 +333,7 @@ public partial class StudentsViewModel : ObservableObject
                 var row = new StudentRowVm
                 {
                     StudentId = s.StudentId,
-                    FullName = s.FullName,
+                    FullName = ToSurnameFirst(s.FullName),
                     ContactLine = BuildPreferredContactLine(s),
                     YearLabel = $"Έτος: {year}",
                     EnrollmentSummaryText = enrollmentSummaryText,
@@ -348,12 +353,13 @@ public partial class StudentsViewModel : ObservableObject
                 foreach (var en in yearEnrollments.OrderBy(x => x.Program?.Name))
                 {
                     var enPaid = PaymentAgreementHelper.SumAgreementPayments(en.Payments) + en.DownPayment;
-                    var enBalance = en.AgreementTotal - enPaid;
+                    var enBalance = InstallmentPlanHelper.GetEffectiveAgreementTotal(en) - enPaid;
                     var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
-                    var enOverpaid = enPaid > en.AgreementTotal + 0.009m;
-                    var enFullyPaid = enPaid + 0.009m >= en.AgreementTotal;
+                    var enOverpaid = enPaid > InstallmentPlanHelper.GetEffectiveAgreementTotal(en) + 0.009m;
+                    var enFullyPaid = enPaid + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
 
-                    var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
+                    var enrollmentEffectiveTotal = InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
+                    var enrollmentProgress = enrollmentEffectiveTotal <= 0 ? 0d : (double)(enPaid / enrollmentEffectiveTotal * 100m);
                     if (enrollmentProgress > 100) enrollmentProgress = 100;
                     if (enrollmentProgress < 0) enrollmentProgress = 0;
 
@@ -413,6 +419,20 @@ public partial class StudentsViewModel : ObservableObject
         }
 
     }
+
+    private static string ToSurnameFirst(string? fullName)
+    {
+        var parts = (fullName ?? string.Empty)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length < 2)
+            return fullName?.Trim() ?? string.Empty;
+
+        var surname = parts[^1];
+        var firstNames = string.Join(' ', parts[..^1]);
+        return string.IsNullOrWhiteSpace(firstNames) ? surname : $"{surname} {firstNames}";
+    }
+
     private static string BuildPreferredContactLine(Student student)
     {
         var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);

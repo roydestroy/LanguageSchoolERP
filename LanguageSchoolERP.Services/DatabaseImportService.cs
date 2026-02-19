@@ -156,7 +156,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                     try
                     {
                         var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, CancellationToken.None);
-                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, summary, CancellationToken.None);
+                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, row.HasTransportationColumn, row.HasStudyLabColumn, row.HasBooksColumn, summary, CancellationToken.None);
                         var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.StudentPhone, row.FatherPhone, row.MotherPhone, summary, CancellationToken.None);
 
                         var enrollment = await localDb.Enrollments
@@ -174,16 +174,23 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 AcademicPeriodId = academicPeriod.AcademicPeriodId,
                                 ProgramId = program.Id,
                                 Program = program,
+                                LevelOrClass = row.LevelOrClass,
                                 AgreementTotal = row.AgreementTotal,
                                 DownPayment = row.DownPayment,
                                 IncludesTransportation = row.TransportationMonthlyCost > 0m,
                                 TransportationMonthlyPrice = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : null,
                                 HasTransportation = row.TransportationMonthlyCost > 0m,
                                 TransportationMonthlyFee = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : 0m,
+                                IncludesStudyLab = row.StudyLabMonthlyCost > 0m,
+                                StudyLabMonthlyPrice = row.StudyLabMonthlyCost > 0m ? row.StudyLabMonthlyCost : null,
+                                HasStudyLab = row.StudyLabMonthlyCost > 0m,
+                                StudyLabMonthlyFee = row.StudyLabMonthlyCost > 0m ? row.StudyLabMonthlyCost : 0m,
                                 IsStopped = row.IsDiscontinued,
                                 Status = row.IsDiscontinued ? "Stopped" : "Active",
                                 StoppedOn = row.IsDiscontinued ? DateTime.Today : null,
                                 StopReason = row.IsDiscontinued ? "Excel import: ΔΙΑΚΟΠΗ" : string.Empty,
+                                InstallmentCount = row.InstallmentCount > 0 ? row.InstallmentCount : 0,
+                                InstallmentStartMonth = row.InstallmentCount > 0 ? row.InstallmentStartMonth : null,
                                 Comments = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
                             };
                             localDb.Enrollments.Add(enrollment);
@@ -197,12 +204,29 @@ public sealed class DatabaseImportService : IDatabaseImportService
                             if (row.DownPayment > 0m)
                                 enrollment.DownPayment = row.DownPayment;
 
+                            if (!string.IsNullOrWhiteSpace(row.LevelOrClass))
+                                enrollment.LevelOrClass = row.LevelOrClass;
+
                             if (row.TransportationMonthlyCost > 0m)
                             {
                                 enrollment.IncludesTransportation = true;
                                 enrollment.TransportationMonthlyPrice = row.TransportationMonthlyCost;
                                 enrollment.HasTransportation = true;
                                 enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
+                            }
+
+                            if (row.StudyLabMonthlyCost > 0m)
+                            {
+                                enrollment.IncludesStudyLab = true;
+                                enrollment.StudyLabMonthlyPrice = row.StudyLabMonthlyCost;
+                                enrollment.HasStudyLab = true;
+                                enrollment.StudyLabMonthlyFee = row.StudyLabMonthlyCost;
+                            }
+
+                            if (row.InstallmentCount > 0)
+                            {
+                                enrollment.InstallmentCount = row.InstallmentCount;
+                                enrollment.InstallmentStartMonth = row.InstallmentStartMonth;
                             }
 
                             if (row.IsDiscontinued)
@@ -230,6 +254,15 @@ public sealed class DatabaseImportService : IDatabaseImportService
                             enrollment.TransportationMonthlyPrice = row.TransportationMonthlyCost;
                             enrollment.HasTransportation = true;
                             enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
+                        }
+
+                        if (row.StudyLabMonthlyCost > 0m
+                            && (enrollment.StudyLabMonthlyFee <= 0m || enrollment.StudyLabMonthlyPrice is null))
+                        {
+                            enrollment.IncludesStudyLab = true;
+                            enrollment.StudyLabMonthlyPrice = row.StudyLabMonthlyCost;
+                            enrollment.HasStudyLab = true;
+                            enrollment.StudyLabMonthlyFee = row.StudyLabMonthlyCost;
                         }
 
                         if (row.IsDiscontinued && !enrollment.IsStopped)
@@ -267,22 +300,35 @@ public sealed class DatabaseImportService : IDatabaseImportService
                         else if (row.ConfirmedCollectedAmount.HasValue && row.ConfirmedCollectedAmount.Value > 0)
                         {
                             var paymentDate = row.PaymentDate ?? DateTime.Today;
-                            var existsPayment = enrollment.Payments.Any(p => p.Amount == row.ConfirmedCollectedAmount.Value && p.PaymentDate.Date == paymentDate.Date);
-                            if (!existsPayment)
+                            var paymentAmount = row.ConfirmedCollectedAmount.Value;
+
+                            // Avoid duplicating down payment (ΠΡΟΚ/ΛΗ) as a separate payment record.
+                            if (row.DownPayment > 0m)
+                                paymentAmount = Math.Max(0m, paymentAmount - row.DownPayment);
+
+                            if (paymentAmount <= 0m)
                             {
-                                localDb.Payments.Add(new Payment
-                                {
-                                    EnrollmentId = enrollment.EnrollmentId,
-                                    Amount = row.ConfirmedCollectedAmount.Value,
-                                    PaymentDate = paymentDate,
-                                    Method = PaymentMethod.Cash,
-                                    Notes = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
-                                });
-                                summary.InsertedPayments++;
+                                summary.SkippedRows++;
                             }
                             else
                             {
-                                summary.SkippedRows++;
+                                var existsPayment = enrollment.Payments.Any(p => p.Amount == paymentAmount && p.PaymentDate.Date == paymentDate.Date);
+                                if (!existsPayment)
+                                {
+                                    localDb.Payments.Add(new Payment
+                                    {
+                                        EnrollmentId = enrollment.EnrollmentId,
+                                        Amount = paymentAmount,
+                                        PaymentDate = paymentDate,
+                                        Method = PaymentMethod.Cash,
+                                        Notes = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
+                                    });
+                                    summary.InsertedPayments++;
+                                }
+                                else
+                                {
+                                    summary.SkippedRows++;
+                                }
                             }
                         }
 
@@ -420,6 +466,9 @@ END
     private static async Task<StudyProgram> ResolveOrCreateProgramAsync(
         SchoolDbContext db,
         string programName,
+        bool hasTransportationColumn,
+        bool hasStudyLabColumn,
+        bool hasBooksColumn,
         ExcelImportSummary summary,
         CancellationToken ct)
     {
@@ -430,9 +479,26 @@ END
         var program = db.Programs.Local.FirstOrDefault(p => string.Equals(p.Name, normalized, StringComparison.OrdinalIgnoreCase));
         program ??= await db.Programs.FirstOrDefaultAsync(p => p.Name == normalized, ct);
         if (program is not null)
-            return program;
+        {
+            if (hasTransportationColumn && !program.HasTransport)
+                program.HasTransport = true;
 
-        program = new StudyProgram { Name = normalized };
+            if (hasStudyLabColumn && !program.HasStudyLab)
+                program.HasStudyLab = true;
+
+            if (hasBooksColumn && !program.HasBooks)
+                program.HasBooks = true;
+
+            return program;
+        }
+
+        program = new StudyProgram
+        {
+            Name = normalized,
+            HasTransport = hasTransportationColumn,
+            HasStudyLab = hasStudyLabColumn,
+            HasBooks = hasBooksColumn
+        };
         db.Programs.Add(program);
         summary.InsertedPrograms++;
         return program;
