@@ -1338,11 +1338,17 @@ public partial class StudentProfileViewModel : ObservableObject
     private static string ParseAdditionalNotes(string? notes)
     {
         var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
-        if (string.IsNullOrWhiteSpace(raw))
-            return "";
+        var parts = string.IsNullOrWhiteSpace(raw)
+            ? Array.Empty<string>()
+            : raw.Split('|', 2, StringSplitOptions.TrimEntries);
 
-        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
-        return parts.Length == 2 ? parts[1] : "";
+        var additionalNotes = parts.Length == 2 ? parts[1] : "";
+        if (!PaymentAgreementHelper.IsExcludedFromAgreement(notes))
+            return additionalNotes;
+
+        return string.IsNullOrWhiteSpace(additionalNotes)
+            ? PaymentAgreementHelper.ExcludeFromAgreementDisplayText
+            : $"{additionalNotes} | {PaymentAgreementHelper.ExcludeFromAgreementDisplayText}";
     }
 
     private static void TryDeleteFile(string? path, string label, ICollection<string> errors)

@@ -70,7 +70,7 @@ public partial class DailyPaymentsViewModel : ObservableObject
                     Amount = payment.Amount,
                     AmountText = $"{payment.Amount:0.00} €",
                     MethodText = payment.Method.ToGreekLabel(),
-                    Notes = PaymentAgreementHelper.RemoveExcludeMarker(payment.Notes)
+                    Notes = PaymentAgreementHelper.BuildDisplayNotes(payment.Notes)
                 });
             }
 

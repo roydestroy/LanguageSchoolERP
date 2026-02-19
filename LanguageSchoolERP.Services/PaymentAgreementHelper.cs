@@ -9,6 +9,8 @@ public static class PaymentAgreementHelper
     public const string ExcludeFromAgreementMarker = "[ΕΚΤΟΣ_ΣΥΜΦΩΝΗΘΕΝΤΟΣ]";
     private const string LegacyExcludeFromAgreementMarker = "[EXCLUDE_FROM_AGREEMENT]";
 
+    public const string ExcludeFromAgreementDisplayText = "Εκτός συμφωνηθέντος ποσού";
+
     public static bool IsExcludedFromAgreement(string? notes)
     {
         if (string.IsNullOrWhiteSpace(notes))
@@ -44,6 +46,18 @@ public static class PaymentAgreementHelper
         cleaned = cleaned.Trim().Trim('|').Trim();
 
         return cleaned;
+    }
+
+
+    public static string BuildDisplayNotes(string? notes)
+    {
+        var cleaned = RemoveExcludeMarker(notes);
+        if (!IsExcludedFromAgreement(notes))
+            return cleaned;
+
+        return string.IsNullOrWhiteSpace(cleaned)
+            ? ExcludeFromAgreementDisplayText
+            : $"{cleaned} | {ExcludeFromAgreementDisplayText}";
     }
 
     public static decimal SumAgreementPayments(IEnumerable<Payment>? payments)

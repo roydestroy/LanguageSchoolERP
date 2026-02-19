@@ -342,7 +342,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 PaymentMethod: newPayment.Method.ToGreekLabel(),
                 ProgramLabel: enrollment.Program?.Name ?? "—",
                 AcademicYear: academicYear,
-                Notes: PaymentAgreementHelper.RemoveExcludeMarker(newPayment.Notes)
+                Notes: PaymentAgreementHelper.BuildDisplayNotes(newPayment.Notes)
             );
 
             _excelReceiptGenerator.GenerateReceiptPdf(templatePath, pdfPath, data);
