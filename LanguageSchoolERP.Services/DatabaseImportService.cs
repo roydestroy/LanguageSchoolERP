@@ -174,6 +174,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 AcademicPeriodId = academicPeriod.AcademicPeriodId,
                                 ProgramId = program.Id,
                                 Program = program,
+                                LevelOrClass = row.LevelOrClass,
                                 AgreementTotal = row.AgreementTotal,
                                 DownPayment = row.DownPayment,
                                 IncludesTransportation = row.TransportationMonthlyCost > 0m,
@@ -196,6 +197,9 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
                             if (row.DownPayment > 0m)
                                 enrollment.DownPayment = row.DownPayment;
+
+                            if (!string.IsNullOrWhiteSpace(row.LevelOrClass))
+                                enrollment.LevelOrClass = row.LevelOrClass;
 
                             if (row.TransportationMonthlyCost > 0m)
                             {

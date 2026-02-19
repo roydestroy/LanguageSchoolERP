@@ -11,6 +11,7 @@ public sealed record ExcelImportParseRow(
     string? MotherPhone,
     string AcademicYearLabel,
     string ProgramName,
+    string LevelOrClass,
     decimal AgreementTotal,
     decimal DownPayment,
     decimal TransportationMonthlyCost,

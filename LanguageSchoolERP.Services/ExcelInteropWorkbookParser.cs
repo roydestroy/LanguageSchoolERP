@@ -59,6 +59,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var motherPhoneCol = FindColumn(headerMap, "ΜΑΜΑ");
                     var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
+                    var levelCol = FindLevelColumn(headerMap);
                     var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
                     var transportationCol = FindColumn(headerMap, "ΜΕΤΑΦΟΡ");
@@ -100,12 +101,14 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             continue;
                         }
 
-                        var programName = programCol.HasValue
-                            ? ReadText(used.Cells[row, programCol.Value])
+                        var levelOrClass = levelCol.HasValue
+                            ? ReadText(used.Cells[row, levelCol.Value]).Trim()
                             : string.Empty;
 
-                        if (string.IsNullOrWhiteSpace(programName))
-                            programName = defaultProgramName;
+                        var programName = ResolveProgramName(
+                            programCol.HasValue ? ReadText(used.Cells[row, programCol.Value]) : string.Empty,
+                            levelOrClass,
+                            defaultProgramName);
 
                         var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
@@ -162,6 +165,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             sourceMotherPhone,
                             normalizedYearLabel,
                             programName.Trim(),
+                            levelOrClass,
                             agreementTotal,
                             downPayment,
                             transportationMonthlyCost,
@@ -230,6 +234,47 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         return map;
     }
 
+
+
+    private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers)
+    {
+        if (headers.ContainsKey(4))
+            return 4;
+
+        return FindColumn(headers, "ΕΠΙΠ", "LEVEL", "ΤΑΞ", "CLASS");
+    }
+
+    private static string ResolveProgramName(string explicitProgramName, string levelOrClass, string defaultProgramName)
+    {
+        if (!string.IsNullOrWhiteSpace(explicitProgramName))
+            return explicitProgramName;
+
+        var mapped = MapLanguageProgramFromLevel(levelOrClass);
+        if (!string.IsNullOrWhiteSpace(mapped))
+            return mapped;
+
+        return defaultProgramName;
+    }
+
+    private static string? MapLanguageProgramFromLevel(string? levelOrClass)
+    {
+        if (string.IsNullOrWhiteSpace(levelOrClass))
+            return null;
+
+        var normalized = levelOrClass.Trim().ToUpperInvariant();
+        var firstChar = normalized[0];
+
+        if (firstChar is 'E' or 'Ε')
+            return "ΑΓΓΛΙΚΗ ΓΛΩΣΣΑ";
+
+        if (firstChar is 'F' or 'Φ')
+            return "ΓΑΛΛΙΚΗ ΓΛΩΣΣΑ";
+
+        if (firstChar is 'G' or 'Γ')
+            return "ΓΕΡΜΑΝΙΚΗ ΓΛΩΣΣΑ";
+
+        return null;
+    }
 
     private static int? FindAgreementColumn(IReadOnlyDictionary<int, string> headers)
     {
