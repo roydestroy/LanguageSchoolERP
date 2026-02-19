@@ -142,13 +142,25 @@
 
                         <DataGridTextColumn Header="Εισπραχθέν"
                         Binding="{Binding CollectedTotal, StringFormat={}{0:0.00} €}"
-                        Width="150"
+                        Width="140"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+
+                        <DataGridTextColumn Header="Διακοπές"
+                        Binding="{Binding DiscontinuedCount}"
+                        Width="100"
+                        ElementStyle="{StaticResource CenterCellText}"
+                        HeaderStyle="{StaticResource CenterHeader}"/>
+
+                        <DataGridTextColumn Header="Απώλειες"
+                        Binding="{Binding LostAmount, StringFormat={}{0:0.00} €}"
+                        Width="130"
                         ElementStyle="{StaticResource CenterCellText}"
                         HeaderStyle="{StaticResource CenterHeader}"/>
 
                         <DataGridTextColumn Header="Υπόλοιπο"
                         Binding="{Binding OutstandingTotal, StringFormat={}{0:0.00} €}"
-                        Width="130"
+                        Width="120"
                         ElementStyle="{StaticResource CenterCellText}"
                         HeaderStyle="{StaticResource CenterHeader}"/>
                     </DataGrid.Columns>
