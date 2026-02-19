@@ -246,14 +246,27 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
     private static string ResolveProgramName(string explicitProgramName, string levelOrClass, string defaultProgramName)
     {
-        if (!string.IsNullOrWhiteSpace(explicitProgramName))
-            return explicitProgramName;
+        var explicitNormalized = NormalizeProgramAlias(explicitProgramName);
+        if (!string.IsNullOrWhiteSpace(explicitNormalized))
+            return explicitNormalized;
 
         var mapped = MapLanguageProgramFromLevel(levelOrClass);
         if (!string.IsNullOrWhiteSpace(mapped))
             return mapped;
 
         return defaultProgramName;
+    }
+
+    private static string? NormalizeProgramAlias(string? explicitProgramName)
+    {
+        if (string.IsNullOrWhiteSpace(explicitProgramName))
+            return null;
+
+        var normalized = explicitProgramName.Trim();
+        if (normalized.Equals("KIDS", StringComparison.OrdinalIgnoreCase))
+            return "ΑΓΓΛΙΚΗ ΓΛΩΣΣΑ";
+
+        return normalized;
     }
 
     private static string? MapLanguageProgramFromLevel(string? levelOrClass)

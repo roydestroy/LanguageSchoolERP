@@ -271,22 +271,35 @@ public sealed class DatabaseImportService : IDatabaseImportService
                         else if (row.ConfirmedCollectedAmount.HasValue && row.ConfirmedCollectedAmount.Value > 0)
                         {
                             var paymentDate = row.PaymentDate ?? DateTime.Today;
-                            var existsPayment = enrollment.Payments.Any(p => p.Amount == row.ConfirmedCollectedAmount.Value && p.PaymentDate.Date == paymentDate.Date);
-                            if (!existsPayment)
+                            var paymentAmount = row.ConfirmedCollectedAmount.Value;
+
+                            // Avoid duplicating down payment (ΠΡΟΚ/ΛΗ) as a separate payment record.
+                            if (row.DownPayment > 0m)
+                                paymentAmount = Math.Max(0m, paymentAmount - row.DownPayment);
+
+                            if (paymentAmount <= 0m)
                             {
-                                localDb.Payments.Add(new Payment
-                                {
-                                    EnrollmentId = enrollment.EnrollmentId,
-                                    Amount = row.ConfirmedCollectedAmount.Value,
-                                    PaymentDate = paymentDate,
-                                    Method = PaymentMethod.Cash,
-                                    Notes = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
-                                });
-                                summary.InsertedPayments++;
+                                summary.SkippedRows++;
                             }
                             else
                             {
-                                summary.SkippedRows++;
+                                var existsPayment = enrollment.Payments.Any(p => p.Amount == paymentAmount && p.PaymentDate.Date == paymentDate.Date);
+                                if (!existsPayment)
+                                {
+                                    localDb.Payments.Add(new Payment
+                                    {
+                                        EnrollmentId = enrollment.EnrollmentId,
+                                        Amount = paymentAmount,
+                                        PaymentDate = paymentDate,
+                                        Method = PaymentMethod.Cash,
+                                        Notes = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
+                                    });
+                                    summary.InsertedPayments++;
+                                }
+                                else
+                                {
+                                    summary.SkippedRows++;
+                                }
                             }
                         }
 
