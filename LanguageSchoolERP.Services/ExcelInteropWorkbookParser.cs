@@ -14,7 +14,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         string defaultProgramName,
         CancellationToken cancellationToken)
     {
-        return Task.Run(() => ParseInternal(workbookPath, defaultProgramName, cancellationToken), cancellationToken);
+        return Task.Run(() => ParseInternal(workbookPath, defaultProgramName, cancellationToken));
     }
 
     private static ExcelImportParseResult ParseInternal(string workbookPath, string defaultProgramName, CancellationToken ct)
@@ -34,7 +34,8 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
             {
                 try
                 {
-                    ct.ThrowIfCancellationRequested();
+                    if (ct.IsCancellationRequested)
+                        return new ExcelImportParseResult(rows, errors);
 
                     var used = sheet.UsedRange;
                     var rowCount = used.Rows.Count;
@@ -76,7 +77,8 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
                     for (var row = headerRow + 1; row <= rowCount; row++)
                     {
-                        ct.ThrowIfCancellationRequested();
+                        if (ct.IsCancellationRequested)
+                            return new ExcelImportParseResult(rows, errors);
 
                         var fullName = ReadText(used.Cells[row, fullNameCol!.Value]);
                         if (string.IsNullOrWhiteSpace(fullName))

@@ -368,6 +368,17 @@ public partial class DatabaseImportViewModel : ObservableObject
                     _cts.Token);
             }
 
+            if (_cts?.IsCancellationRequested == true)
+            {
+                AppendLog("Import cancelled by user.");
+                MessageBox.Show(
+                    "Η εισαγωγή ακυρώθηκε.",
+                    "Import",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
             _appState.SelectedLocalDatabaseName = localDbName;
             _appState.SelectedDatabaseMode = DatabaseMode.Local;
             _appState.NotifyDataChanged();
@@ -536,7 +547,7 @@ public partial class DatabaseImportViewModel : ObservableObject
 
     private bool ConfirmImport()
     {
-        if (SelectedImportSource != DatabaseImportSource.RemoteDatabase || WipeLocalFirst)
+        if (SelectedImportSource == DatabaseImportSource.RemoteDatabase && WipeLocalFirst)
         {
             var dialog = new ConfirmImportDialog
             {

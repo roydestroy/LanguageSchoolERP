@@ -7,8 +7,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
@@ -56,7 +54,9 @@
                     <Button Content="Ακύρωση"
                             Width="100"
                             Height="34"
+                            Margin="0,0,10,0"
                             Command="{Binding CancelCommand}"/>
+
                 </StackPanel>
 
                 <TextBlock Grid.Row="2" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,14,10,0">
@@ -227,6 +227,7 @@
                          Text="{Binding Log}"
                          IsReadOnly="True"
                          AcceptsReturn="True"
+                         VerticalContentAlignment="Top"
                          VerticalScrollBarVisibility="Auto"
                          TextWrapping="Wrap"/>
             </Grid>
@@ -242,12 +243,12 @@
             <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="150"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Προεπιλογή βάσης" FontWeight="SemiBold" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,0,150,0">
                         <RadioButton Content="Φιλοθέη"
                                      GroupName="StartupDb"
                                      Margin="0,0,16,0"
@@ -260,8 +261,15 @@
                         <Button Content="Αποθήκευση"
                                 Width="110"
                                 Height="30"
-                                Margin="20,0,0,0"
+                                Margin="10,0,0,0"
                                 Command="{Binding SaveStartupDatabaseCommand}"/>
+
+                        <Button x:Name="CheckUpdatesBtn"
+                                Content="Έλεγχος ενημερώσεων"
+                                Width="171"
+                                Height="28"
+                                Margin="10,0,0,0"
+                                Click="CheckUpdatesBtn_Click"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -324,34 +332,5 @@
             </Border>
         </Grid>
 
-
-        <Border Grid.Row="2" Margin="0,14,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Text="Ρυθμίσεις" FontWeight="SemiBold" VerticalAlignment="Center"/>
-
-                <Button Grid.Column="1"
-                        Width="170"
-                        Height="32"
-                        Content="Εισαγωγή (Διαχειριστής)"
-                        Command="{Binding ImportCommand}"/>
-
-                <Button Grid.Column="3"
-                        x:Name="CheckUpdatesBtn"
-                        Width="170"
-                        Height="32"
-                        Content="Έλεγχος ενημερώσεων"
-                        Click="CheckUpdatesBtn_Click"/>
-            </Grid>
-        </Border>
-
-        <TextBlock Grid.Row="3" Margin="2,10,2,0" Foreground="#777"
-                   Text="Tip: απαιτείται πάντα επιβεβαίωση IMPORT πριν από import/restore στη τοπική βάση."/>
     </Grid>
 </UserControl>
