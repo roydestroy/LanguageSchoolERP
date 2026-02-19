@@ -59,7 +59,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var motherPhoneCol = FindColumn(headerMap, "ΜΑΜΑ");
                     var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
-                    var levelCol = FindLevelColumn(headerMap);
+                    var levelCol = FindLevelColumn(headerMap, defaultProgramName);
                     var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
                     var transportationCol = FindColumn(headerMap, "ΜΕΤΑΦΟΡ");
@@ -236,12 +236,19 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
 
 
-    private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers)
+    private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers, string defaultProgramName)
     {
-        if (headers.ContainsKey(4))
-            return 4;
+        // Language enrollment workbooks use an explicit "ΕΠΙΠΕΔΟ" header (commonly on row 3).
+        // Do not treat column D as level/class unless this header exists.
+        var levelColumn = FindColumn(headers, "ΕΠΙΠΕΔΟ", "LEVEL");
+        if (levelColumn.HasValue)
+            return levelColumn;
 
-        return FindColumn(headers, "ΕΠΙΠ", "LEVEL", "ΤΑΞ", "CLASS");
+        // Study support workbook (ΣΧΟΛΙΚΗ ΜΕΛΕΤΗ) stores class in a dedicated "ΤΑΞΗ" column.
+        if (defaultProgramName.Contains("ΣΧΟΛΙΚΗ ΜΕΛΕΤΗ", StringComparison.OrdinalIgnoreCase))
+            return FindColumn(headers, "ΤΑΞΗ", "ΤΑΞ", "CLASS");
+
+        return null;
     }
 
     private static string ResolveProgramName(string explicitProgramName, string levelOrClass, string defaultProgramName)
@@ -250,9 +257,12 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         if (!string.IsNullOrWhiteSpace(explicitNormalized))
             return explicitNormalized;
 
-        var mapped = MapLanguageProgramFromLevel(levelOrClass);
-        if (!string.IsNullOrWhiteSpace(mapped))
-            return mapped;
+        if (!defaultProgramName.Contains("ΣΧΟΛΙΚΗ ΜΕΛΕΤΗ", StringComparison.OrdinalIgnoreCase))
+        {
+            var mapped = MapLanguageProgramFromLevel(levelOrClass);
+            if (!string.IsNullOrWhiteSpace(mapped))
+                return mapped;
+        }
 
         return defaultProgramName;
     }
