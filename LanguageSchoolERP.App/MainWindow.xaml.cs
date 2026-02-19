@@ -144,13 +144,17 @@ public partial class MainWindow : Window
 
         decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
         decimal paidSum = enrollments.Sum(e => e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments));
+        var discontinuedRemaining = enrollments
+            .Where(e => e.IsStopped)
+            .Sum(InstallmentPlanHelper.GetOutstandingAmount);
+        var collectibleSum = Math.Max(0m, agreementSum - discontinuedRemaining);
 
-        var progress = agreementSum <= 0 ? 0d : (double)(paidSum / agreementSum * 100m);
+        var progress = collectibleSum <= 0 ? 0d : (double)(paidSum / collectibleSum * 100m);
         if (progress > 100) progress = 100;
         if (progress < 0) progress = 0;
 
         YearProgressBar.Value = progress;
-        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum:0.00} € / {agreementSum:0.00} €";
+        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum:0.00} € / {collectibleSum:0.00} €";
     }
 
 

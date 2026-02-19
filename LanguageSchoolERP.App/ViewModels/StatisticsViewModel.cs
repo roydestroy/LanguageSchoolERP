@@ -23,6 +23,8 @@ public partial class StatisticsViewModel : ObservableObject
     [ObservableProperty] private decimal collectedTotal;
     [ObservableProperty] private decimal outstandingTotal;
     [ObservableProperty] private decimal lostRevenueTotal;
+    [ObservableProperty] private double collectibleProgressPercent;
+    [ObservableProperty] private double agreementProgressPercent;
     [ObservableProperty] private string errorMessage = string.Empty;
 
     public IAsyncRelayCommand RefreshCommand { get; }
@@ -101,6 +103,13 @@ public partial class StatisticsViewModel : ObservableObject
             CollectibleTotal = Math.Max(0m, AgreementsTotal - discontinuedRemaining);
             OutstandingTotal = Math.Max(0m, CollectibleTotal - CollectedTotal);
 
+            CollectibleProgressPercent = CollectibleTotal <= 0m
+                ? 0d
+                : Math.Clamp((double)(CollectedTotal / CollectibleTotal * 100m), 0d, 100d);
+            AgreementProgressPercent = AgreementsTotal <= 0m
+                ? 0d
+                : Math.Clamp((double)(CollectedTotal / AgreementsTotal * 100m), 0d, 100d);
+
             var rows = enrollments
                 .GroupBy(e => new { e.ProgramId, ProgramName = e.Program.Name })
                 .Select(g =>
@@ -148,6 +157,8 @@ public partial class StatisticsViewModel : ObservableObject
         CollectedTotal = 0;
         OutstandingTotal = 0;
         LostRevenueTotal = 0;
+        CollectibleProgressPercent = 0;
+        AgreementProgressPercent = 0;
         ProgramStatistics.Clear();
     }
 }
