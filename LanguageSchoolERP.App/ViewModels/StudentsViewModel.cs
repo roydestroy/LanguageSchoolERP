@@ -20,8 +20,8 @@ namespace LanguageSchoolERP.App.ViewModels;
 public partial class StudentsViewModel : ObservableObject
 {
     private const string AllStudentsFilter = "Όλοι οι μαθητές";
-    private const string ActiveStudentsFilter = "Μόνο ενεργοί";
-    private const string InactiveStudentsFilter = "Μόνο ανενεργοί";
+    private const string ActiveStudentsFilter = "Ενεργοί";
+    private const string InactiveStudentsFilter = "Ανενεργοί";
     private const string ContractPendingFilter = "Εκκρεμεί συμφωνητικό";
     private const string OverdueFilter = "Ληξιπρόθεσμα";
     private const string DiscontinuedFilter = "Με διακοπή";
@@ -43,12 +43,12 @@ public partial class StudentsViewModel : ObservableObject
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
     [
-        AllStudentsFilter,
         ActiveStudentsFilter,
         InactiveStudentsFilter,
         ContractPendingFilter,
         OverdueFilter,
-        DiscontinuedFilter
+        DiscontinuedFilter,
+        AllStudentsFilter
     ];
 
     public ObservableCollection<string> StudentSortOptions { get; } =
@@ -59,7 +59,7 @@ public partial class StudentsViewModel : ObservableObject
     ];
 
     [ObservableProperty] private string searchText = "";
-    [ObservableProperty] private string selectedStudentStatusFilter = AllStudentsFilter;
+    [ObservableProperty] private string selectedStudentStatusFilter = ActiveStudentsFilter;
     [ObservableProperty] private string selectedStudentSortOption = SortByName;
 
     public IRelayCommand RefreshCommand { get; }
@@ -240,7 +240,12 @@ public partial class StudentsViewModel : ObservableObject
                 baseQuery = baseQuery.Where(s =>
                     s.FullName.Contains(st) ||
                     s.Phone.Contains(st) ||
-                    s.Email.Contains(st));
+                    s.Email.Contains(st) ||
+                    db.Enrollments.Any(e =>
+                        e.StudentId == s.StudentId &&
+                        (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
+                        e.LevelOrClass != null &&
+                        e.LevelOrClass.Contains(st)));
             }
 
             var students = await baseQuery
