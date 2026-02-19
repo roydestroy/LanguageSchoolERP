@@ -1327,7 +1327,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string ParseReason(string? notes)
     {
-        var raw = (notes ?? "").Trim();
+        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
         if (string.IsNullOrWhiteSpace(raw))
             return "—";
 
@@ -1337,7 +1337,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string ParseAdditionalNotes(string? notes)
     {
-        var raw = (notes ?? "").Trim();
+        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
         if (string.IsNullOrWhiteSpace(raw))
             return "";
 

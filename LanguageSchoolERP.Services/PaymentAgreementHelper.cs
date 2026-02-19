@@ -6,11 +6,17 @@ namespace LanguageSchoolERP.Services;
 
 public static class PaymentAgreementHelper
 {
-    public const string ExcludeFromAgreementMarker = "[EXCLUDE_FROM_AGREEMENT]";
+    public const string ExcludeFromAgreementMarker = "[ΕΚΤΟΣ_ΣΥΜΦΩΝΗΘΕΝΤΟΣ]";
+    private const string LegacyExcludeFromAgreementMarker = "[EXCLUDE_FROM_AGREEMENT]";
 
     public static bool IsExcludedFromAgreement(string? notes)
-        => !string.IsNullOrWhiteSpace(notes)
-           && notes.Contains(ExcludeFromAgreementMarker, StringComparison.OrdinalIgnoreCase);
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return false;
+
+        return notes.Contains(ExcludeFromAgreementMarker, StringComparison.OrdinalIgnoreCase)
+               || notes.Contains(LegacyExcludeFromAgreementMarker, StringComparison.OrdinalIgnoreCase);
+    }
 
     public static string AddExcludeMarker(string notes)
     {
@@ -31,7 +37,9 @@ public static class PaymentAgreementHelper
         if (string.IsNullOrWhiteSpace(safeNotes))
             return string.Empty;
 
-        var cleaned = safeNotes.Replace(ExcludeFromAgreementMarker, string.Empty, StringComparison.OrdinalIgnoreCase);
+        var cleaned = safeNotes
+            .Replace(ExcludeFromAgreementMarker, string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace(LegacyExcludeFromAgreementMarker, string.Empty, StringComparison.OrdinalIgnoreCase);
         cleaned = cleaned.Replace("||", "|");
         cleaned = cleaned.Trim().Trim('|').Trim();
 
