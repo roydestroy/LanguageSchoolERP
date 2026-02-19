@@ -156,7 +156,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                     try
                     {
                         var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, CancellationToken.None);
-                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, summary, CancellationToken.None);
+                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, row.HasTransportationColumn, row.HasStudyLabColumn, summary, CancellationToken.None);
                         var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.StudentPhone, row.FatherPhone, row.MotherPhone, summary, CancellationToken.None);
 
                         var enrollment = await localDb.Enrollments
@@ -181,6 +181,10 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 TransportationMonthlyPrice = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : null,
                                 HasTransportation = row.TransportationMonthlyCost > 0m,
                                 TransportationMonthlyFee = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : 0m,
+                                IncludesStudyLab = row.StudyLabMonthlyCost > 0m,
+                                StudyLabMonthlyPrice = row.StudyLabMonthlyCost > 0m ? row.StudyLabMonthlyCost : null,
+                                HasStudyLab = row.StudyLabMonthlyCost > 0m,
+                                StudyLabMonthlyFee = row.StudyLabMonthlyCost > 0m ? row.StudyLabMonthlyCost : 0m,
                                 IsStopped = row.IsDiscontinued,
                                 Status = row.IsDiscontinued ? "Stopped" : "Active",
                                 StoppedOn = row.IsDiscontinued ? DateTime.Today : null,
@@ -209,6 +213,14 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
                             }
 
+                            if (row.StudyLabMonthlyCost > 0m)
+                            {
+                                enrollment.IncludesStudyLab = true;
+                                enrollment.StudyLabMonthlyPrice = row.StudyLabMonthlyCost;
+                                enrollment.HasStudyLab = true;
+                                enrollment.StudyLabMonthlyFee = row.StudyLabMonthlyCost;
+                            }
+
                             if (row.IsDiscontinued)
                             {
                                 enrollment.IsStopped = true;
@@ -234,6 +246,15 @@ public sealed class DatabaseImportService : IDatabaseImportService
                             enrollment.TransportationMonthlyPrice = row.TransportationMonthlyCost;
                             enrollment.HasTransportation = true;
                             enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
+                        }
+
+                        if (row.StudyLabMonthlyCost > 0m
+                            && (enrollment.StudyLabMonthlyFee <= 0m || enrollment.StudyLabMonthlyPrice is null))
+                        {
+                            enrollment.IncludesStudyLab = true;
+                            enrollment.StudyLabMonthlyPrice = row.StudyLabMonthlyCost;
+                            enrollment.HasStudyLab = true;
+                            enrollment.StudyLabMonthlyFee = row.StudyLabMonthlyCost;
                         }
 
                         if (row.IsDiscontinued && !enrollment.IsStopped)
@@ -437,6 +458,8 @@ END
     private static async Task<StudyProgram> ResolveOrCreateProgramAsync(
         SchoolDbContext db,
         string programName,
+        bool hasTransportationColumn,
+        bool hasStudyLabColumn,
         ExcelImportSummary summary,
         CancellationToken ct)
     {
@@ -447,9 +470,22 @@ END
         var program = db.Programs.Local.FirstOrDefault(p => string.Equals(p.Name, normalized, StringComparison.OrdinalIgnoreCase));
         program ??= await db.Programs.FirstOrDefaultAsync(p => p.Name == normalized, ct);
         if (program is not null)
-            return program;
+        {
+            if (hasTransportationColumn && !program.HasTransport)
+                program.HasTransport = true;
 
-        program = new StudyProgram { Name = normalized };
+            if (hasStudyLabColumn && !program.HasStudyLab)
+                program.HasStudyLab = true;
+
+            return program;
+        }
+
+        program = new StudyProgram
+        {
+            Name = normalized,
+            HasTransport = hasTransportationColumn,
+            HasStudyLab = hasStudyLabColumn
+        };
         db.Programs.Add(program);
         summary.InsertedPrograms++;
         return program;

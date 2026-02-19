@@ -62,7 +62,8 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var levelCol = FindLevelColumn(headerMap, defaultProgramName);
                     var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
-                    var transportationCol = FindColumn(headerMap, "ΜΕΤΑΦΟΡ");
+                    var transportationCol = FindTransportationColumn(headerMap, headerRow);
+                    var studyLabCol = FindStudyLabColumn(headerMap, headerRow);
                     var discontinuedCol = FindColumn(headerMap, "ΔΙΑΚΟΠ", "STOP", "DISCONT");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
@@ -113,6 +114,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
                         var transportationMonthlyCost = transportationCol.HasValue ? ReadDecimal(used.Cells[row, transportationCol.Value]) : 0m;
+                        var studyLabMonthlyCost = studyLabCol.HasValue ? ReadDecimal(used.Cells[row, studyLabCol.Value]) : 0m;
                         var isDiscontinued = discontinuedCol.HasValue && IsTruthyYes(ReadText(used.Cells[row, discontinuedCol.Value]));
                         var collection = collectionCol.HasValue ? ReadDecimal(used.Cells[row, collectionCol.Value]) : 0m;
 
@@ -169,6 +171,9 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             agreementTotal,
                             downPayment,
                             transportationMonthlyCost,
+                            studyLabMonthlyCost,
+                            transportationCol.HasValue,
+                            studyLabCol.HasValue,
                             isDiscontinued,
                             monthlySignals,
                             confirmedCollected,
@@ -236,6 +241,23 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
 
 
+    private static int? FindTransportationColumn(IReadOnlyDictionary<int, string> headers, int headerRow)
+    {
+        // Import variant uses row 3 headers for addons.
+        if (headerRow == 3)
+            return FindColumn(headers, "ΜΕΤΑΦΟΡΑ", "ΜΕΤΑΦΟΡ");
+
+        return FindColumn(headers, "ΜΕΤΑΦΟΡ");
+    }
+
+    private static int? FindStudyLabColumn(IReadOnlyDictionary<int, string> headers, int headerRow)
+    {
+        if (headerRow == 3)
+            return FindColumn(headers, "ΜΕΛΕΤΗ", "STUDYLAB", "STUDY");
+
+        return FindColumn(headers, "ΜΕΛΕΤΗ", "STUDYLAB", "STUDY");
+    }
+
     private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers, string defaultProgramName)
     {
         // Language enrollment workbooks use an explicit "ΕΠΙΠΕΔΟ" header (commonly on row 3).
@@ -285,6 +307,9 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
             return null;
 
         var normalized = levelOrClass.Trim().ToUpperInvariant();
+        if (normalized.StartsWith("KIDS", StringComparison.OrdinalIgnoreCase))
+            return "ΑΓΓΛΙΚΗ ΓΛΩΣΣΑ";
+
         var firstChar = normalized[0];
 
         if (firstChar is 'E' or 'Ε')
