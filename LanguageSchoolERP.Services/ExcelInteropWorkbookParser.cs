@@ -58,6 +58,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
                     var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
+                    var transportationCol = FindColumn(headerMap, "ΜΕΤΑΦΟΡ");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
 
@@ -99,6 +100,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
                         var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
+                        var transportationMonthlyCost = transportationCol.HasValue ? ReadDecimal(used.Cells[row, transportationCol.Value]) : 0m;
                         var collection = collectionCol.HasValue ? ReadDecimal(used.Cells[row, collectionCol.Value]) : 0m;
 
                         var normalizedYearLabel = NormalizeAcademicYearLabel(yearLabel);
@@ -130,6 +132,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             programName.Trim(),
                             agreementTotal,
                             downPayment,
+                            transportationMonthlyCost,
                             monthlySignals,
                             confirmedCollected,
                             paymentDate,

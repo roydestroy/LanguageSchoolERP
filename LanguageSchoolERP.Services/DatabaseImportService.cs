@@ -167,6 +167,10 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 Program = program,
                                 AgreementTotal = row.AgreementTotal,
                                 DownPayment = row.DownPayment,
+                                IncludesTransportation = row.TransportationMonthlyCost > 0m,
+                                TransportationMonthlyPrice = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : null,
+                                HasTransportation = row.TransportationMonthlyCost > 0m,
+                                TransportationMonthlyFee = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : 0m,
                                 Comments = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
                             };
                             localDb.Enrollments.Add(enrollment);
@@ -180,6 +184,14 @@ public sealed class DatabaseImportService : IDatabaseImportService
                             if (row.DownPayment > 0m)
                                 enrollment.DownPayment = row.DownPayment;
 
+                            if (row.TransportationMonthlyCost > 0m)
+                            {
+                                enrollment.IncludesTransportation = true;
+                                enrollment.TransportationMonthlyPrice = row.TransportationMonthlyCost;
+                                enrollment.HasTransportation = true;
+                                enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
+                            }
+
                             summary.UpdatedEnrollments++;
                         }
 
@@ -188,6 +200,15 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
                         if (enrollment.DownPayment <= 0m && row.DownPayment > 0m)
                             enrollment.DownPayment = row.DownPayment;
+
+                        if (row.TransportationMonthlyCost > 0m
+                            && (enrollment.TransportationMonthlyFee <= 0m || enrollment.TransportationMonthlyPrice is null))
+                        {
+                            enrollment.IncludesTransportation = true;
+                            enrollment.TransportationMonthlyPrice = row.TransportationMonthlyCost;
+                            enrollment.HasTransportation = true;
+                            enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
+                        }
 
                         var hasMonthlyPayments = row.MonthlyPayments.Count > 0;
                         if (hasMonthlyPayments)

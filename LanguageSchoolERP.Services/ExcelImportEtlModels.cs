@@ -11,6 +11,7 @@ public sealed record ExcelImportParseRow(
     string ProgramName,
     decimal AgreementTotal,
     decimal DownPayment,
+    decimal TransportationMonthlyCost,
     IReadOnlyList<ExcelMonthlyPaymentSignal> MonthlyPayments,
     decimal? ConfirmedCollectedAmount,
     DateTime? PaymentDate,
