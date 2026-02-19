@@ -280,7 +280,7 @@
 								<DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Τηλέφωνο" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<TextBlock Text="Κινητό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
 									<Button Command="{Binding SelectStudentPhonePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
@@ -296,7 +296,10 @@
 										</Button.Style>
 									</Button>
 								</DockPanel>
-								<TextBox Text="{Binding EditablePhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBox Text="{Binding EditableMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+								<TextBlock Text="Σταθερό" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Ηλ. ταχυδρομείο" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
@@ -331,7 +334,7 @@
 								<TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Τηλέφωνο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<TextBlock Text="Κινητό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
 									<Button Command="{Binding SelectFatherPhonePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
@@ -347,7 +350,10 @@
 										</Button.Style>
 									</Button>
 								</DockPanel>
-								<TextBox Text="{Binding EditableFatherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBox Text="{Binding EditableFatherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+								<TextBlock Text="Σταθερό πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableFatherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
@@ -375,7 +381,7 @@
 								<TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Τηλέφωνο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<TextBlock Text="Κινητό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
 									<Button Command="{Binding SelectMotherPhonePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
@@ -391,7 +397,10 @@
 										</Button.Style>
 									</Button>
 								</DockPanel>
-								<TextBox Text="{Binding EditableMotherPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+								<TextBox Text="{Binding EditableMotherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
+								<TextBlock Text="Σταθερό μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableMotherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>

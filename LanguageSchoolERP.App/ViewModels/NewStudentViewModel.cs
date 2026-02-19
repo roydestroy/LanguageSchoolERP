@@ -29,19 +29,22 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private string studentName = "";
     [ObservableProperty] private string studentSurname = "";
     [ObservableProperty] private DateTime? dateOfBirth;
-    [ObservableProperty] private string phone = "";
+    [ObservableProperty] private string mobile = "";
+    [ObservableProperty] private string landline = "";
     [ObservableProperty] private string email = "";
     [ObservableProperty] private string notes = "";
 
     // Parents
     [ObservableProperty] private string fatherName = "";
     [ObservableProperty] private string fatherSurname = "";
-    [ObservableProperty] private string fatherPhone = "";
+    [ObservableProperty] private string fatherMobile = "";
+    [ObservableProperty] private string fatherLandline = "";
     [ObservableProperty] private string fatherEmail = "";
 
     [ObservableProperty] private string motherName = "";
     [ObservableProperty] private string motherSurname = "";
-    [ObservableProperty] private string motherPhone = "";
+    [ObservableProperty] private string motherMobile = "";
+    [ObservableProperty] private string motherLandline = "";
     [ObservableProperty] private string motherEmail = "";
 
     // Enrollment
@@ -227,13 +230,18 @@ public partial class NewStudentViewModel : ObservableObject
             {
                 FullName = fullName,
                 DateOfBirth = DateOfBirth,
-                Phone = Phone.Trim(),
+                Mobile = Mobile.Trim(),
+                Landline = Landline.Trim(),
                 Email = Email.Trim(),
                 Notes = Notes.Trim(),
                 FatherName = JoinName(FatherName, FatherSurname),
-                FatherContact = JoinPhoneEmail(FatherPhone, FatherEmail),
+                FatherEmail = FatherEmail.Trim(),
+                FatherMobile = FatherMobile.Trim(),
+                FatherLandline = FatherLandline.Trim(),
                 MotherName = JoinName(MotherName, MotherSurname),
-                MotherContact = JoinPhoneEmail(MotherPhone, MotherEmail),
+                MotherEmail = MotherEmail.Trim(),
+                MotherMobile = MotherMobile.Trim(),
+                MotherLandline = MotherLandline.Trim(),
             };
 
             var enrollment = new Enrollment
@@ -273,15 +281,6 @@ public partial class NewStudentViewModel : ObservableObject
             .Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 
-    private static string JoinPhoneEmail(string? phone, string? email)
-    {
-        var p = phone?.Trim() ?? "";
-        var e = email?.Trim() ?? "";
-
-        if (string.IsNullOrWhiteSpace(p)) return e;
-        if (string.IsNullOrWhiteSpace(e)) return p;
-        return $"{p} | {e}";
-    }
 
     private static bool TryParseMoney(string text, out decimal value)
     {

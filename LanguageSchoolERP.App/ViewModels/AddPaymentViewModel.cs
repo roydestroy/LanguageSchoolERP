@@ -336,7 +336,7 @@ public partial class AddPaymentViewModel : ObservableObject
                 ReceiptNumber: receiptNumber,
                 IssueDate: newPayment.PaymentDate,
                 StudentName: student.FullName,
-                StudentPhone: student.Phone ?? "",
+                StudentPhone: student.Mobile ?? "",
                 StudentEmail: student.Email ?? "",
                 Amount: newPayment.Amount,
                 PaymentMethod: newPayment.Method.ToGreekLabel(),

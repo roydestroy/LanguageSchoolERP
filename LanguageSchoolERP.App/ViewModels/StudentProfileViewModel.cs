@@ -38,15 +38,18 @@ public partial class StudentProfileViewModel : ObservableObject
     private string _originalStudentName = "";
     private string _originalStudentSurname = "";
     private DateTime? _originalDateOfBirth;
-    private string _originalPhone = "";
+    private string _originalMobile = "";
+    private string _originalLandline = "";
     private string _originalEmail = "";
     private string _originalFatherName = "";
     private string _originalFatherSurname = "";
-    private string _originalFatherPhone = "";
+    private string _originalFatherMobile = "";
+    private string _originalFatherLandline = "";
     private string _originalFatherEmail = "";
     private string _originalMotherName = "";
     private string _originalMotherSurname = "";
-    private string _originalMotherPhone = "";
+    private string _originalMotherMobile = "";
+    private string _originalMotherLandline = "";
     private string _originalMotherEmail = "";
     private PreferredPhoneSource _originalPreferredPhoneSource = PreferredPhoneSource.Student;
     private PreferredEmailSource _originalPreferredEmailSource = PreferredEmailSource.Student;
@@ -71,15 +74,18 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string editableStudentName = "";
     [ObservableProperty] private string editableStudentSurname = "";
     [ObservableProperty] private DateTime? editableDateOfBirth;
-    [ObservableProperty] private string editablePhone = "";
+    [ObservableProperty] private string editableMobile = "";
+    [ObservableProperty] private string editableLandline = "";
     [ObservableProperty] private string editableEmail = "";
     [ObservableProperty] private string editableFatherName = "";
     [ObservableProperty] private string editableFatherSurname = "";
-    [ObservableProperty] private string editableFatherPhone = "";
+    [ObservableProperty] private string editableFatherMobile = "";
+    [ObservableProperty] private string editableFatherLandline = "";
     [ObservableProperty] private string editableFatherEmail = "";
     [ObservableProperty] private string editableMotherName = "";
     [ObservableProperty] private string editableMotherSurname = "";
-    [ObservableProperty] private string editableMotherPhone = "";
+    [ObservableProperty] private string editableMotherMobile = "";
+    [ObservableProperty] private string editableMotherLandline = "";
     [ObservableProperty] private string editableMotherEmail = "";
     [ObservableProperty] private PreferredPhoneSource editablePreferredPhoneSource = PreferredPhoneSource.Student;
     [ObservableProperty] private PreferredEmailSource editablePreferredEmailSource = PreferredEmailSource.Student;
@@ -94,7 +100,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public bool IsMotherEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Mother;
 
     [ObservableProperty] private string dobLine = "";
-    [ObservableProperty] private string phoneLine = "";
+    [ObservableProperty] private string mobileLine = "";
     [ObservableProperty] private string emailLine = "";
     [ObservableProperty] private string fatherLine = "";
     [ObservableProperty] private string motherLine = "";
@@ -264,15 +270,18 @@ public partial class StudentProfileViewModel : ObservableObject
         EditableStudentName = _originalStudentName;
         EditableStudentSurname = _originalStudentSurname;
         EditableDateOfBirth = _originalDateOfBirth;
-        EditablePhone = _originalPhone;
+        EditableMobile = _originalMobile;
+        EditableLandline = _originalLandline;
         EditableEmail = _originalEmail;
         EditableFatherName = _originalFatherName;
         EditableFatherSurname = _originalFatherSurname;
-        EditableFatherPhone = _originalFatherPhone;
+        EditableFatherMobile = _originalFatherMobile;
+        EditableFatherLandline = _originalFatherLandline;
         EditableFatherEmail = _originalFatherEmail;
         EditableMotherName = _originalMotherName;
         EditableMotherSurname = _originalMotherSurname;
-        EditableMotherPhone = _originalMotherPhone;
+        EditableMotherMobile = _originalMotherMobile;
+        EditableMotherLandline = _originalMotherLandline;
         EditableMotherEmail = _originalMotherEmail;
         EditablePreferredPhoneSource = _originalPreferredPhoneSource;
         EditablePreferredEmailSource = _originalPreferredEmailSource;
@@ -304,12 +313,17 @@ public partial class StudentProfileViewModel : ObservableObject
 
             student.FullName = JoinName(EditableStudentName, EditableStudentSurname);
             student.DateOfBirth = EditableDateOfBirth;
-            student.Phone = EditablePhone.Trim();
+            student.Mobile = EditableMobile.Trim();
+            student.Landline = EditableLandline.Trim();
             student.Email = EditableEmail.Trim();
             student.FatherName = JoinName(EditableFatherName, EditableFatherSurname);
-            student.FatherContact = JoinPhoneEmail(EditableFatherPhone, EditableFatherEmail);
+            student.FatherMobile = EditableFatherMobile.Trim();
+            student.FatherLandline = EditableFatherLandline.Trim();
+            student.FatherEmail = EditableFatherEmail.Trim();
             student.MotherName = JoinName(EditableMotherName, EditableMotherSurname);
-            student.MotherContact = JoinPhoneEmail(EditableMotherPhone, EditableMotherEmail);
+            student.MotherMobile = EditableMotherMobile.Trim();
+            student.MotherLandline = EditableMotherLandline.Trim();
+            student.MotherEmail = EditableMotherEmail.Trim();
             student.PreferredPhoneSource = ResolvePreferredPhoneSource();
             student.PreferredEmailSource = ResolvePreferredEmailSource();
             student.Notes = EditableNotes.Trim();
@@ -784,7 +798,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     ReceiptNumber: 0,
                     IssueDate: issueDate,
                     StudentName: student.FullName,
-                    StudentPhone: student.Phone ?? "",
+                    StudentPhone: student.Mobile ?? "",
                     StudentEmail: student.Email ?? "",
                     Amount: enrollment.DownPayment,
                     PaymentMethod: "Προκαταβολή εγγραφής",
@@ -906,23 +920,24 @@ public partial class StudentProfileViewModel : ObservableObject
 
             var (studentName, studentSurname) = SplitName(student.FullName);
             var (fatherName, fatherSurname) = SplitName(student.FatherName);
-            var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
             var (motherName, motherSurname) = SplitName(student.MotherName);
-            var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
 
             _originalStudentName = studentName;
             _originalStudentSurname = studentSurname;
             _originalDateOfBirth = student.DateOfBirth;
-            _originalPhone = student.Phone ?? "";
+            _originalMobile = student.Mobile ?? "";
+            _originalLandline = student.Landline ?? "";
             _originalEmail = student.Email ?? "";
             _originalFatherName = fatherName;
             _originalFatherSurname = fatherSurname;
-            _originalFatherPhone = fatherPhone;
-            _originalFatherEmail = fatherEmail;
+            _originalFatherMobile = student.FatherMobile ?? "";
+            _originalFatherLandline = student.FatherLandline ?? "";
+            _originalFatherEmail = student.FatherEmail ?? "";
             _originalMotherName = motherName;
             _originalMotherSurname = motherSurname;
-            _originalMotherPhone = motherPhone;
-            _originalMotherEmail = motherEmail;
+            _originalMotherMobile = student.MotherMobile ?? "";
+            _originalMotherLandline = student.MotherLandline ?? "";
+            _originalMotherEmail = student.MotherEmail ?? "";
             _originalPreferredPhoneSource = student.PreferredPhoneSource;
             _originalPreferredEmailSource = student.PreferredEmailSource;
             _originalNotes = student.Notes ?? "";
@@ -930,22 +945,25 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableStudentName = _originalStudentName;
             EditableStudentSurname = _originalStudentSurname;
             EditableDateOfBirth = _originalDateOfBirth;
-            EditablePhone = _originalPhone;
+            EditableMobile = _originalMobile;
+            EditableLandline = _originalLandline;
             EditableEmail = _originalEmail;
             EditableFatherName = _originalFatherName;
             EditableFatherSurname = _originalFatherSurname;
-            EditableFatherPhone = _originalFatherPhone;
+            EditableFatherMobile = _originalFatherMobile;
+            EditableFatherLandline = _originalFatherLandline;
             EditableFatherEmail = _originalFatherEmail;
             EditableMotherName = _originalMotherName;
             EditableMotherSurname = _originalMotherSurname;
-            EditableMotherPhone = _originalMotherPhone;
+            EditableMotherMobile = _originalMotherMobile;
+            EditableMotherLandline = _originalMotherLandline;
             EditableMotherEmail = _originalMotherEmail;
             EditablePreferredPhoneSource = _originalPreferredPhoneSource;
             EditablePreferredEmailSource = _originalPreferredEmailSource;
             EditableNotes = _originalNotes;
 
             DobLine = student.DateOfBirth.HasValue ? $"Ημ. γέννησης: {student.DateOfBirth:dd/MM/yyyy}" : "Ημ. γέννησης: —";
-            PhoneLine = string.IsNullOrWhiteSpace(student.Phone) ? "Τηλέφωνο: —" : $"Τηλέφωνο: {student.Phone}";
+            MobileLine = string.IsNullOrWhiteSpace(student.Mobile) ? "Κινητό: —" : $"Κινητό: {student.Mobile}";
             EmailLine = string.IsNullOrWhiteSpace(student.Email) ? "Ηλ. ταχυδρομείο: —" : $"Ηλ. ταχυδρομείο: {student.Email}";
             FatherLine = $"Πατέρας: {student.FatherName}".Trim();
             MotherLine = $"Μητέρα: {student.MotherName}".Trim();
@@ -1225,10 +1243,10 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         return EditablePreferredPhoneSource switch
         {
-            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherPhone) => PreferredPhoneSource.Student,
-            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherPhone) => PreferredPhoneSource.Student,
-            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditablePhone) && !string.IsNullOrWhiteSpace(EditableFatherPhone) => PreferredPhoneSource.Father,
-            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditablePhone) && string.IsNullOrWhiteSpace(EditableFatherPhone) && !string.IsNullOrWhiteSpace(EditableMotherPhone) => PreferredPhoneSource.Mother,
+            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherMobile) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherMobile) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && !string.IsNullOrWhiteSpace(EditableFatherMobile) => PreferredPhoneSource.Father,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && string.IsNullOrWhiteSpace(EditableFatherMobile) && !string.IsNullOrWhiteSpace(EditableMotherMobile) => PreferredPhoneSource.Mother,
             _ => EditablePreferredPhoneSource
         };
     }
@@ -1247,19 +1265,21 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string BuildPreferredContactLine(Student student)
     {
-        var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
-        var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
+        var fatherPhone = !string.IsNullOrWhiteSpace(student.FatherMobile) ? student.FatherMobile : student.FatherLandline;
+        var motherPhone = !string.IsNullOrWhiteSpace(student.MotherMobile) ? student.MotherMobile : student.MotherLandline;
+        var fatherEmail = student.FatherEmail;
+        var motherEmail = student.MotherEmail;
 
         var phone = student.PreferredPhoneSource switch
         {
             PreferredPhoneSource.Father => fatherPhone,
             PreferredPhoneSource.Mother => motherPhone,
-            _ => student.Phone
+            _ => student.Mobile
         };
 
         if (string.IsNullOrWhiteSpace(phone))
         {
-            phone = !string.IsNullOrWhiteSpace(student.Phone) ? student.Phone
+            phone = !string.IsNullOrWhiteSpace(student.Mobile) ? student.Mobile
                 : !string.IsNullOrWhiteSpace(fatherPhone) ? fatherPhone
                 : motherPhone;
         }
@@ -1405,25 +1425,6 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
             .Where(x => !string.IsNullOrWhiteSpace(x)));
-    }
-
-    private static (string Phone, string Email) SplitPhoneEmail(string? value)
-    {
-        var raw = (value ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(raw)) return ("", "");
-
-        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
-        return parts.Length == 2 ? (parts[0], parts[1]) : (raw, "");
-    }
-
-    private static string JoinPhoneEmail(string? phone, string? email)
-    {
-        var p = phone?.Trim() ?? "";
-        var e = email?.Trim() ?? "";
-
-        if (string.IsNullOrWhiteSpace(p)) return e;
-        if (string.IsNullOrWhiteSpace(e)) return p;
-        return $"{p} | {e}";
     }
 
 }
