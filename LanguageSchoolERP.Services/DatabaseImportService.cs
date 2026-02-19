@@ -517,47 +517,92 @@ END
         if (string.IsNullOrWhiteSpace(normalizedName))
             throw new InvalidOperationException("Student full name is required.");
 
+        var (normalizedFirstName, normalizedLastName) = SplitFullName(normalizedName);
+        var (normalizedStudentMobile, normalizedStudentLandline) = SplitPhoneByPrefix(normalizedStudentPhone);
+        var (normalizedFatherMobile, normalizedFatherLandline) = SplitPhoneByPrefix(normalizedFatherPhone);
+        var (normalizedMotherMobile, normalizedMotherLandline) = SplitPhoneByPrefix(normalizedMotherPhone);
+
         Student? student = null;
 
-        if (!string.IsNullOrWhiteSpace(normalizedStudentPhone))
+        if (!string.IsNullOrWhiteSpace(normalizedStudentMobile))
         {
-            student = db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName && s.Phone == normalizedStudentPhone)
-                ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName && s.Phone == normalizedStudentPhone, ct);
+            student = db.Students.Local.FirstOrDefault(s => s.FirstName == normalizedFirstName && s.LastName == normalizedLastName && s.Mobile == normalizedStudentMobile)
+                ?? await db.Students.FirstOrDefaultAsync(s => s.FirstName == normalizedFirstName && s.LastName == normalizedLastName && s.Mobile == normalizedStudentMobile, ct);
         }
 
-        student ??= db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName)
-            ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName, ct);
+        student ??= db.Students.Local.FirstOrDefault(s => s.FirstName == normalizedFirstName && s.LastName == normalizedLastName)
+            ?? await db.Students.FirstOrDefaultAsync(s => s.FirstName == normalizedFirstName && s.LastName == normalizedLastName, ct);
 
-        if (student is null && !string.IsNullOrWhiteSpace(normalizedStudentPhone))
+        if (student is null && !string.IsNullOrWhiteSpace(normalizedStudentMobile))
         {
-            student = db.Students.Local.FirstOrDefault(s => s.Phone == normalizedStudentPhone)
-                ?? await db.Students.FirstOrDefaultAsync(s => s.Phone == normalizedStudentPhone, ct);
+            student = db.Students.Local.FirstOrDefault(s => s.Mobile == normalizedStudentMobile)
+                ?? await db.Students.FirstOrDefaultAsync(s => s.Mobile == normalizedStudentMobile, ct);
         }
 
         if (student is not null)
         {
-            if (!string.IsNullOrWhiteSpace(normalizedStudentPhone))
-                student.Phone = normalizedStudentPhone;
+            if (!string.IsNullOrWhiteSpace(normalizedStudentMobile))
+                student.Mobile = normalizedStudentMobile;
 
-            if (!string.IsNullOrWhiteSpace(normalizedFatherPhone))
-                student.FatherContact = normalizedFatherPhone;
+            if (!string.IsNullOrWhiteSpace(normalizedStudentLandline))
+                student.Landline = normalizedStudentLandline;
 
-            if (!string.IsNullOrWhiteSpace(normalizedMotherPhone))
-                student.MotherContact = normalizedMotherPhone;
+            if (!string.IsNullOrWhiteSpace(normalizedFatherMobile))
+                student.FatherMobile = normalizedFatherMobile;
+
+            if (!string.IsNullOrWhiteSpace(normalizedFatherLandline))
+                student.FatherLandline = normalizedFatherLandline;
+
+            if (!string.IsNullOrWhiteSpace(normalizedMotherMobile))
+                student.MotherMobile = normalizedMotherMobile;
+
+            if (!string.IsNullOrWhiteSpace(normalizedMotherLandline))
+                student.MotherLandline = normalizedMotherLandline;
 
             return student;
         }
 
         student = new Student
         {
-            FullName = normalizedName,
-            Phone = normalizedStudentPhone ?? string.Empty,
-            FatherContact = normalizedFatherPhone ?? string.Empty,
-            MotherContact = normalizedMotherPhone ?? string.Empty
+            FirstName = normalizedFirstName,
+            LastName = normalizedLastName,
+            Mobile = normalizedStudentMobile ?? string.Empty,
+            Landline = normalizedStudentLandline ?? string.Empty,
+            FatherMobile = normalizedFatherMobile ?? string.Empty,
+            FatherLandline = normalizedFatherLandline ?? string.Empty,
+            MotherMobile = normalizedMotherMobile ?? string.Empty,
+            MotherLandline = normalizedMotherLandline ?? string.Empty
         };
         db.Students.Add(student);
         summary.InsertedStudents++;
         return student;
+    }
+
+    private static (string FirstName, string LastName) SplitFullName(string fullName)
+    {
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0)
+            return (string.Empty, string.Empty);
+
+        if (parts.Length == 1)
+            return (parts[0], string.Empty);
+
+        return (string.Join(' ', parts.Take(parts.Length - 1)), parts[^1]);
+    }
+
+    private static (string? Mobile, string? Landline) SplitPhoneByPrefix(string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return (null, null);
+
+        var value = phone.Trim();
+        if (value.StartsWith('2'))
+            return (null, value);
+
+        if (value.StartsWith('6'))
+            return (value, null);
+
+        return (value, null);
     }
 
     private static string ReplaceDatabaseName(string connectionString, string databaseName)

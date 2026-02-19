@@ -44,8 +44,11 @@
                     <TextBlock Text="Ημερομηνία γέννησης (προαιρετικό)"/>
                     <DatePicker Margin="0,2,0,6" SelectedDate="{Binding DateOfBirth}"/>
 
-                    <TextBlock Text="Τηλέφωνο"/>
-                    <TextBox Margin="0,2,0,6" Text="{Binding Phone}"/>
+                    <TextBlock Text="Κινητό"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding Mobile}"/>
+
+                    <TextBlock Text="Σταθερό"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding Landline}"/>
 
                     <TextBlock Text="Ηλ. ταχυδρομείο"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding Email}"/>
@@ -66,8 +69,11 @@
                     <TextBlock Text="Επώνυμο πατέρα"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding FatherSurname, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Τηλέφωνο πατέρα"/>
-                    <TextBox Margin="0,2,0,6" Text="{Binding FatherPhone, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="Κινητό πατέρα"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding FatherMobile, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Σταθερό πατέρα"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding FatherLandline, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock Text="Ηλ. ταχυδρομείο πατέρα"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding FatherEmail, UpdateSourceTrigger=PropertyChanged}"/>
@@ -78,8 +84,11 @@
                     <TextBlock Text="Επώνυμο μητέρας"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding MotherSurname, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBlock Text="Τηλέφωνο μητέρας"/>
-                    <TextBox Margin="0,2,0,6" Text="{Binding MotherPhone, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="Κινητό μητέρας"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding MotherMobile, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Text="Σταθερό μητέρας"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding MotherLandline, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <TextBlock Text="Ηλ. ταχυδρομείο μητέρας"/>
                     <TextBox Margin="0,2,0,0" Text="{Binding MotherEmail, UpdateSourceTrigger=PropertyChanged}"/>

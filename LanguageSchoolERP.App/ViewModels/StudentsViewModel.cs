@@ -238,8 +238,9 @@ public partial class StudentsViewModel : ObservableObject
             {
                 var st = SearchText.Trim();
                 baseQuery = baseQuery.Where(s =>
-                    s.FullName.Contains(st) ||
-                    s.Phone.Contains(st) ||
+                    (s.FirstName + " " + s.LastName).Contains(st) ||
+                    s.Mobile.Contains(st) ||
+                    s.Landline.Contains(st) ||
                     s.Email.Contains(st) ||
                     db.Enrollments.Any(e =>
                         e.StudentId == s.StudentId &&
@@ -254,7 +255,7 @@ public partial class StudentsViewModel : ObservableObject
                 .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
                     .ThenInclude(en => en.Payments)
                 .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
-                .OrderBy(s => s.FullName)
+                .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
                 .ToListAsync();
 
             var rows = new List<StudentRowVm>();
@@ -333,7 +334,7 @@ public partial class StudentsViewModel : ObservableObject
                 var row = new StudentRowVm
                 {
                     StudentId = s.StudentId,
-                    FullName = ToSurnameFirst(s.FullName),
+                    FullName = ToSurnameFirst($"{s.FirstName} {s.LastName}"),
                     ContactLine = BuildPreferredContactLine(s),
                     YearLabel = $"Έτος: {year}",
                     EnrollmentSummaryText = enrollmentSummaryText,
@@ -435,19 +436,21 @@ public partial class StudentsViewModel : ObservableObject
 
     private static string BuildPreferredContactLine(Student student)
     {
-        var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
-        var (motherPhone, motherEmail) = SplitPhoneEmail(student.MotherContact);
+        var fatherPhone = !string.IsNullOrWhiteSpace(student.FatherMobile) ? student.FatherMobile : student.FatherLandline;
+        var motherPhone = !string.IsNullOrWhiteSpace(student.MotherMobile) ? student.MotherMobile : student.MotherLandline;
+        var fatherEmail = student.FatherEmail;
+        var motherEmail = student.MotherEmail;
 
         var phone = student.PreferredPhoneSource switch
         {
             PreferredPhoneSource.Father => fatherPhone,
             PreferredPhoneSource.Mother => motherPhone,
-            _ => student.Phone
+            _ => student.Mobile
         };
 
         if (string.IsNullOrWhiteSpace(phone))
         {
-            phone = !string.IsNullOrWhiteSpace(student.Phone) ? student.Phone
+            phone = !string.IsNullOrWhiteSpace(student.Mobile) ? student.Mobile
                 : !string.IsNullOrWhiteSpace(fatherPhone) ? fatherPhone
                 : motherPhone;
         }
@@ -467,15 +470,6 @@ public partial class StudentsViewModel : ObservableObject
         }
 
         return $"{phone}  |  {email}".Trim(' ', '|');
-    }
-
-    private static (string Phone, string Email) SplitPhoneEmail(string? value)
-    {
-        var raw = (value ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(raw)) return ("", "");
-
-        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
-        return parts.Length == 2 ? (parts[0], parts[1]) : (raw, "");
     }
 
 }
