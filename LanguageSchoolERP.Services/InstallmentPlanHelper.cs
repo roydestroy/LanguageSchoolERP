@@ -19,7 +19,7 @@ public static class InstallmentPlanHelper
             return false;
 
         var paid = e.DownPayment + SumPayments(e);
-        var remaining = e.AgreementTotal - paid;
+        var remaining = GetEffectiveAgreementTotal(e) - paid;
         if (remaining <= 0)
             return false;
 
@@ -72,7 +72,7 @@ public static class InstallmentPlanHelper
 
         if (e.InstallmentCount <= 0)
         {
-            var remaining = e.AgreementTotal - (e.DownPayment + SumPayments(e));
+            var remaining = GetEffectiveAgreementTotal(e) - (e.DownPayment + SumPayments(e));
             return remaining > 0 ? remaining : 0m;
         }
 
@@ -99,13 +99,14 @@ public static class InstallmentPlanHelper
 
     public static decimal GetEffectiveAgreementTotal(Enrollment e)
     {
-        return e.AgreementTotal;
+        var studyLabTotal = e.IncludesStudyLab ? (e.StudyLabMonthlyPrice ?? 0m) : 0m;
+        return e.AgreementTotal + studyLabTotal;
     }
 
     public static decimal GetOutstandingAmount(Enrollment e)
     {
         var paid = e.DownPayment + SumPayments(e);
-        var remaining = e.AgreementTotal - paid;
+        var remaining = GetEffectiveAgreementTotal(e) - paid;
         return remaining > 0 ? remaining : 0m;
     }
 
@@ -118,13 +119,13 @@ public static class InstallmentPlanHelper
             return e.StoppedAmountWaived;
 
         var paid = e.DownPayment + SumPayments(e);
-        var remaining = e.AgreementTotal - paid;
+        var remaining = GetEffectiveAgreementTotal(e) - paid;
         return remaining > 0 ? remaining : 0m;
     }
 
     private static decimal GetRoundedFinancedAmount(Enrollment e)
     {
-        var financed = e.AgreementTotal - e.DownPayment;
+        var financed = GetEffectiveAgreementTotal(e) - e.DownPayment;
         if (financed <= 0)
             return 0m;
 

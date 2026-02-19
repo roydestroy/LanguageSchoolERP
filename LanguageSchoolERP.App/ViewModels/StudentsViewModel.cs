@@ -294,10 +294,10 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
                     continue;
 
-                var activeBalance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
+                var activeBalance = activeEnrollments.Sum(e => InstallmentPlanHelper.GetEffectiveAgreementTotal(e) - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
                 var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
-                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) > en.AgreementTotal + 0.009m);
-                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) + 0.009m >= en.AgreementTotal);
+                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) > InstallmentPlanHelper.GetEffectiveAgreementTotal(en) + 0.009m);
+                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(en));
 
                 var studentProgressBrush = hasOnlyStoppedPrograms
                     ? ProgressStoppedRedBrush
@@ -348,12 +348,13 @@ public partial class StudentsViewModel : ObservableObject
                 foreach (var en in yearEnrollments.OrderBy(x => x.Program?.Name))
                 {
                     var enPaid = PaymentAgreementHelper.SumAgreementPayments(en.Payments) + en.DownPayment;
-                    var enBalance = en.AgreementTotal - enPaid;
+                    var enBalance = InstallmentPlanHelper.GetEffectiveAgreementTotal(en) - enPaid;
                     var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
-                    var enOverpaid = enPaid > en.AgreementTotal + 0.009m;
-                    var enFullyPaid = enPaid + 0.009m >= en.AgreementTotal;
+                    var enOverpaid = enPaid > InstallmentPlanHelper.GetEffectiveAgreementTotal(en) + 0.009m;
+                    var enFullyPaid = enPaid + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
 
-                    var enrollmentProgress = en.AgreementTotal <= 0 ? 0d : (double)(enPaid / en.AgreementTotal * 100m);
+                    var enrollmentEffectiveTotal = InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
+                    var enrollmentProgress = enrollmentEffectiveTotal <= 0 ? 0d : (double)(enPaid / enrollmentEffectiveTotal * 100m);
                     if (enrollmentProgress > 100) enrollmentProgress = 100;
                     if (enrollmentProgress < 0) enrollmentProgress = 0;
 
