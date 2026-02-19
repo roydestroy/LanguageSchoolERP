@@ -81,6 +81,7 @@
                 <StackPanel>
                     <TextBlock Text="Συμφωνηθέν ποσό" FontSize="12" Foreground="{StaticResource Brush.TextSecondary}"/>
                     <TextBlock Text="{Binding AgreementsTotal, StringFormat={}{0:0.00} €}" FontSize="24" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CollectibleTotal, StringFormat=Εισπράξιμο ποσό: {0:0.00} €}" Foreground="#2E7D32"/>
                     <TextBlock Text="{Binding LostRevenueTotal, StringFormat=Απώλειες: {0:0.00} €}" Foreground="#A64949"/>
                 </StackPanel>
             </Border>

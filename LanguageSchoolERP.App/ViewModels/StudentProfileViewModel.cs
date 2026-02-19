@@ -981,12 +981,13 @@ public partial class StudentProfileViewModel : ObservableObject
                 });
             }
 
-            // Summary across enrollments (grouped by caret in list; here we aggregate)
-            decimal agreementSum = enrollments.Sum(e => e.AgreementTotal);
-            decimal downSum = enrollments.Sum(e => e.DownPayment);
-            decimal paidSum = enrollments.Sum(e => e.Payments.Sum(p => p.Amount));
+            // Summary across active enrollments for top-right metrics
+            var activeEnrollments = enrollments.Where(e => !e.IsStopped).ToList();
+            decimal agreementSum = activeEnrollments.Sum(e => e.AgreementTotal);
+            decimal downSum = activeEnrollments.Sum(e => e.DownPayment);
+            decimal paidSum = activeEnrollments.Sum(e => PaymentAgreementHelper.SumAgreementPayments(e.Payments));
             decimal paidTotal = downSum + paidSum;
-            decimal balance = enrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
+            decimal balance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
 
             string BuildEnrollmentExtras(Enrollment e)
             {
@@ -1037,11 +1038,10 @@ public partial class StudentProfileViewModel : ObservableObject
             if (progress > 100) progress = 100;
             if (progress < 0) progress = 0;
 
-            var activeEnrollments = enrollments.Where(e => !e.IsStopped).ToList();
             var hasOnlyStoppedPrograms = enrollments.Count > 0 && enrollments.All(e => e.IsStopped);
             var anyActiveOverdue = activeEnrollments.Any(e => InstallmentPlanHelper.IsEnrollmentOverdue(e, DateTime.Today));
-            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + e.Payments.Sum(p => p.Amount)) > e.AgreementTotal + 0.009m);
-            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + e.Payments.Sum(p => p.Amount)) + 0.009m >= e.AgreementTotal);
+            var anyActiveOverpaid = activeEnrollments.Any(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) > e.AgreementTotal + 0.009m);
+            var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(e => (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)) + 0.009m >= e.AgreementTotal);
 
             ProgressBrush = hasOnlyStoppedPrograms
                 ? ProgressStoppedRedBrush
@@ -1327,7 +1327,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string ParseReason(string? notes)
     {
-        var raw = (notes ?? "").Trim();
+        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
         if (string.IsNullOrWhiteSpace(raw))
             return "—";
 
@@ -1337,12 +1337,18 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string ParseAdditionalNotes(string? notes)
     {
-        var raw = (notes ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(raw))
-            return "";
+        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
+        var parts = string.IsNullOrWhiteSpace(raw)
+            ? Array.Empty<string>()
+            : raw.Split('|', 2, StringSplitOptions.TrimEntries);
 
-        var parts = raw.Split('|', 2, StringSplitOptions.TrimEntries);
-        return parts.Length == 2 ? parts[1] : "";
+        var additionalNotes = parts.Length == 2 ? parts[1] : "";
+        if (!PaymentAgreementHelper.IsExcludedFromAgreement(notes))
+            return additionalNotes;
+
+        return string.IsNullOrWhiteSpace(additionalNotes)
+            ? PaymentAgreementHelper.ExcludeFromAgreementDisplayText
+            : $"{additionalNotes} | {PaymentAgreementHelper.ExcludeFromAgreementDisplayText}";
     }
 
     private static void TryDeleteFile(string? path, string label, ICollection<string> errors)

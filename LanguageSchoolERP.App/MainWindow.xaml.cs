@@ -143,7 +143,7 @@ public partial class MainWindow : Window
             .ToListAsync();
 
         decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
-        decimal paidSum = enrollments.Sum(e => e.DownPayment + e.Payments.Sum(p => p.Amount));
+        decimal paidSum = enrollments.Sum(e => e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments));
 
         var progress = agreementSum <= 0 ? 0d : (double)(paidSum / agreementSum * 100m);
         if (progress > 100) progress = 100;

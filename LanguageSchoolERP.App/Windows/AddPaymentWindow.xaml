@@ -54,6 +54,11 @@
                           ItemsSource="{Binding PaymentReasons}"
                           SelectedItem="{Binding SelectedReason}"/>
 
+
+				<CheckBox Margin="0,0,0,12"
+				          IsChecked="{Binding IsExcludedFromAgreement}"
+				          Content="Να μην αφαιρεθεί από το συμφωνηθέν ποσό (π.χ. μεταφορά/βιβλία/λοιπά)"/>
+
 				<TextBlock Text="Σημειώσεις"/>
 				<TextBox Margin="0,4,0,0" Height="150"
                          AcceptsReturn="True" TextWrapping="Wrap"
