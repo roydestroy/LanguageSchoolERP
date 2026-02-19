@@ -117,7 +117,11 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
         foreach (var file in files)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            if (cancellationToken.IsCancellationRequested)
+            {
+                progress?.Report(new ImportProgress("Cancellation requested. Stopping Excel import...", step, totalSteps));
+                return;
+            }
 
             var route = _excelImportRouter.ResolveRoute(file, fallbackLocalDatabaseName);
             var routedConnectionString = ReplaceDatabaseName(localConnectionString, route.LocalDatabaseName);
@@ -142,7 +146,12 @@ public sealed class DatabaseImportService : IDatabaseImportService
             {
                 foreach (var row in parseResult.Rows)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        await tx.RollbackAsync(CancellationToken.None);
+                        progress?.Report(new ImportProgress($"Cancellation requested while processing '{Path.GetFileName(file)}'.", step, totalSteps));
+                        return;
+                    }
 
                     try
                     {
@@ -278,6 +287,12 @@ public sealed class DatabaseImportService : IDatabaseImportService
                         }
 
                         await localDb.SaveChangesAsync(cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        await tx.RollbackAsync(CancellationToken.None);
+                        progress?.Report(new ImportProgress($"Cancellation requested while processing '{Path.GetFileName(file)}'.", step, totalSteps));
+                        return;
                     }
                     catch (Exception ex)
                     {
