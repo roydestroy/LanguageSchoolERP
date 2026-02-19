@@ -57,11 +57,6 @@
                             Margin="0,0,10,0"
                             Command="{Binding CancelCommand}"/>
 
-                    <Button x:Name="CheckUpdatesBtn"
-                            Width="140"
-                            Height="30"
-                            Content="Έλεγχος ενημερώσεων"
-                            Click="CheckUpdatesBtn_Click"/>
                 </StackPanel>
 
                 <TextBlock Grid.Row="2" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,14,10,0">
@@ -248,11 +243,11 @@
             <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="150"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="Προεπιλεγμένη τοπική βάση" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="Προεπιλογή βάσης" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <RadioButton Content="Φιλοθέη"
                                      GroupName="StartupDb"
@@ -266,8 +261,15 @@
                         <Button Content="Αποθήκευση"
                                 Width="110"
                                 Height="30"
-                                Margin="20,0,0,0"
+                                Margin="10,0,0,0"
                                 Command="{Binding SaveStartupDatabaseCommand}"/>
+
+                        <Button x:Name="CheckUpdatesBtn"
+                                Content="Έλεγχος ενημερώσεων"
+                                Width="135"
+                                Height="28"
+                                Margin="10,0,0,0"
+                                Click="CheckUpdatesBtn_Click"/>
                     </StackPanel>
                 </Grid>
             </Border>
