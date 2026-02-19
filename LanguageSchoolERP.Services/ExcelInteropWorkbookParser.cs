@@ -111,10 +111,9 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                                 continue;
 
                             monthTotal += amount;
-                            var paymentDateForMonth = BuildMonthPaymentDate(normalizedYearLabel, monthCol.Value);
-                            if (paymentDateForMonth.HasValue)
+                            if (TryBuildMonthPaymentDate(normalizedYearLabel, monthCol.Value, out var paymentDateForMonth))
                             {
-                                monthlySignals.Add(new ExcelMonthlyPaymentSignal(monthCol.Value, paymentDateForMonth.Value, amount));
+                                monthlySignals.Add(new ExcelMonthlyPaymentSignal(monthCol.Value, paymentDateForMonth, amount));
                             }
                         }
 
@@ -262,17 +261,20 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
     }
 
 
-    private static DateTime? BuildMonthPaymentDate(string academicYearLabel, string monthHeader)
+    private static bool TryBuildMonthPaymentDate(string academicYearLabel, string monthHeader, out DateTime paymentDate)
     {
+        paymentDate = default;
+
         if (!TryParseAcademicYear(academicYearLabel, out var startYear, out var endYear))
-            return null;
+            return false;
 
         var month = TryResolveMonthNumber(monthHeader);
         if (!month.HasValue)
-            return null;
+            return false;
 
         var year = month is >= 9 and <= 12 ? startYear : endYear;
-        return new DateTime(year, month.Value, 1);
+        paymentDate = new DateTime(year, month.Value, 1);
+        return true;
     }
 
     private static int? TryResolveMonthNumber(string monthHeader)
