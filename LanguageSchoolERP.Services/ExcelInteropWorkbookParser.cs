@@ -43,19 +43,21 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     if (rowCount < 2 || colCount < 1)
                         continue;
 
-                    var headerMap = BuildHeaderMap(used, colCount);
-                    var fullNameCol = FindColumn(headerMap, "ΟΝΟΜΑ");
-                    if (fullNameCol is null)
+                    var headerInfo = FindHeaderRow(used, rowCount, colCount);
+                    if (headerInfo is null)
                     {
                         errors.Add(new ExcelImportRowError(sheet.Name, 1, "Δεν βρέθηκε στήλη ονόματος μαθητή."));
                         continue;
                     }
 
+                    var (headerRow, headerMap) = headerInfo.Value;
+
+                    var fullNameCol = FindColumn(headerMap, "ΟΝΟΜΑ");
                     var phoneCol = FindColumn(headerMap, "ΤΗΛ", "ΚΙΝ");
                     var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
                     var agreementCol = FindColumn(headerMap, "ΣΥΜΦΩΝ", "TOTAL", "ΣΥΝΟΛ");
-                    var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚΑΤ", "DOWN");
+                    var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
 
@@ -64,12 +66,15 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         .Select(kvp => kvp.Key)
                         .ToList();
 
-                    for (var row = 2; row <= rowCount; row++)
+                    for (var row = headerRow + 1; row <= rowCount; row++)
                     {
                         ct.ThrowIfCancellationRequested();
 
-                        var fullName = ReadText(used.Cells[row, fullNameCol.Value]);
+                        var fullName = ReadText(used.Cells[row, fullNameCol!.Value]);
                         if (string.IsNullOrWhiteSpace(fullName))
+                            continue;
+
+                        if (fullName.Contains("ΣΥΝΟΛ", StringComparison.OrdinalIgnoreCase))
                             continue;
 
                         var yearLabel = yearCol.HasValue
@@ -141,12 +146,33 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         return new ExcelImportParseResult(rows, errors);
     }
 
-    private static Dictionary<int, string> BuildHeaderMap(Excel.Range used, int colCount)
+    private static (int HeaderRow, Dictionary<int, string> HeaderMap)? FindHeaderRow(Excel.Range used, int rowCount, int colCount)
+    {
+        var maxHeaderScanRow = Math.Min(rowCount, 12);
+
+        for (var row = 1; row <= maxHeaderScanRow; row++)
+        {
+            var headerMap = BuildHeaderMap(used, row, colCount);
+            if (headerMap.Count == 0)
+                continue;
+
+            var hasName = FindColumn(headerMap, "ΟΝΟΜΑ") is not null;
+            var hasFinancialSignal = FindColumn(headerMap, "ΣΥΜΦΩΝ", "ΠΡΟΚ", "ΕΙΣΠΡΑΞ") is not null
+                                     || headerMap.Any(kvp => MonthHints.Any(m => kvp.Value.Contains(m, StringComparison.OrdinalIgnoreCase)));
+
+            if (hasName && hasFinancialSignal)
+                return (row, headerMap);
+        }
+
+        return null;
+    }
+
+    private static Dictionary<int, string> BuildHeaderMap(Excel.Range used, int headerRow, int colCount)
     {
         var map = new Dictionary<int, string>();
         for (var col = 1; col <= colCount; col++)
         {
-            var header = ReadText(used.Cells[1, col]);
+            var header = ReadText(used.Cells[headerRow, col]);
             if (!string.IsNullOrWhiteSpace(header))
                 map[col] = NormalizeHeader(header);
         }
