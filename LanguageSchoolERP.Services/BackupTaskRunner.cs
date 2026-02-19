@@ -8,7 +8,7 @@ namespace LanguageSchoolERP.Services;
 
 public static class BackupTaskRunner
 {
-    public static Task<int> RunAsync(bool force = false)
+    public static Task<int> RunAsync(bool force = false, string? localDatabaseName = null)
     {
         BackupStatusStore.TryWriteAttempt(DateTime.UtcNow);
 
@@ -41,7 +41,9 @@ public static class BackupTaskRunner
             }
 
             var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var db = s.Local.Database;
+            var db = string.IsNullOrWhiteSpace(localDatabaseName)
+                ? s.Local.Database
+                : localDatabaseName.Trim();
 
             var localBak = Path.Combine(s.Backup.LocalBackupDir, $"{db}_{ts}.bak");
             BackupLocalDatabaseWithSmo(s.Local.Server, db, localBak);

@@ -334,7 +334,7 @@ public partial class DatabaseImportViewModel : ObservableObject
 
         try
         {
-            var exitCode = await BackupTaskRunner.RunAsync(force: true);
+            var exitCode = await BackupTaskRunner.RunAsync(force: true, localDatabaseName: _appState.SelectedLocalDatabaseName);
             RefreshBackupStatus();
 
             if (exitCode == 0)
