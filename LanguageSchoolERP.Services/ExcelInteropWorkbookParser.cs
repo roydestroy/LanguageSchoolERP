@@ -1,0 +1,232 @@
+using System.Globalization;
+using System.Runtime.InteropServices;
+using Excel = Microsoft.Office.Interop.Excel;
+
+namespace LanguageSchoolERP.Services;
+
+public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
+{
+    private static readonly CultureInfo ElGr = new("el-GR");
+    private static readonly string[] MonthHints = ["ΣΕΠ", "ΟΚΤ", "ΝΟΕ", "ΔΕΚ", "ΙΑΝ", "ΦΕΒ", "ΜΑΡ", "ΑΠΡ", "ΜΑΙ", "ΙΟΥΝ"];
+
+    public Task<ExcelImportParseResult> ParseAsync(
+        string workbookPath,
+        string defaultProgramName,
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(() => ParseInternal(workbookPath, defaultProgramName, cancellationToken), cancellationToken);
+    }
+
+    private static ExcelImportParseResult ParseInternal(string workbookPath, string defaultProgramName, CancellationToken ct)
+    {
+        var rows = new List<ExcelImportParseRow>();
+        var errors = new List<ExcelImportRowError>();
+
+        Excel.Application? app = null;
+        Excel.Workbook? workbook = null;
+
+        try
+        {
+            app = new Excel.Application { DisplayAlerts = false, Visible = false };
+            workbook = app.Workbooks.Open(workbookPath, ReadOnly: true);
+
+            foreach (Excel.Worksheet sheet in workbook.Worksheets)
+            {
+                try
+                {
+                    ct.ThrowIfCancellationRequested();
+
+                    var used = sheet.UsedRange;
+                    var rowCount = used.Rows.Count;
+                    var colCount = used.Columns.Count;
+
+                    if (rowCount < 2 || colCount < 1)
+                        continue;
+
+                    var headerMap = BuildHeaderMap(used, colCount);
+                    var fullNameCol = FindColumn(headerMap, "ΟΝΟΜΑ");
+                    if (fullNameCol is null)
+                    {
+                        errors.Add(new ExcelImportRowError(sheet.Name, 1, "Δεν βρέθηκε στήλη ονόματος μαθητή."));
+                        continue;
+                    }
+
+                    var phoneCol = FindColumn(headerMap, "ΤΗΛ", "ΚΙΝ");
+                    var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
+                    var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
+                    var agreementCol = FindColumn(headerMap, "ΣΥΜΦΩΝ", "TOTAL", "ΣΥΝΟΛ");
+                    var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚΑΤ", "DOWN");
+                    var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
+                    var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
+
+                    var monthCols = headerMap
+                        .Where(kvp => MonthHints.Any(m => kvp.Value.Contains(m, StringComparison.OrdinalIgnoreCase)))
+                        .Select(kvp => kvp.Key)
+                        .ToList();
+
+                    for (var row = 2; row <= rowCount; row++)
+                    {
+                        ct.ThrowIfCancellationRequested();
+
+                        var fullName = ReadText(used.Cells[row, fullNameCol.Value]);
+                        if (string.IsNullOrWhiteSpace(fullName))
+                            continue;
+
+                        var yearLabel = yearCol.HasValue
+                            ? ReadText(used.Cells[row, yearCol.Value])
+                            : string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(yearLabel))
+                            yearLabel = TryExtractAcademicYearLabel(sheet.Name) ?? string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(yearLabel))
+                        {
+                            errors.Add(new ExcelImportRowError(sheet.Name, row, "Δεν ήταν δυνατή η ανάγνωση ακαδημαϊκού έτους."));
+                            continue;
+                        }
+
+                        var programName = programCol.HasValue
+                            ? ReadText(used.Cells[row, programCol.Value])
+                            : string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(programName))
+                            programName = defaultProgramName;
+
+                        var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
+                        var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
+                        var collection = collectionCol.HasValue ? ReadDecimal(used.Cells[row, collectionCol.Value]) : 0m;
+
+                        decimal monthTotal = 0m;
+                        foreach (var col in monthCols)
+                            monthTotal += ReadDecimal(used.Cells[row, col]);
+
+                        var confirmedCollected = collection > 0m ? collection : monthTotal > 0m ? monthTotal : null;
+                        var paymentDate = paymentDateCol.HasValue ? ReadDate(used.Cells[row, paymentDateCol.Value]) : null;
+
+                        rows.Add(new ExcelImportParseRow(
+                            sheet.Name,
+                            row,
+                            fullName.Trim(),
+                            phoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, phoneCol.Value])) : null,
+                            NormalizeAcademicYearLabel(yearLabel),
+                            programName.Trim(),
+                            agreementTotal,
+                            downPayment,
+                            confirmedCollected,
+                            paymentDate,
+                            Path.GetFileName(workbookPath)));
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(sheet);
+                }
+            }
+        }
+        finally
+        {
+            if (workbook is not null)
+            {
+                workbook.Close(false);
+                Marshal.ReleaseComObject(workbook);
+            }
+
+            if (app is not null)
+            {
+                app.Quit();
+                Marshal.ReleaseComObject(app);
+            }
+        }
+
+        return new ExcelImportParseResult(rows, errors);
+    }
+
+    private static Dictionary<int, string> BuildHeaderMap(Excel.Range used, int colCount)
+    {
+        var map = new Dictionary<int, string>();
+        for (var col = 1; col <= colCount; col++)
+        {
+            var header = ReadText(used.Cells[1, col]);
+            if (!string.IsNullOrWhiteSpace(header))
+                map[col] = NormalizeHeader(header);
+        }
+
+        return map;
+    }
+
+    private static int? FindColumn(IReadOnlyDictionary<int, string> headers, params string[] tokens)
+    {
+        foreach (var (col, header) in headers)
+        {
+            if (tokens.Any(t => header.Contains(t, StringComparison.OrdinalIgnoreCase)))
+                return col;
+        }
+
+        return null;
+    }
+
+    private static string NormalizeHeader(string value)
+        => value.Replace(" ", string.Empty, StringComparison.Ordinal).Trim().ToUpperInvariant();
+
+    private static string ReadText(Excel.Range cell)
+    {
+        var value = cell?.Value2;
+        return value?.ToString() ?? string.Empty;
+    }
+
+    private static decimal ReadDecimal(Excel.Range cell)
+    {
+        var txt = ReadText(cell).Trim();
+        if (string.IsNullOrWhiteSpace(txt))
+            return 0m;
+
+        if (decimal.TryParse(txt, NumberStyles.Any, ElGr, out var d))
+            return d;
+
+        if (decimal.TryParse(txt, NumberStyles.Any, CultureInfo.InvariantCulture, out d))
+            return d;
+
+        return 0m;
+    }
+
+    private static DateTime? ReadDate(Excel.Range cell)
+    {
+        var raw = cell?.Value2;
+        if (raw is double oa)
+            return DateTime.FromOADate(oa);
+
+        var txt = ReadText(cell).Trim();
+        if (DateTime.TryParse(txt, ElGr, DateTimeStyles.None, out var dt))
+            return dt;
+
+        return null;
+    }
+
+    private static string NormalizeAcademicYearLabel(string value)
+    {
+        var txt = value.Trim();
+        if (txt.Contains('-'))
+            return txt;
+
+        var digits = new string(txt.Where(char.IsDigit).ToArray());
+        if (digits.Length >= 8)
+            return $"{digits[..4]}-{digits.Substring(4, 4)}";
+
+        return txt;
+    }
+
+    private static string? TryExtractAcademicYearLabel(string sheetName)
+    {
+        var digits = new string(sheetName.Where(c => char.IsDigit(c) || c == '-').ToArray());
+        return string.IsNullOrWhiteSpace(digits) ? null : NormalizeAcademicYearLabel(digits);
+    }
+
+    private static string? NormalizePhone(string? phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return null;
+
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        return string.IsNullOrWhiteSpace(digits) ? null : digits;
+    }
+}

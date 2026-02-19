@@ -38,6 +38,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private string selectedExcelTargetDatabaseName = "FilotheiSchoolERP";
     [ObservableProperty] private bool excelTargetFilotheiSelected = true;
     [ObservableProperty] private bool excelTargetNeaIoniaSelected;
+    [ObservableProperty] private bool excelDryRunMode;
     [ObservableProperty] private bool wipeLocalFirst = true;
     [ObservableProperty] private string log = string.Empty;
     [ObservableProperty] private double progressValue;
@@ -321,10 +322,12 @@ public partial class DatabaseImportViewModel : ObservableObject
 
                 AppendLog($"Excel source files: {string.Join(", ", ExcelFilePaths)}");
                 AppendLog($"Local target: {localDbName}");
+                AppendLog($"Dry run: {ExcelDryRunMode}");
 
                 await _databaseImportService.ImportFromExcelAsync(
                     ExcelFilePaths,
                     localConnection,
+                    ExcelDryRunMode,
                     progress,
                     _cts.Token);
             }

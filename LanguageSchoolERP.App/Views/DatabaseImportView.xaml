@@ -165,6 +165,23 @@
                     </StackPanel.Style>
                 </StackPanel>
 
+                <CheckBox Grid.Row="4" Grid.Column="2"
+                          Content="Dry run (μόνο έλεγχος)"
+                          Margin="12,14,0,0"
+                          VerticalAlignment="Center"
+                          IsChecked="{Binding ExcelDryRunMode, Mode=TwoWay}">
+                    <CheckBox.Style>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsExcelImportSelected}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </CheckBox.Style>
+                </CheckBox>
+
                 <TextBlock Grid.Row="5" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">

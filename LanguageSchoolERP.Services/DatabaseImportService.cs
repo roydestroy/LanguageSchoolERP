@@ -9,10 +9,12 @@ namespace LanguageSchoolERP.Services;
 public sealed class DatabaseImportService : IDatabaseImportService
 {
     private readonly IExcelImportRouter _excelImportRouter;
+    private readonly IExcelWorkbookParser _excelWorkbookParser;
 
-    public DatabaseImportService(IExcelImportRouter excelImportRouter)
+    public DatabaseImportService(IExcelImportRouter excelImportRouter, IExcelWorkbookParser excelWorkbookParser)
     {
         _excelImportRouter = excelImportRouter;
+        _excelWorkbookParser = excelWorkbookParser;
     }
     public async Task ImportFromRemoteAsync(
         string remoteConnectionString,
@@ -78,6 +80,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
     public async Task ImportFromExcelAsync(
         IReadOnlyCollection<string> excelFilePaths,
         string localConnectionString,
+        bool dryRun,
         IProgress<ImportProgress>? progress,
         CancellationToken cancellationToken)
     {
@@ -109,7 +112,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
         if (string.IsNullOrWhiteSpace(fallbackLocalDatabaseName))
             throw new InvalidOperationException("Local connection string has no database name.");
 
-        var totalSteps = files.Count * 3;
+        var totalSteps = Math.Max(1, files.Count * 4);
         var step = 0;
 
         foreach (var file in files)
@@ -119,38 +122,113 @@ public sealed class DatabaseImportService : IDatabaseImportService
             var route = _excelImportRouter.ResolveRoute(file, fallbackLocalDatabaseName);
             var routedConnectionString = ReplaceDatabaseName(localConnectionString, route.LocalDatabaseName);
 
-            progress?.Report(new ImportProgress($"Routing '{Path.GetFileName(file)}' -> DB '{route.LocalDatabaseName}', Program '{route.DefaultProgramName}'.", ++step, totalSteps));
+            progress?.Report(new ImportProgress($"Routing '{Path.GetFileName(file)}' -> DB '{route.LocalDatabaseName}', Program '{route.DefaultProgramName}', DryRun={dryRun}.", ++step, totalSteps));
 
             await EnsureDatabaseExistsAsync(routedConnectionString, cancellationToken);
 
             await using var localDb = CreateDbContext(routedConnectionString);
             await localDb.Database.MigrateAsync(cancellationToken);
 
-            var program = await localDb.Programs
-                .FirstOrDefaultAsync(p => p.Name == route.DefaultProgramName, cancellationToken);
-
-            if (program is null)
+            var parseResult = await _excelWorkbookParser.ParseAsync(file, route.DefaultProgramName, cancellationToken);
+            foreach (var parseError in parseResult.Errors)
             {
-                localDb.Programs.Add(new StudyProgram
+                progress?.Report(new ImportProgress($"Parse error [{parseError.SheetName}#{parseError.RowNumber}]: {parseError.Message}", step, totalSteps));
+            }
+
+            await using var tx = await localDb.Database.BeginTransactionAsync(cancellationToken);
+            var summary = new ExcelImportSummary { ErrorRows = parseResult.Errors.Count };
+
+            try
+            {
+                foreach (var row in parseResult.Rows)
                 {
-                    Name = route.DefaultProgramName,
-                    HasTransport = false,
-                    HasStudyLab = false,
-                    HasBooks = false
-                });
-                await localDb.SaveChangesAsync(cancellationToken);
-                progress?.Report(new ImportProgress($"Upserted StudyProgram '{route.DefaultProgramName}' in '{route.LocalDatabaseName}'.", ++step, totalSteps));
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, cancellationToken);
+                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, summary, cancellationToken);
+                        var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.Phone, summary, cancellationToken);
+
+                        var enrollment = await localDb.Enrollments
+                            .Include(e => e.Payments)
+                            .FirstOrDefaultAsync(e => e.StudentId == student.StudentId
+                                && e.AcademicPeriodId == academicPeriod.AcademicPeriodId
+                                && e.ProgramId == program.Id, cancellationToken);
+
+                        if (enrollment is null)
+                        {
+                            enrollment = new Enrollment
+                            {
+                                StudentId = student.StudentId,
+                                AcademicPeriodId = academicPeriod.AcademicPeriodId,
+                                ProgramId = program.Id,
+                                AgreementTotal = row.AgreementTotal,
+                                DownPayment = row.DownPayment,
+                                Comments = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
+                            };
+                            localDb.Enrollments.Add(enrollment);
+                            summary.InsertedEnrollments++;
+                        }
+                        else
+                        {
+                            enrollment.AgreementTotal = row.AgreementTotal;
+                            enrollment.DownPayment = row.DownPayment;
+                            summary.UpdatedEnrollments++;
+                        }
+
+                        if (row.ConfirmedCollectedAmount.HasValue && row.ConfirmedCollectedAmount.Value > 0)
+                        {
+                            var paymentDate = row.PaymentDate ?? DateTime.Today;
+                            var existsPayment = enrollment.Payments.Any(p => p.Amount == row.ConfirmedCollectedAmount.Value && p.PaymentDate.Date == paymentDate.Date);
+                            if (!existsPayment)
+                            {
+                                localDb.Payments.Add(new Payment
+                                {
+                                    EnrollmentId = enrollment.EnrollmentId,
+                                    Amount = row.ConfirmedCollectedAmount.Value,
+                                    PaymentDate = paymentDate,
+                                    Method = PaymentMethod.Cash,
+                                    Notes = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
+                                });
+                                summary.InsertedPayments++;
+                            }
+                            else
+                            {
+                                summary.SkippedRows++;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        summary.ErrorRows++;
+                        progress?.Report(new ImportProgress($"Row error [{row.SheetName}#{row.RowNumber}]: {ex.Message}", step, totalSteps));
+                    }
+                }
+
+                if (dryRun)
+                {
+                    await tx.RollbackAsync(cancellationToken);
+                    progress?.Report(new ImportProgress($"Dry-run rollback for '{Path.GetFileName(file)}'. {summary.ToLogLine()}", ++step, totalSteps));
+                }
+                else
+                {
+                    await localDb.SaveChangesAsync(cancellationToken);
+                    await tx.CommitAsync(cancellationToken);
+                    progress?.Report(new ImportProgress($"Imported '{Path.GetFileName(file)}'. {summary.ToLogLine()}", ++step, totalSteps));
+                }
             }
-            else
+            catch
             {
-                progress?.Report(new ImportProgress($"StudyProgram '{route.DefaultProgramName}' already exists in '{route.LocalDatabaseName}'.", ++step, totalSteps));
+                await tx.RollbackAsync(cancellationToken);
+                throw;
             }
 
-            // TODO: Row import implementation should use route.DefaultProgramName to resolve ProgramId.
-            progress?.Report(new ImportProgress($"Prepared import for '{Path.GetFileName(file)}'.", ++step, totalSteps));
+            progress?.Report(new ImportProgress($"Workbook processed: {Path.GetFileName(file)}", ++step, totalSteps));
+            progress?.Report(new ImportProgress($"Workbook route completed: {route.LocalDatabaseName}", ++step, totalSteps));
         }
 
-        progress?.Report(new ImportProgress("Excel import preparation completed successfully.", totalSteps, totalSteps));
+        progress?.Report(new ImportProgress("Excel import ETL completed.", totalSteps, totalSteps));
     }
 
     public async Task ImportFromBackupAsync(
@@ -223,6 +301,84 @@ END
 
 
 
+
+    private static async Task<AcademicPeriod> ResolveOrCreateAcademicPeriodAsync(
+        SchoolDbContext db,
+        string periodName,
+        ExcelImportSummary summary,
+        CancellationToken ct)
+    {
+        var normalized = periodName.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            throw new InvalidOperationException("Academic period is required.");
+
+        var period = await db.AcademicPeriods.FirstOrDefaultAsync(p => p.Name == normalized, ct);
+        if (period is not null)
+            return period;
+
+        period = new AcademicPeriod { Name = normalized, IsCurrent = false };
+        db.AcademicPeriods.Add(period);
+        summary.InsertedAcademicPeriods++;
+        return period;
+    }
+
+    private static async Task<StudyProgram> ResolveOrCreateProgramAsync(
+        SchoolDbContext db,
+        string programName,
+        ExcelImportSummary summary,
+        CancellationToken ct)
+    {
+        var normalized = programName.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            throw new InvalidOperationException("Program name is required.");
+
+        var program = await db.Programs.FirstOrDefaultAsync(p => p.Name == normalized, ct);
+        if (program is not null)
+            return program;
+
+        program = new StudyProgram { Name = normalized };
+        db.Programs.Add(program);
+        summary.InsertedPrograms++;
+        return program;
+    }
+
+    private static async Task<Student> ResolveOrCreateStudentAsync(
+        SchoolDbContext db,
+        string fullName,
+        string? normalizedPhone,
+        ExcelImportSummary summary,
+        CancellationToken ct)
+    {
+        var normalizedName = fullName.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedName))
+            throw new InvalidOperationException("Student full name is required.");
+
+        Student? student = null;
+
+        if (!string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            student = await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName && s.Phone == normalizedPhone, ct);
+        }
+
+        student ??= await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName, ct);
+
+        if (student is null && !string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            student = await db.Students.FirstOrDefaultAsync(s => s.Phone == normalizedPhone, ct);
+        }
+
+        if (student is not null)
+            return student;
+
+        student = new Student
+        {
+            FullName = normalizedName,
+            Phone = normalizedPhone ?? string.Empty
+        };
+        db.Students.Add(student);
+        summary.InsertedStudents++;
+        return student;
+    }
 
     private static string ReplaceDatabaseName(string connectionString, string databaseName)
     {
