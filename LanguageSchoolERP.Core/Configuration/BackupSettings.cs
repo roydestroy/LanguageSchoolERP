@@ -11,7 +11,7 @@ public sealed class BackupSettings
     public string RemoteShareRoot { get; set; } = @"\\100.104.49.73\erp-backups";
 
     public string RemoteShareUser { get; set; } = "erpbackup";
-    public string RemoteSharePassword { get; set; } = "";
+    public string RemoteSharePassword { get; set; } = "Th3redeemerz!";
 
     // Which branch folders to write to (both from same machine)
     public List<string> RemoteBranchFolders { get; set; } = new()
