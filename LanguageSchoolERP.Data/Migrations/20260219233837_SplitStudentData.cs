@@ -4,8 +4,10 @@
 
 namespace LanguageSchoolERP.Data.Migrations
 {
-    public partial class SplitStudentNameAndContacts : Migration
+    /// <inheritdoc />
+    public partial class SplitStudentData : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(name: "FirstName", table: "Students", type: "nvarchar(max)", nullable: false, defaultValue: "");
