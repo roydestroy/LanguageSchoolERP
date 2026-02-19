@@ -19,6 +19,7 @@ public partial class StatisticsViewModel : ObservableObject
     [ObservableProperty] private int enrollmentsCount;
     [ObservableProperty] private int discontinuedEnrollmentsCount;
     [ObservableProperty] private decimal agreementsTotal;
+    [ObservableProperty] private decimal collectibleTotal;
     [ObservableProperty] private decimal collectedTotal;
     [ObservableProperty] private decimal outstandingTotal;
     [ObservableProperty] private decimal lostRevenueTotal;
@@ -91,19 +92,33 @@ public partial class StatisticsViewModel : ObservableObject
 
             AgreementsTotal = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
             CollectedTotal = enrollments.Sum(e => e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments));
-            OutstandingTotal = Math.Max(0m, AgreementsTotal - CollectedTotal);
             LostRevenueTotal = enrollments.Sum(InstallmentPlanHelper.GetLostAmount);
+
+            var discontinuedRemaining = enrollments
+                .Where(e => e.IsStopped)
+                .Sum(InstallmentPlanHelper.GetOutstandingAmount);
+
+            CollectibleTotal = Math.Max(0m, AgreementsTotal - discontinuedRemaining);
+            OutstandingTotal = Math.Max(0m, CollectibleTotal - CollectedTotal);
 
             var rows = enrollments
                 .GroupBy(e => new { e.ProgramId, ProgramName = e.Program.Name })
-                .Select(g => new ProgramStatisticsRowVm
+                .Select(g =>
                 {
-                    ProgramName = g.Key.ProgramName,
-                    StudentsCount = g.Select(x => x.StudentId).Distinct().Count(),
-                    EnrollmentsCount = g.Count(),
-                    AgreementTotal = g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal),
-                    CollectedTotal = g.Sum(x => x.DownPayment + PaymentAgreementHelper.SumAgreementPayments(x.Payments)),
-                    OutstandingTotal = Math.Max(0m, g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal) - g.Sum(x => x.DownPayment + PaymentAgreementHelper.SumAgreementPayments(x.Payments)))
+                    var agreementTotal = g.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
+                    var collectedTotal = g.Sum(x => x.DownPayment + PaymentAgreementHelper.SumAgreementPayments(x.Payments));
+                    var discontinuedRemainingByProgram = g.Where(x => x.IsStopped).Sum(InstallmentPlanHelper.GetOutstandingAmount);
+                    var collectibleTotal = Math.Max(0m, agreementTotal - discontinuedRemainingByProgram);
+
+                    return new ProgramStatisticsRowVm
+                    {
+                        ProgramName = g.Key.ProgramName,
+                        StudentsCount = g.Select(x => x.StudentId).Distinct().Count(),
+                        EnrollmentsCount = g.Count(),
+                        AgreementTotal = agreementTotal,
+                        CollectedTotal = collectedTotal,
+                        OutstandingTotal = Math.Max(0m, collectibleTotal - collectedTotal)
+                    };
                 })
                 .OrderByDescending(x => x.StudentsCount)
                 .ThenBy(x => x.ProgramName)
@@ -129,6 +144,7 @@ public partial class StatisticsViewModel : ObservableObject
         EnrollmentsCount = 0;
         DiscontinuedEnrollmentsCount = 0;
         AgreementsTotal = 0;
+        CollectibleTotal = 0;
         CollectedTotal = 0;
         OutstandingTotal = 0;
         LostRevenueTotal = 0;
