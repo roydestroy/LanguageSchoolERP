@@ -171,6 +171,10 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 TransportationMonthlyPrice = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : null,
                                 HasTransportation = row.TransportationMonthlyCost > 0m,
                                 TransportationMonthlyFee = row.TransportationMonthlyCost > 0m ? row.TransportationMonthlyCost : 0m,
+                                IsStopped = row.IsDiscontinued,
+                                Status = row.IsDiscontinued ? "Stopped" : "Active",
+                                StoppedOn = row.IsDiscontinued ? DateTime.Today : null,
+                                StopReason = row.IsDiscontinued ? "Excel import: ΔΙΑΚΟΠΗ" : string.Empty,
                                 Comments = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
                             };
                             localDb.Enrollments.Add(enrollment);
@@ -192,6 +196,15 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
                             }
 
+                            if (row.IsDiscontinued)
+                            {
+                                enrollment.IsStopped = true;
+                                enrollment.Status = "Stopped";
+                                enrollment.StoppedOn ??= DateTime.Today;
+                                if (string.IsNullOrWhiteSpace(enrollment.StopReason))
+                                    enrollment.StopReason = "Excel import: ΔΙΑΚΟΠΗ";
+                            }
+
                             summary.UpdatedEnrollments++;
                         }
 
@@ -208,6 +221,15 @@ public sealed class DatabaseImportService : IDatabaseImportService
                             enrollment.TransportationMonthlyPrice = row.TransportationMonthlyCost;
                             enrollment.HasTransportation = true;
                             enrollment.TransportationMonthlyFee = row.TransportationMonthlyCost;
+                        }
+
+                        if (row.IsDiscontinued && !enrollment.IsStopped)
+                        {
+                            enrollment.IsStopped = true;
+                            enrollment.Status = "Stopped";
+                            enrollment.StoppedOn ??= DateTime.Today;
+                            if (string.IsNullOrWhiteSpace(enrollment.StopReason))
+                                enrollment.StopReason = "Excel import: ΔΙΑΚΟΠΗ";
                         }
 
                         var hasMonthlyPayments = row.MonthlyPayments.Count > 0;

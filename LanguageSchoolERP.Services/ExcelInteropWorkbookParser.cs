@@ -59,6 +59,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
                     var transportationCol = FindColumn(headerMap, "ΜΕΤΑΦΟΡ");
+                    var discontinuedCol = FindColumn(headerMap, "ΔΙΑΚΟΠ", "STOP", "DISCONT");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
 
@@ -101,6 +102,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
                         var transportationMonthlyCost = transportationCol.HasValue ? ReadDecimal(used.Cells[row, transportationCol.Value]) : 0m;
+                        var isDiscontinued = discontinuedCol.HasValue && IsTruthyYes(ReadText(used.Cells[row, discontinuedCol.Value]));
                         var collection = collectionCol.HasValue ? ReadDecimal(used.Cells[row, collectionCol.Value]) : 0m;
 
                         var normalizedYearLabel = NormalizeAcademicYearLabel(yearLabel);
@@ -133,6 +135,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             agreementTotal,
                             downPayment,
                             transportationMonthlyCost,
+                            isDiscontinued,
                             monthlySignals,
                             confirmedCollected,
                             paymentDate,
@@ -356,6 +359,19 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         parts.Add(surname);
 
         return string.Join(' ', parts);
+    }
+
+
+    private static bool IsTruthyYes(string value)
+    {
+        var normalized = value.Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return false;
+
+        return normalized is "ΝΑΙ" or "Ν" or "ΝΕ" or "YES" or "Y" or "TRUE" or "T"
+            || normalized.StartsWith("NAI", StringComparison.OrdinalIgnoreCase)
+            || normalized.StartsWith("ΔΙΑΚ", StringComparison.OrdinalIgnoreCase)
+            || normalized.StartsWith("STOP", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string? NormalizePhone(string? phone)
