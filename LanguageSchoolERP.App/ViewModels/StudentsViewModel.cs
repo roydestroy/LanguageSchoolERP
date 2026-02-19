@@ -328,7 +328,7 @@ public partial class StudentsViewModel : ObservableObject
                 var row = new StudentRowVm
                 {
                     StudentId = s.StudentId,
-                    FullName = s.FullName,
+                    FullName = ToSurnameFirst(s.FullName),
                     ContactLine = BuildPreferredContactLine(s),
                     YearLabel = $"Έτος: {year}",
                     EnrollmentSummaryText = enrollmentSummaryText,
@@ -414,6 +414,20 @@ public partial class StudentsViewModel : ObservableObject
         }
 
     }
+
+    private static string ToSurnameFirst(string? fullName)
+    {
+        var parts = (fullName ?? string.Empty)
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length < 2)
+            return fullName?.Trim() ?? string.Empty;
+
+        var surname = parts[^1];
+        var firstNames = string.Join(' ', parts[..^1]);
+        return string.IsNullOrWhiteSpace(firstNames) ? surname : $"{surname} {firstNames}";
+    }
+
     private static string BuildPreferredContactLine(Student student)
     {
         var (fatherPhone, fatherEmail) = SplitPhoneEmail(student.FatherContact);
