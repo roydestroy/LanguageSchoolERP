@@ -227,6 +227,7 @@
                          Text="{Binding Log}"
                          IsReadOnly="True"
                          AcceptsReturn="True"
+                         VerticalContentAlignment="Top"
                          VerticalScrollBarVisibility="Auto"
                          TextWrapping="Wrap"/>
             </Grid>
