@@ -124,7 +124,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         rows.Add(new ExcelImportParseRow(
                             sheet.Name,
                             row,
-                            fullName.Trim(),
+                            NormalizeStudentNameOrder(fullName),
                             phoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, phoneCol.Value])) : null,
                             normalizedYearLabel,
                             programName.Trim(),
@@ -335,6 +335,24 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         }
 
         return false;
+    }
+
+
+    private static string NormalizeStudentNameOrder(string rawName)
+    {
+        var parts = rawName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        if (parts.Count < 2)
+            return rawName.Trim();
+
+        // Source files use "SURNAME FIRSTNAME ..."; store as "FIRSTNAME ... SURNAME".
+        var surname = parts[0];
+        parts.RemoveAt(0);
+        parts.Add(surname);
+
+        return string.Join(' ', parts);
     }
 
     private static string? NormalizePhone(string? phone)
