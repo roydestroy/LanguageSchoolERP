@@ -355,7 +355,7 @@
         <Style TargetType="ProgressBar">
             <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-            <Setter Property="Height" Value="10"/>
+            <Setter Property="Height" Value="12"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">

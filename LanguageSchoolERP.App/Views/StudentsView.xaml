@@ -1,4 +1,4 @@
-<UserControl x:Class="LanguageSchoolERP.App.Views.StudentsView"
+﻿<UserControl x:Class="LanguageSchoolERP.App.Views.StudentsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -197,7 +197,7 @@
 
                                         <!-- Total payment progress -->
                                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
-                                            <ProgressBar Height="10" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
+                                            <ProgressBar Height="12" Margin="0,4,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}"/>
                                         </StackPanel>
 
                                         <!-- Balance -->
@@ -278,7 +278,7 @@
                                                             <StackPanel>
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                                 <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.TextSecondary}" FontSize="12"/>
-                                                                <ProgressBar Height="8" Width="180" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}" HorizontalAlignment="Left"/>
+                                                                <ProgressBar Height="10" Width="180" Margin="0,3,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Foreground="{Binding ProgressBrush}" HorizontalAlignment="Left"/>
                                                             </StackPanel>
 
                                                             <Border Grid.Column="1"
