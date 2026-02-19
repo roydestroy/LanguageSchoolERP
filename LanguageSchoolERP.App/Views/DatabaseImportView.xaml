@@ -39,7 +39,7 @@
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"
                                  IsChecked="{Binding IsBackupImportSelected, Mode=TwoWay}"/>
-                    <RadioButton Content="Αρχεία Excel"
+                    <RadioButton Content="Αρχείο Excel"
                                  GroupName="ImportSource"
                                  IsChecked="{Binding IsExcelImportSelected, Mode=TwoWay}"/>
                 </StackPanel>
@@ -143,7 +143,7 @@
                 </TextBlock>
                 <StackPanel Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,14,0,0">
                     <TextBox Width="320" Height="30" Text="{Binding SelectedExcelFilesText}" IsReadOnly="True" VerticalContentAlignment="Center"/>
-                    <Button Content="Αρχεία" Width="90" Height="30" Margin="8,0,0,0" Command="{Binding BrowseExcelFilesCommand}"/>
+                    <Button Content="Αναζήτηση" Width="100" Height="30" Margin="8,0,0,0" Command="{Binding BrowseExcelFilesCommand}"/>
                     <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
                         <RadioButton Content="Φιλοθέη"
                                      GroupName="ExcelTargetDb"
@@ -166,7 +166,7 @@
                 </StackPanel>
 
                 <CheckBox Grid.Row="4" Grid.Column="2"
-                          Content="Dry run (μόνο έλεγχος)"
+                          Content="Έλεγχος Αρχείου"
                           Margin="12,14,0,0"
                           VerticalAlignment="Center"
                           IsChecked="{Binding ExcelDryRunMode, Mode=TwoWay}">

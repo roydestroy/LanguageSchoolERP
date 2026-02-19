@@ -47,7 +47,7 @@
 
                 <StackPanel Margin="0,0,0,10"
                             Visibility="{Binding IncludesStudyLab, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <TextBlock Text="Μηνιαία τιμή αίθουσας μελέτης (€)"/>
+                    <TextBlock Text="Συνολική Τιμή Study Lab (€)"/>
                     <TextBox Margin="0,4,0,0" Text="{Binding StudyLabMonthlyPriceText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
