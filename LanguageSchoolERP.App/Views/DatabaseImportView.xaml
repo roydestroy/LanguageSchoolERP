@@ -247,8 +247,8 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="Προεπιλογή βάσης" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Προεπιλογή βάσης" FontWeight="SemiBold" VerticalAlignment="Top" Margin="0,0,10,0"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,0,150,0">
                         <RadioButton Content="Φιλοθέη"
                                      GroupName="StartupDb"
                                      Margin="0,0,16,0"
@@ -266,7 +266,7 @@
 
                         <Button x:Name="CheckUpdatesBtn"
                                 Content="Έλεγχος ενημερώσεων"
-                                Width="135"
+                                Width="171"
                                 Height="28"
                                 Margin="10,0,0,0"
                                 Click="CheckUpdatesBtn_Click"/>
