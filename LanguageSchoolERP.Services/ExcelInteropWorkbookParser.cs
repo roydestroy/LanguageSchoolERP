@@ -111,7 +111,8 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                                 continue;
 
                             monthTotal += amount;
-                            if (TryBuildMonthPaymentDate(normalizedYearLabel, monthCol.Value, out var paymentDateForMonth))
+                            DateTime paymentDateForMonth;
+                            if (TryBuildMonthPaymentDate(normalizedYearLabel, monthCol.Value, out paymentDateForMonth))
                             {
                                 monthlySignals.Add(new ExcelMonthlyPaymentSignal(monthCol.Value, paymentDateForMonth, amount));
                             }
