@@ -32,7 +32,7 @@ public static class BackupTaskRunner
             Directory.CreateDirectory(s.Backup.LocalBackupDir);
 
             var shareConnectivity = RemoteConnectivityDiagnostics.CheckRemoteShare(
-                s.Backup.RemoteShareDir,
+                s.Backup.RemoteShareRoot,
                 s.Backup.RemoteShareUser,
                 s.Backup.RemoteSharePassword);
 
@@ -51,11 +51,26 @@ public static class BackupTaskRunner
             var localBak = Path.Combine(s.Backup.LocalBackupDir, $"{db}_{ts}.bak");
             BackupLocalDatabaseWithSmo(s.Local.Server, db, localBak);
 
-            var remoteFile = Path.Combine(s.Backup.RemoteShareDir, $"{db}_{ts}.bak");
-
-            using (new NetworkConnection(s.Backup.RemoteShareDir, s.Backup.RemoteShareUser, s.Backup.RemoteSharePassword))
+            var branchFolders = s.Backup.RemoteBranchFolders ?? [];
+            if (branchFolders.Count == 0)
             {
-                File.Copy(localBak, remoteFile, overwrite: true);
+                BackupStatusStore.TryWriteFailure("No remote branch folders configured.", db);
+                return Task.FromResult(1);
+            }
+
+            using (new NetworkConnection(s.Backup.RemoteShareRoot, s.Backup.RemoteShareUser, s.Backup.RemoteSharePassword))
+            {
+                foreach (var branch in branchFolders)
+                {
+                    if (string.IsNullOrWhiteSpace(branch))
+                        continue;
+
+                    var remoteDir = $@"{s.Backup.RemoteShareRoot}\{branch.Trim()}";
+                    Directory.CreateDirectory(remoteDir);
+
+                    var remoteFile = Path.Combine(remoteDir, $"{db}_{ts}.bak");
+                    File.Copy(localBak, remoteFile, overwrite: true);
+                }
             }
 
             CleanupOldBackups(s.Backup.LocalBackupDir, $"{db}_*.bak", days: 7);
