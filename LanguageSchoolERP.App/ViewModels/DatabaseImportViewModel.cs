@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -42,6 +44,9 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private string lastBackupText = "Ποτέ";
     [ObservableProperty] private string lastBackupErrorText = string.Empty;
     [ObservableProperty] private bool isBackupRunning;
+    [ObservableProperty] private string selectedBackupDatabaseName = "FilotheiSchoolERP";
+    [ObservableProperty] private bool backupFilotheiSelected = true;
+    [ObservableProperty] private bool backupNeaIoniaSelected;
 
 
     public bool IsRemoteImportSelected
@@ -95,6 +100,10 @@ public partial class DatabaseImportViewModel : ObservableObject
 
         SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
         SelectedLocalRestoreDatabaseOption = LocalRestoreDatabases.FirstOrDefault(x => string.Equals(x.Database, StartupLocalDatabaseName, StringComparison.OrdinalIgnoreCase));
+
+        SelectedBackupDatabaseName = string.Equals(_appState.SelectedLocalDatabaseName, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase)
+            ? "NeaIoniaSchoolERP"
+            : "FilotheiSchoolERP";
 
         RefreshBackupStatus();
     }
@@ -156,6 +165,25 @@ public partial class DatabaseImportViewModel : ObservableObject
     {
         if (value)
             StartupLocalDatabaseName = "NeaIoniaSchoolERP";
+    }
+
+    partial void OnSelectedBackupDatabaseNameChanged(string value)
+    {
+        BackupFilotheiSelected = string.Equals(value, "FilotheiSchoolERP", StringComparison.OrdinalIgnoreCase);
+        BackupNeaIoniaSelected = string.Equals(value, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase);
+        RefreshBackupStatus();
+    }
+
+    partial void OnBackupFilotheiSelectedChanged(bool value)
+    {
+        if (value)
+            SelectedBackupDatabaseName = "FilotheiSchoolERP";
+    }
+
+    partial void OnBackupNeaIoniaSelectedChanged(bool value)
+    {
+        if (value)
+            SelectedBackupDatabaseName = "NeaIoniaSchoolERP";
     }
 
     private void SaveStartupDatabase()
@@ -334,7 +362,7 @@ public partial class DatabaseImportViewModel : ObservableObject
 
         try
         {
-            var exitCode = await BackupTaskRunner.RunAsync(force: true, localDatabaseName: _appState.SelectedLocalDatabaseName);
+            var exitCode = await BackupTaskRunner.RunAsync(force: true, localDatabaseName: SelectedBackupDatabaseName);
             RefreshBackupStatus();
 
             if (exitCode == 0)
@@ -383,27 +411,40 @@ public partial class DatabaseImportViewModel : ObservableObject
 
     private void RefreshBackupStatus()
     {
-        var status = BackupStatusStore.TryRead();
-        if (status?.LastSuccessUtc is DateTime successUtc)
-        {
-            var local = successUtc.ToLocalTime();
-            var result = string.IsNullOrWhiteSpace(status.LastResult) ? "Unknown" : status.LastResult;
-            LastBackupText = $"{local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
-        }
-        else if (status?.LastAttemptUtc is DateTime attemptUtc)
-        {
-            var local = attemptUtc.ToLocalTime();
-            var result = string.IsNullOrWhiteSpace(status.LastResult) ? "Unknown" : status.LastResult;
-            LastBackupText = $"{local.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)} ({result})";
-        }
-        else
-        {
-            LastBackupText = "Ποτέ";
-        }
+        var selectedDbName = SelectedBackupDatabaseName;
+        var latestBackup = GetLatestBackupTimestamp(selectedDbName);
 
-        LastBackupErrorText = status is not null && string.Equals(status.LastResult, "Failed", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(status.LastError)
-            ? status.LastError
-            : string.Empty;
+        LastBackupText = latestBackup.HasValue
+            ? latestBackup.Value.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)
+            : "Ποτέ";
+
+        var status = BackupStatusStore.TryRead();
+        LastBackupErrorText = status is not null
+            && string.Equals(status.LastResult, "Failed", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(status.LastDatabaseName, selectedDbName, StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(status.LastError)
+                ? status.LastError
+                : string.Empty;
+    }
+
+    private DateTime? GetLatestBackupTimestamp(string databaseName)
+    {
+        var backupDirectory = _settingsProvider.Settings.Backup.LocalBackupDir;
+        if (string.IsNullOrWhiteSpace(backupDirectory) || !Directory.Exists(backupDirectory))
+            return null;
+
+        try
+        {
+            return Directory
+                .GetFiles(backupDirectory, $"{databaseName}_*.bak")
+                .Select(path => (DateTime?)new FileInfo(path).LastWriteTime)
+                .OrderByDescending(dt => dt)
+                .FirstOrDefault();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private bool ConfirmImport()
