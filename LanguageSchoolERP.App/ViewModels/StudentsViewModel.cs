@@ -259,11 +259,13 @@ public partial class StudentsViewModel : ObservableObject
                 // Aggregate across enrollments in selected year
                 var yearEnrollments = s.Enrollments.ToList();
 
-                decimal agreementSum = yearEnrollments.Sum(e => e.AgreementTotal);
-                decimal downSum = yearEnrollments.Sum(en => en.DownPayment);
-                decimal paidSum = yearEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
+                var activeEnrollments = yearEnrollments.Where(en => !en.IsStopped).ToList();
 
-                var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
+                decimal activeAgreementSum = activeEnrollments.Sum(e => e.AgreementTotal);
+                decimal activeDownSum = activeEnrollments.Sum(en => en.DownPayment);
+                decimal activePaidSum = activeEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
+
+                var totalProgress = activeAgreementSum <= 0 ? 0d : (double)((activeDownSum + activePaidSum) / activeAgreementSum * 100m);
                 if (totalProgress > 100) totalProgress = 100;
                 if (totalProgress < 0) totalProgress = 0;
 
@@ -292,7 +294,6 @@ public partial class StudentsViewModel : ObservableObject
                 if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
                     continue;
 
-                var activeEnrollments = yearEnrollments.Where(en => !en.IsStopped).ToList();
                 var activeBalance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
                 var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
                 var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) > en.AgreementTotal + 0.009m);
