@@ -53,7 +53,9 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var (headerRow, headerMap) = headerInfo.Value;
 
                     var fullNameCol = FindColumn(headerMap, "ΟΝΟΜΑ");
-                    var phoneCol = FindColumn(headerMap, "ΤΗΛ", "ΚΙΝ");
+                    var studentPhoneCol = FindColumn(headerMap, "ΣΤΑΘΕΡΟ");
+                    var fatherPhoneCol = FindColumn(headerMap, "ΜΠΑΜΠΑ");
+                    var motherPhoneCol = FindColumn(headerMap, "ΜΑΜΑ");
                     var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
                     var agreementCol = FindAgreementColumn(headerMap);
@@ -67,6 +69,10 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         .Where(kvp => MonthHints.Any(m => kvp.Value.Contains(m, StringComparison.OrdinalIgnoreCase)))
                         .Select(kvp => new { kvp.Key, kvp.Value })
                         .ToList();
+
+                    string? previousStudentPhone = null;
+                    string? previousFatherPhone = null;
+                    string? previousMotherPhone = null;
 
                     for (var row = headerRow + 1; row <= rowCount; row++)
                     {
@@ -125,11 +131,33 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         var confirmedCollected = collection > 0m ? collection : monthTotal > 0m ? monthTotal : null;
                         var paymentDate = paymentDateCol.HasValue ? ReadDate(used.Cells[row, paymentDateCol.Value]) : null;
 
+                        var sourceStudentPhone = studentPhoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, studentPhoneCol.Value])) : null;
+                        var sourceFatherPhone = fatherPhoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, fatherPhoneCol.Value])) : null;
+                        var sourceMotherPhone = motherPhoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, motherPhoneCol.Value])) : null;
+
+                        var isSiblingRow = fullName.Contains(">>", StringComparison.Ordinal);
+                        var normalizedStudentName = NormalizeStudentNameOrder(fullName.Replace(">>", string.Empty, StringComparison.Ordinal));
+
+                        if (isSiblingRow)
+                        {
+                            sourceStudentPhone = previousStudentPhone;
+                            sourceFatherPhone = previousFatherPhone;
+                            sourceMotherPhone = previousMotherPhone;
+                        }
+                        else
+                        {
+                            previousStudentPhone = sourceStudentPhone;
+                            previousFatherPhone = sourceFatherPhone;
+                            previousMotherPhone = sourceMotherPhone;
+                        }
+
                         rows.Add(new ExcelImportParseRow(
                             sheet.Name,
                             row,
-                            NormalizeStudentNameOrder(fullName),
-                            phoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, phoneCol.Value])) : null,
+                            normalizedStudentName,
+                            sourceStudentPhone,
+                            sourceFatherPhone,
+                            sourceMotherPhone,
                             normalizedYearLabel,
                             programName.Trim(),
                             agreementTotal,
