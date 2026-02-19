@@ -263,8 +263,6 @@ public partial class StudentsViewModel : ObservableObject
                 decimal downSum = yearEnrollments.Sum(en => en.DownPayment);
                 decimal paidSum = yearEnrollments.Sum(en => en.Payments.Sum(p => p.Amount));
 
-                var balance = yearEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
-
                 var totalProgress = agreementSum <= 0 ? 0d : (double)((downSum + paidSum) / agreementSum * 100m);
                 if (totalProgress > 100) totalProgress = 100;
                 if (totalProgress < 0) totalProgress = 0;
@@ -295,6 +293,7 @@ public partial class StudentsViewModel : ObservableObject
                     continue;
 
                 var activeEnrollments = yearEnrollments.Where(en => !en.IsStopped).ToList();
+                var activeBalance = activeEnrollments.Sum(e => e.AgreementTotal - (e.DownPayment + e.Payments.Sum(p => p.Amount)));
                 var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
                 var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) > en.AgreementTotal + 0.009m);
                 var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + en.Payments.Sum(p => p.Amount)) + 0.009m >= en.AgreementTotal);
@@ -332,7 +331,7 @@ public partial class StudentsViewModel : ObservableObject
                     ContactLine = BuildPreferredContactLine(s),
                     YearLabel = $"Έτος: {year}",
                     EnrollmentSummaryText = enrollmentSummaryText,
-                    Balance = balance,
+                    Balance = activeBalance,
                     OverdueAmount = overdueAmount,
                     ProgressPercent = totalProgress,
                     ProgressText = $"{totalProgress:0}%",
