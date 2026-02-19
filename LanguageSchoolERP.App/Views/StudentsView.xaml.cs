@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using LanguageSchoolERP.App.ViewModels;
 
 namespace LanguageSchoolERP.App.Views;
@@ -10,4 +11,13 @@ public partial class StudentsView : UserControl
         InitializeComponent();
         DataContext = vm;
     }
+
+    private void ClearStudentSearch_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is StudentsViewModel vm)
+            vm.SearchText = string.Empty;
+
+        StudentSearchTextBox.Focus();
+    }
+
 }

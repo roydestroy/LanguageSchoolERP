@@ -148,7 +148,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                     {
                         var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, cancellationToken);
                         var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, summary, cancellationToken);
-                        var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.Phone, summary, cancellationToken);
+                        var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.StudentPhone, row.FatherPhone, row.MotherPhone, summary, cancellationToken);
 
                         var enrollment = await localDb.Enrollments
                             .Include(e => e.Payments)
@@ -426,7 +426,9 @@ END
     private static async Task<Student> ResolveOrCreateStudentAsync(
         SchoolDbContext db,
         string fullName,
-        string? normalizedPhone,
+        string? normalizedStudentPhone,
+        string? normalizedFatherPhone,
+        string? normalizedMotherPhone,
         ExcelImportSummary summary,
         CancellationToken ct)
     {
@@ -436,28 +438,41 @@ END
 
         Student? student = null;
 
-        if (!string.IsNullOrWhiteSpace(normalizedPhone))
+        if (!string.IsNullOrWhiteSpace(normalizedStudentPhone))
         {
-            student = db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName && s.Phone == normalizedPhone)
-                ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName && s.Phone == normalizedPhone, ct);
+            student = db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName && s.Phone == normalizedStudentPhone)
+                ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName && s.Phone == normalizedStudentPhone, ct);
         }
 
         student ??= db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName)
             ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName, ct);
 
-        if (student is null && !string.IsNullOrWhiteSpace(normalizedPhone))
+        if (student is null && !string.IsNullOrWhiteSpace(normalizedStudentPhone))
         {
-            student = db.Students.Local.FirstOrDefault(s => s.Phone == normalizedPhone)
-                ?? await db.Students.FirstOrDefaultAsync(s => s.Phone == normalizedPhone, ct);
+            student = db.Students.Local.FirstOrDefault(s => s.Phone == normalizedStudentPhone)
+                ?? await db.Students.FirstOrDefaultAsync(s => s.Phone == normalizedStudentPhone, ct);
         }
 
         if (student is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(normalizedStudentPhone))
+                student.Phone = normalizedStudentPhone;
+
+            if (!string.IsNullOrWhiteSpace(normalizedFatherPhone))
+                student.FatherContact = normalizedFatherPhone;
+
+            if (!string.IsNullOrWhiteSpace(normalizedMotherPhone))
+                student.MotherContact = normalizedMotherPhone;
+
             return student;
+        }
 
         student = new Student
         {
             FullName = normalizedName,
-            Phone = normalizedPhone ?? string.Empty
+            Phone = normalizedStudentPhone ?? string.Empty,
+            FatherContact = normalizedFatherPhone ?? string.Empty,
+            MotherContact = normalizedMotherPhone ?? string.Empty
         };
         db.Students.Add(student);
         summary.InsertedStudents++;
