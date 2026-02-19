@@ -11,9 +11,15 @@ public sealed record ExcelImportParseRow(
     string ProgramName,
     decimal AgreementTotal,
     decimal DownPayment,
+    IReadOnlyList<ExcelMonthlyPaymentSignal> MonthlyPayments,
     decimal? ConfirmedCollectedAmount,
     DateTime? PaymentDate,
     string SourceNote);
+
+public sealed record ExcelMonthlyPaymentSignal(
+    string MonthLabel,
+    DateTime PaymentDate,
+    decimal Amount);
 
 public sealed record ExcelImportRowError(string SheetName, int RowNumber, string Message);
 

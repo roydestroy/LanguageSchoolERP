@@ -63,7 +63,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
                     var monthCols = headerMap
                         .Where(kvp => MonthHints.Any(m => kvp.Value.Contains(m, StringComparison.OrdinalIgnoreCase)))
-                        .Select(kvp => kvp.Key)
+                        .Select(kvp => new { kvp.Key, kvp.Value })
                         .ToList();
 
                     for (var row = headerRow + 1; row <= rowCount; row++)
@@ -101,9 +101,22 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
                         var collection = collectionCol.HasValue ? ReadDecimal(used.Cells[row, collectionCol.Value]) : 0m;
 
+                        var normalizedYearLabel = NormalizeAcademicYearLabel(yearLabel);
+                        var monthlySignals = new List<ExcelMonthlyPaymentSignal>();
                         decimal monthTotal = 0m;
-                        foreach (var col in monthCols)
-                            monthTotal += ReadDecimal(used.Cells[row, col]);
+                        foreach (var monthCol in monthCols)
+                        {
+                            var amount = ReadDecimal(used.Cells[row, monthCol.Key]);
+                            if (amount <= 0m)
+                                continue;
+
+                            monthTotal += amount;
+                            var paymentDateForMonth = BuildMonthPaymentDate(normalizedYearLabel, monthCol.Value);
+                            if (paymentDateForMonth.HasValue)
+                            {
+                                monthlySignals.Add(new ExcelMonthlyPaymentSignal(monthCol.Value, paymentDateForMonth.Value, amount));
+                            }
+                        }
 
                         var confirmedCollected = collection > 0m ? collection : monthTotal > 0m ? monthTotal : null;
                         var paymentDate = paymentDateCol.HasValue ? ReadDate(used.Cells[row, paymentDateCol.Value]) : null;
@@ -113,10 +126,11 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             row,
                             fullName.Trim(),
                             phoneCol.HasValue ? NormalizePhone(ReadText(used.Cells[row, phoneCol.Value])) : null,
-                            NormalizeAcademicYearLabel(yearLabel),
+                            normalizedYearLabel,
                             programName.Trim(),
                             agreementTotal,
                             downPayment,
+                            monthlySignals,
                             confirmedCollected,
                             paymentDate,
                             Path.GetFileName(workbookPath)));
@@ -245,6 +259,53 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
     {
         var digits = new string(sheetName.Where(c => char.IsDigit(c) || c == '-').ToArray());
         return string.IsNullOrWhiteSpace(digits) ? null : NormalizeAcademicYearLabel(digits);
+    }
+
+
+    private static DateTime? BuildMonthPaymentDate(string academicYearLabel, string monthHeader)
+    {
+        if (!TryParseAcademicYear(academicYearLabel, out var startYear, out var endYear))
+            return null;
+
+        var month = TryResolveMonthNumber(monthHeader);
+        if (!month.HasValue)
+            return null;
+
+        var year = month is >= 9 and <= 12 ? startYear : endYear;
+        return new DateTime(year, month.Value, 1);
+    }
+
+    private static int? TryResolveMonthNumber(string monthHeader)
+    {
+        var h = monthHeader.ToUpperInvariant();
+        if (h.Contains("ΣΕΠ")) return 9;
+        if (h.Contains("ΟΚΤ")) return 10;
+        if (h.Contains("ΝΟΕ")) return 11;
+        if (h.Contains("ΔΕΚ")) return 12;
+        if (h.Contains("ΙΑΝ")) return 1;
+        if (h.Contains("ΦΕΒ")) return 2;
+        if (h.Contains("ΜΑΡ")) return 3;
+        if (h.Contains("ΑΠΡ")) return 4;
+        if (h.Contains("ΜΑΙ")) return 5;
+        if (h.Contains("ΙΟΥΝ")) return 6;
+
+        return null;
+    }
+
+    private static bool TryParseAcademicYear(string label, out int startYear, out int endYear)
+    {
+        startYear = 0;
+        endYear = 0;
+
+        var parts = label.Split('-', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 2
+            && int.TryParse(parts[0], out startYear)
+            && int.TryParse(parts[1], out endYear))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static string? NormalizePhone(string? phone)

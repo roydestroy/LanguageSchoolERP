@@ -174,12 +174,45 @@ public sealed class DatabaseImportService : IDatabaseImportService
                         }
                         else
                         {
-                            enrollment.AgreementTotal = row.AgreementTotal;
-                            enrollment.DownPayment = row.DownPayment;
+                            if (row.AgreementTotal > 0m)
+                                enrollment.AgreementTotal = row.AgreementTotal;
+
+                            if (row.DownPayment > 0m)
+                                enrollment.DownPayment = row.DownPayment;
+
                             summary.UpdatedEnrollments++;
                         }
 
-                        if (row.ConfirmedCollectedAmount.HasValue && row.ConfirmedCollectedAmount.Value > 0)
+                        if (enrollment.AgreementTotal <= 0m && row.AgreementTotal > 0m)
+                            enrollment.AgreementTotal = row.AgreementTotal;
+
+                        if (enrollment.DownPayment <= 0m && row.DownPayment > 0m)
+                            enrollment.DownPayment = row.DownPayment;
+
+                        var hasMonthlyPayments = row.MonthlyPayments.Count > 0;
+                        if (hasMonthlyPayments)
+                        {
+                            foreach (var monthly in row.MonthlyPayments)
+                            {
+                                var existsMonthly = enrollment.Payments.Any(p => p.Amount == monthly.Amount && p.PaymentDate.Date == monthly.PaymentDate.Date);
+                                if (existsMonthly)
+                                {
+                                    summary.SkippedRows++;
+                                    continue;
+                                }
+
+                                localDb.Payments.Add(new Payment
+                                {
+                                    EnrollmentId = enrollment.EnrollmentId,
+                                    Amount = monthly.Amount,
+                                    PaymentDate = monthly.PaymentDate,
+                                    Method = PaymentMethod.Cash,
+                                    Notes = $"Excel import month {monthly.MonthLabel} ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
+                                });
+                                summary.InsertedPayments++;
+                            }
+                        }
+                        else if (row.ConfirmedCollectedAmount.HasValue && row.ConfirmedCollectedAmount.Value > 0)
                         {
                             var paymentDate = row.PaymentDate ?? DateTime.Today;
                             var existsPayment = enrollment.Payments.Any(p => p.Amount == row.ConfirmedCollectedAmount.Value && p.PaymentDate.Date == paymentDate.Date);
