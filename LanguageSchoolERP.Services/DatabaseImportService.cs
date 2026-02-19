@@ -200,6 +200,8 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 summary.SkippedRows++;
                             }
                         }
+
+                        await localDb.SaveChangesAsync(cancellationToken);
                     }
                     catch (Exception ex)
                     {
@@ -215,7 +217,6 @@ public sealed class DatabaseImportService : IDatabaseImportService
                 }
                 else
                 {
-                    await localDb.SaveChangesAsync(cancellationToken);
                     await tx.CommitAsync(cancellationToken);
                     progress?.Report(new ImportProgress($"Imported '{Path.GetFileName(file)}'. {summary.ToLogLine()}", ++step, totalSteps));
                 }
@@ -314,7 +315,8 @@ END
         if (string.IsNullOrWhiteSpace(normalized))
             throw new InvalidOperationException("Academic period is required.");
 
-        var period = await db.AcademicPeriods.FirstOrDefaultAsync(p => p.Name == normalized, ct);
+        var period = db.AcademicPeriods.Local.FirstOrDefault(p => string.Equals(p.Name, normalized, StringComparison.OrdinalIgnoreCase));
+        period ??= await db.AcademicPeriods.FirstOrDefaultAsync(p => p.Name == normalized, ct);
         if (period is not null)
             return period;
 
@@ -334,7 +336,8 @@ END
         if (string.IsNullOrWhiteSpace(normalized))
             throw new InvalidOperationException("Program name is required.");
 
-        var program = await db.Programs.FirstOrDefaultAsync(p => p.Name == normalized, ct);
+        var program = db.Programs.Local.FirstOrDefault(p => string.Equals(p.Name, normalized, StringComparison.OrdinalIgnoreCase));
+        program ??= await db.Programs.FirstOrDefaultAsync(p => p.Name == normalized, ct);
         if (program is not null)
             return program;
 
@@ -359,14 +362,17 @@ END
 
         if (!string.IsNullOrWhiteSpace(normalizedPhone))
         {
-            student = await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName && s.Phone == normalizedPhone, ct);
+            student = db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName && s.Phone == normalizedPhone)
+                ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName && s.Phone == normalizedPhone, ct);
         }
 
-        student ??= await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName, ct);
+        student ??= db.Students.Local.FirstOrDefault(s => s.FullName == normalizedName)
+            ?? await db.Students.FirstOrDefaultAsync(s => s.FullName == normalizedName, ct);
 
         if (student is null && !string.IsNullOrWhiteSpace(normalizedPhone))
         {
-            student = await db.Students.FirstOrDefaultAsync(s => s.Phone == normalizedPhone, ct);
+            student = db.Students.Local.FirstOrDefault(s => s.Phone == normalizedPhone)
+                ?? await db.Students.FirstOrDefaultAsync(s => s.Phone == normalizedPhone, ct);
         }
 
         if (student is not null)
