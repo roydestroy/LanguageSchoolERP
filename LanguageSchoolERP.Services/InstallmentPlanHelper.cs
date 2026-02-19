@@ -111,7 +111,15 @@ public static class InstallmentPlanHelper
 
     public static decimal GetLostAmount(Enrollment e)
     {
-        return e.StoppedAmountWaived > 0 ? e.StoppedAmountWaived : 0m;
+        if (!e.IsStopped)
+            return 0m;
+
+        if (e.StoppedAmountWaived > 0)
+            return e.StoppedAmountWaived;
+
+        var paid = e.DownPayment + SumPayments(e);
+        var remaining = e.AgreementTotal - paid;
+        return remaining > 0 ? remaining : 0m;
     }
 
     private static decimal GetRoundedFinancedAmount(Enrollment e)
