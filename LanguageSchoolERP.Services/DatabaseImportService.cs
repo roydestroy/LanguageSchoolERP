@@ -152,9 +152,10 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
                         var enrollment = await localDb.Enrollments
                             .Include(e => e.Payments)
+                            .Include(e => e.Program)
                             .FirstOrDefaultAsync(e => e.StudentId == student.StudentId
                                 && e.AcademicPeriodId == academicPeriod.AcademicPeriodId
-                                && e.ProgramId == program.Id, cancellationToken);
+                                && e.Program.Name == program.Name, cancellationToken);
 
                         if (enrollment is null)
                         {
@@ -163,6 +164,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 StudentId = student.StudentId,
                                 AcademicPeriodId = academicPeriod.AcademicPeriodId,
                                 ProgramId = program.Id,
+                                Program = program,
                                 AgreementTotal = row.AgreementTotal,
                                 DownPayment = row.DownPayment,
                                 Comments = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
