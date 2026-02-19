@@ -137,11 +137,11 @@
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentSortOptions}"
                           SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
-                <Grid Grid.Column="4" Height="32" VerticalAlignment="Center">
+                <Grid Grid.Column="4" MinHeight="34" VerticalAlignment="Center">
                     <TextBox x:Name="StudentSearchTextBox"
-                             Height="32"
+                             MinHeight="34"
                              VerticalAlignment="Center"
-                             Padding="10,6,30,6"
+                             Padding="10,4,30,4"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Αναζήτηση με όνομα, τηλέφωνο, ηλ. ταχυδρομείο"/>
                     <Button Width="20"
