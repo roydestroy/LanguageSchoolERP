@@ -67,6 +67,56 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
 
 
+
+
+    public async Task ImportFromExcelAsync(
+        IReadOnlyCollection<string> excelFilePaths,
+        string localConnectionString,
+        IProgress<ImportProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        if (excelFilePaths is null || excelFilePaths.Count == 0)
+            throw new ArgumentException("At least one Excel file path is required.", nameof(excelFilePaths));
+
+        var files = excelFilePaths
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (files.Count == 0)
+            throw new ArgumentException("At least one valid Excel file path is required.", nameof(excelFilePaths));
+
+        foreach (var file in files)
+        {
+            var extension = Path.GetExtension(file);
+            if (!string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(extension, ".xlsm", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Unsupported Excel file extension: {file}");
+            }
+
+            if (!File.Exists(file))
+                throw new FileNotFoundException("Excel file not found.", file);
+        }
+
+        var totalSteps = files.Count + 2;
+        progress?.Report(new ImportProgress("Ensuring local database exists...", 1, totalSteps));
+        await EnsureDatabaseExistsAsync(localConnectionString, cancellationToken);
+
+        await using var localDb = CreateDbContext(localConnectionString);
+        progress?.Report(new ImportProgress("Applying migrations...", 2, totalSteps));
+        await localDb.Database.MigrateAsync(cancellationToken);
+
+        var step = 2;
+        foreach (var file in files)
+        {
+            step++;
+            progress?.Report(new ImportProgress($"Validated Excel source: {file}", step, totalSteps));
+        }
+
+        progress?.Report(new ImportProgress("Excel import validation completed successfully.", totalSteps, totalSteps));
+    }
+
     public async Task ImportFromBackupAsync(
         string backupFilePath,
         string localConnectionString,
