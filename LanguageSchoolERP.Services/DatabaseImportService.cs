@@ -8,6 +8,12 @@ namespace LanguageSchoolERP.Services;
 
 public sealed class DatabaseImportService : IDatabaseImportService
 {
+    private readonly IExcelImportRouter _excelImportRouter;
+
+    public DatabaseImportService(IExcelImportRouter excelImportRouter)
+    {
+        _excelImportRouter = excelImportRouter;
+    }
     public async Task ImportFromRemoteAsync(
         string remoteConnectionString,
         string localConnectionString,
@@ -99,22 +105,52 @@ public sealed class DatabaseImportService : IDatabaseImportService
                 throw new FileNotFoundException("Excel file not found.", file);
         }
 
-        var totalSteps = files.Count + 2;
-        progress?.Report(new ImportProgress("Ensuring local database exists...", 1, totalSteps));
-        await EnsureDatabaseExistsAsync(localConnectionString, cancellationToken);
+        var fallbackLocalDatabaseName = new SqlConnectionStringBuilder(localConnectionString).InitialCatalog;
+        if (string.IsNullOrWhiteSpace(fallbackLocalDatabaseName))
+            throw new InvalidOperationException("Local connection string has no database name.");
 
-        await using var localDb = CreateDbContext(localConnectionString);
-        progress?.Report(new ImportProgress("Applying migrations...", 2, totalSteps));
-        await localDb.Database.MigrateAsync(cancellationToken);
+        var totalSteps = files.Count * 3;
+        var step = 0;
 
-        var step = 2;
         foreach (var file in files)
         {
-            step++;
-            progress?.Report(new ImportProgress($"Validated Excel source: {file}", step, totalSteps));
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var route = _excelImportRouter.ResolveRoute(file, fallbackLocalDatabaseName);
+            var routedConnectionString = ReplaceDatabaseName(localConnectionString, route.LocalDatabaseName);
+
+            progress?.Report(new ImportProgress($"Routing '{Path.GetFileName(file)}' -> DB '{route.LocalDatabaseName}', Program '{route.DefaultProgramName}'.", ++step, totalSteps));
+
+            await EnsureDatabaseExistsAsync(routedConnectionString, cancellationToken);
+
+            await using var localDb = CreateDbContext(routedConnectionString);
+            await localDb.Database.MigrateAsync(cancellationToken);
+
+            var program = await localDb.Programs
+                .FirstOrDefaultAsync(p => p.Name == route.DefaultProgramName, cancellationToken);
+
+            if (program is null)
+            {
+                localDb.Programs.Add(new StudyProgram
+                {
+                    Name = route.DefaultProgramName,
+                    HasTransport = false,
+                    HasStudyLab = false,
+                    HasBooks = false
+                });
+                await localDb.SaveChangesAsync(cancellationToken);
+                progress?.Report(new ImportProgress($"Upserted StudyProgram '{route.DefaultProgramName}' in '{route.LocalDatabaseName}'.", ++step, totalSteps));
+            }
+            else
+            {
+                progress?.Report(new ImportProgress($"StudyProgram '{route.DefaultProgramName}' already exists in '{route.LocalDatabaseName}'.", ++step, totalSteps));
+            }
+
+            // TODO: Row import implementation should use route.DefaultProgramName to resolve ProgramId.
+            progress?.Report(new ImportProgress($"Prepared import for '{Path.GetFileName(file)}'.", ++step, totalSteps));
         }
 
-        progress?.Report(new ImportProgress("Excel import validation completed successfully.", totalSteps, totalSteps));
+        progress?.Report(new ImportProgress("Excel import preparation completed successfully.", totalSteps, totalSteps));
     }
 
     public async Task ImportFromBackupAsync(
@@ -186,6 +222,17 @@ END
     }
 
 
+
+
+    private static string ReplaceDatabaseName(string connectionString, string databaseName)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = databaseName
+        };
+
+        return builder.ConnectionString;
+    }
 
     private static async Task ExecuteOnMasterAsync(
         string connectionString,
