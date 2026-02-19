@@ -1394,7 +1394,11 @@ public partial class StudentProfileViewModel : ObservableObject
         var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 1) return (parts[0], "");
 
-        return (parts[0], string.Join(" ", parts.Skip(1)));
+        // Prefer last token as surname so multi-word first names remain intact
+        // (e.g. "DAN ALEXANDER JAHRE" -> Name="DAN ALEXANDER", Surname="JAHRE").
+        var surname = parts[^1];
+        var name = string.Join(" ", parts[..^1]);
+        return (name, surname);
     }
 
     private static string JoinName(string? name, string? surname)
