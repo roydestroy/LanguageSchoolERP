@@ -155,9 +155,17 @@
                             FontWeight="SemiBold"
                             ToolTip="Καθαρισμός αναζήτησης"
                             Cursor="Hand"
+                            Focusable="False"
+                            IsTabStop="False"
+                            FocusVisualStyle="{x:Null}"
                             BorderThickness="0"
                             Background="Transparent"
                             Foreground="{StaticResource Brush.TextSecondary}">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </ControlTemplate>
+                        </Button.Template>
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Visibility" Value="Visible"/>
