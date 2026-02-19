@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace LanguageSchoolERP.Services;
@@ -112,7 +113,10 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             levelOrClass,
                             defaultProgramName);
 
-                        var agreementTotal = agreementCol.HasValue ? ReadDecimal(used.Cells[row, agreementCol.Value]) : 0m;
+                        var agreementCell = agreementCol.HasValue ? (Excel.Range)used.Cells[row, agreementCol.Value] : null;
+                        var agreementTotal = agreementCell is not null ? ReadDecimal(agreementCell) : 0m;
+                        var installmentCount = agreementCell is not null ? TryExtractInstallmentCountFromAgreementComment(agreementCell) : 0;
+                        DateTime? installmentStartMonth = installmentCount > 0 ? new DateTime(2025, 10, 1) : null;
                         var downPayment = downPaymentCol.HasValue ? ReadDecimal(used.Cells[row, downPaymentCol.Value]) : 0m;
                         var transportationMonthlyCost = transportationCol.HasValue ? ReadDecimal(used.Cells[row, transportationCol.Value]) : 0m;
                         var studyLabMonthlyCost = studyLabCol.HasValue ? ReadDecimal(used.Cells[row, studyLabCol.Value]) : 0m;
@@ -178,6 +182,8 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             booksCol.HasValue,
                             isDiscontinued,
                             monthlySignals,
+                            installmentCount,
+                            installmentStartMonth,
                             confirmedCollected,
                             paymentDate,
                             Path.GetFileName(workbookPath)));
@@ -372,6 +378,36 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
     private static string NormalizeHeader(string value)
         => value.Replace(" ", string.Empty, StringComparison.Ordinal).Trim().ToUpperInvariant();
+
+    private static int TryExtractInstallmentCountFromAgreementComment(Excel.Range cell)
+    {
+        var commentText = ReadCommentText(cell);
+        if (string.IsNullOrWhiteSpace(commentText))
+            return 0;
+
+        // Example comments: 65+140*8, (65+140)*8, 65+140 x 8.
+        var match = Regex.Match(commentText, @"[\*xX×]\s*(\d+)");
+        if (!match.Success)
+            return 0;
+
+        return int.TryParse(match.Groups[1].Value, out var count) && count > 0 ? count : 0;
+    }
+
+    private static string ReadCommentText(Excel.Range cell)
+    {
+        var comment = cell?.Comment;
+        if (comment is null)
+            return string.Empty;
+
+        try
+        {
+            return comment.Text() ?? string.Empty;
+        }
+        finally
+        {
+            Marshal.ReleaseComObject(comment);
+        }
+    }
 
     private static string ReadText(Excel.Range cell)
     {

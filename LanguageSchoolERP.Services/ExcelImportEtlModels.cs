@@ -21,6 +21,8 @@ public sealed record ExcelImportParseRow(
     bool HasBooksColumn,
     bool IsDiscontinued,
     IReadOnlyList<ExcelMonthlyPaymentSignal> MonthlyPayments,
+    int InstallmentCount,
+    DateTime? InstallmentStartMonth,
     decimal? ConfirmedCollectedAmount,
     DateTime? PaymentDate,
     string SourceNote);

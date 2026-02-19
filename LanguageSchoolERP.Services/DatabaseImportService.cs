@@ -189,6 +189,8 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 Status = row.IsDiscontinued ? "Stopped" : "Active",
                                 StoppedOn = row.IsDiscontinued ? DateTime.Today : null,
                                 StopReason = row.IsDiscontinued ? "Excel import: ΔΙΑΚΟΠΗ" : string.Empty,
+                                InstallmentCount = row.InstallmentCount > 0 ? row.InstallmentCount : 0,
+                                InstallmentStartMonth = row.InstallmentCount > 0 ? row.InstallmentStartMonth : null,
                                 Comments = $"Excel import ({row.SourceNote}/{row.SheetName}#{row.RowNumber})"
                             };
                             localDb.Enrollments.Add(enrollment);
@@ -219,6 +221,12 @@ public sealed class DatabaseImportService : IDatabaseImportService
                                 enrollment.StudyLabMonthlyPrice = row.StudyLabMonthlyCost;
                                 enrollment.HasStudyLab = true;
                                 enrollment.StudyLabMonthlyFee = row.StudyLabMonthlyCost;
+                            }
+
+                            if (row.InstallmentCount > 0)
+                            {
+                                enrollment.InstallmentCount = row.InstallmentCount;
+                                enrollment.InstallmentStartMonth = row.InstallmentStartMonth;
                             }
 
                             if (row.IsDiscontinued)
