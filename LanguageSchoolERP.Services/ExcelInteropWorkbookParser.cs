@@ -14,7 +14,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         string defaultProgramName,
         CancellationToken cancellationToken)
     {
-        return Task.Run(() => ParseInternal(workbookPath, defaultProgramName, cancellationToken), cancellationToken);
+        return Task.Run(() => ParseInternal(workbookPath, defaultProgramName, cancellationToken));
     }
 
     private static ExcelImportParseResult ParseInternal(string workbookPath, string defaultProgramName, CancellationToken ct)

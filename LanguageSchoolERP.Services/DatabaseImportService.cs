@@ -128,10 +128,10 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
             progress?.Report(new ImportProgress($"Routing '{Path.GetFileName(file)}' -> DB '{route.LocalDatabaseName}', Program '{route.DefaultProgramName}', DryRun={dryRun}.", ++step, totalSteps));
 
-            await EnsureDatabaseExistsAsync(routedConnectionString, cancellationToken);
+            await EnsureDatabaseExistsAsync(routedConnectionString, CancellationToken.None);
 
             await using var localDb = CreateDbContext(routedConnectionString);
-            await localDb.Database.MigrateAsync(cancellationToken);
+            await localDb.Database.MigrateAsync(CancellationToken.None);
 
             var parseResult = await _excelWorkbookParser.ParseAsync(file, route.DefaultProgramName, cancellationToken);
             foreach (var parseError in parseResult.Errors)
@@ -139,7 +139,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                 progress?.Report(new ImportProgress($"Parse error [{parseError.SheetName}#{parseError.RowNumber}]: {parseError.Message}", step, totalSteps));
             }
 
-            await using var tx = await localDb.Database.BeginTransactionAsync(cancellationToken);
+            await using var tx = await localDb.Database.BeginTransactionAsync(CancellationToken.None);
             var summary = new ExcelImportSummary { ErrorRows = parseResult.Errors.Count };
 
             try
@@ -155,16 +155,16 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
                     try
                     {
-                        var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, cancellationToken);
-                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, summary, cancellationToken);
-                        var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.StudentPhone, row.FatherPhone, row.MotherPhone, summary, cancellationToken);
+                        var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, CancellationToken.None);
+                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, summary, CancellationToken.None);
+                        var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.StudentPhone, row.FatherPhone, row.MotherPhone, summary, CancellationToken.None);
 
                         var enrollment = await localDb.Enrollments
                             .Include(e => e.Payments)
                             .Include(e => e.Program)
                             .FirstOrDefaultAsync(e => e.StudentId == student.StudentId
                                 && e.AcademicPeriodId == academicPeriod.AcademicPeriodId
-                                && e.Program.Name == program.Name, cancellationToken);
+                                && e.Program.Name == program.Name, CancellationToken.None);
 
                         if (enrollment is null)
                         {
@@ -286,7 +286,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                             }
                         }
 
-                        await localDb.SaveChangesAsync(cancellationToken);
+                        await localDb.SaveChangesAsync(CancellationToken.None);
                     }
                     catch (OperationCanceledException)
                     {
@@ -303,12 +303,12 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
                 if (dryRun)
                 {
-                    await tx.RollbackAsync(cancellationToken);
+                    await tx.RollbackAsync(CancellationToken.None);
                     progress?.Report(new ImportProgress($"Dry-run rollback for '{Path.GetFileName(file)}'. {summary.ToLogLine()}", ++step, totalSteps));
                 }
                 else
                 {
-                    await tx.CommitAsync(cancellationToken);
+                    await tx.CommitAsync(CancellationToken.None);
                     progress?.Report(new ImportProgress($"Imported '{Path.GetFileName(file)}'. {summary.ToLogLine()}", ++step, totalSteps));
                 }
             }
