@@ -56,7 +56,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var phoneCol = FindColumn(headerMap, "ΤΗΛ", "ΚΙΝ");
                     var yearCol = FindColumn(headerMap, "ΑΚΑΔΗΜ", "ΕΤΟΣ");
                     var programCol = FindColumn(headerMap, "ΠΡΟΓΡ");
-                    var agreementCol = FindColumn(headerMap, "ΣΥΜΦΩΝ", "TOTAL", "ΣΥΝΟΛ");
+                    var agreementCol = FindAgreementColumn(headerMap);
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
@@ -192,6 +192,32 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         }
 
         return map;
+    }
+
+
+    private static int? FindAgreementColumn(IReadOnlyDictionary<int, string> headers)
+    {
+        // Prefer explicit agreement columns, avoid "ΣΥΜΦΩΝΗΤΙΚΟ" boolean/signature columns.
+        foreach (var (col, header) in headers)
+        {
+            if (header.Contains("ΣΥΜΦΩΝΙΑ", StringComparison.OrdinalIgnoreCase)
+                || header.Contains("AGREEMENT", StringComparison.OrdinalIgnoreCase)
+                || header.Contains("TOTAL", StringComparison.OrdinalIgnoreCase))
+            {
+                return col;
+            }
+        }
+
+        foreach (var (col, header) in headers)
+        {
+            if (header.Contains("ΣΥΜΦΩΝ", StringComparison.OrdinalIgnoreCase)
+                && !header.Contains("ΣΥΜΦΩΝΗΤΙΚ", StringComparison.OrdinalIgnoreCase))
+            {
+                return col;
+            }
+        }
+
+        return null;
     }
 
     private static int? FindColumn(IReadOnlyDictionary<int, string> headers, params string[] tokens)
