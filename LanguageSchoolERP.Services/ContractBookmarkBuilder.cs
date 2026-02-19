@@ -35,9 +35,15 @@ public sealed class ContractBookmarkBuilder
         {
             values["slab"] = "Για την συμμετοχή στο πρόγραμμα Study Lab το συμφωνηθέν ποσό καθορίζεται ως εξής:";
             var studyLabTotal = payload.StudyLabMonthlyPrice ?? 0m;
-            var divisor = payload.InstallmentCount > 0 ? payload.InstallmentCount : 1;
-            var studyLabPerMonth = studyLabTotal / divisor;
-            values["slabc"] = $"{studyLabPerMonth:0.##}€/μήνα";
+            if (payload.InstallmentCount > 0)
+            {
+                var studyLabPerMonth = studyLabTotal / payload.InstallmentCount;
+                values["slabc"] = $"{studyLabPerMonth:0.##}€/μήνα";
+            }
+            else
+            {
+                values["slabc"] = $"{studyLabTotal:0.##}€";
+            }
         }
         else
         {
