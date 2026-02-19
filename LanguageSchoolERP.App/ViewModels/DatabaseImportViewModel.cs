@@ -547,7 +547,7 @@ public partial class DatabaseImportViewModel : ObservableObject
 
     private bool ConfirmImport()
     {
-        if (SelectedImportSource != DatabaseImportSource.RemoteDatabase || WipeLocalFirst)
+        if (SelectedImportSource == DatabaseImportSource.RemoteDatabase && WipeLocalFirst)
         {
             var dialog = new ConfirmImportDialog
             {
