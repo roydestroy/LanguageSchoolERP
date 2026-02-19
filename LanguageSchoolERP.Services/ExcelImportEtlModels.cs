@@ -18,6 +18,7 @@ public sealed record ExcelImportParseRow(
     decimal StudyLabMonthlyCost,
     bool HasTransportationColumn,
     bool HasStudyLabColumn,
+    bool HasBooksColumn,
     bool IsDiscontinued,
     IReadOnlyList<ExcelMonthlyPaymentSignal> MonthlyPayments,
     decimal? ConfirmedCollectedAmount,

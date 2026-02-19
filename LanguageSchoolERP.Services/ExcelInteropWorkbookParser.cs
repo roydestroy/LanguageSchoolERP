@@ -64,6 +64,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                     var downPaymentCol = FindColumn(headerMap, "ΠΡΟΚ", "DOWN");
                     var transportationCol = FindTransportationColumn(headerMap, headerRow);
                     var studyLabCol = FindStudyLabColumn(headerMap, headerRow);
+                    var booksCol = FindBooksColumn(headerMap, headerRow);
                     var discontinuedCol = FindColumn(headerMap, "ΔΙΑΚΟΠ", "STOP", "DISCONT");
                     var collectionCol = FindColumn(headerMap, "ΕΙΣΠΡΑΞ");
                     var paymentDateCol = FindColumn(headerMap, "ΗΜΕΡ", "DATE");
@@ -174,6 +175,7 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
                             studyLabMonthlyCost,
                             transportationCol.HasValue,
                             studyLabCol.HasValue,
+                            booksCol.HasValue,
                             isDiscontinued,
                             monthlySignals,
                             confirmedCollected,
@@ -256,6 +258,14 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
             return FindColumn(headers, "ΜΕΛΕΤΗ", "STUDYLAB", "STUDY");
 
         return FindColumn(headers, "ΜΕΛΕΤΗ", "STUDYLAB", "STUDY");
+    }
+
+    private static int? FindBooksColumn(IReadOnlyDictionary<int, string> headers, int headerRow)
+    {
+        if (headerRow == 3)
+            return FindColumn(headers, "ΒΙΒΛΙΑ", "BOOK");
+
+        return FindColumn(headers, "ΒΙΒΛΙΑ", "BOOK");
     }
 
     private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers, string defaultProgramName)

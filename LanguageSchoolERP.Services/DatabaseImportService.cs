@@ -156,7 +156,7 @@ public sealed class DatabaseImportService : IDatabaseImportService
                     try
                     {
                         var academicPeriod = await ResolveOrCreateAcademicPeriodAsync(localDb, row.AcademicYearLabel, summary, CancellationToken.None);
-                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, row.HasTransportationColumn, row.HasStudyLabColumn, summary, CancellationToken.None);
+                        var program = await ResolveOrCreateProgramAsync(localDb, string.IsNullOrWhiteSpace(row.ProgramName) ? route.DefaultProgramName : row.ProgramName, row.HasTransportationColumn, row.HasStudyLabColumn, row.HasBooksColumn, summary, CancellationToken.None);
                         var student = await ResolveOrCreateStudentAsync(localDb, row.StudentFullName, row.StudentPhone, row.FatherPhone, row.MotherPhone, summary, CancellationToken.None);
 
                         var enrollment = await localDb.Enrollments
@@ -460,6 +460,7 @@ END
         string programName,
         bool hasTransportationColumn,
         bool hasStudyLabColumn,
+        bool hasBooksColumn,
         ExcelImportSummary summary,
         CancellationToken ct)
     {
@@ -477,6 +478,9 @@ END
             if (hasStudyLabColumn && !program.HasStudyLab)
                 program.HasStudyLab = true;
 
+            if (hasBooksColumn && !program.HasBooks)
+                program.HasBooks = true;
+
             return program;
         }
 
@@ -484,7 +488,8 @@ END
         {
             Name = normalized,
             HasTransport = hasTransportationColumn,
-            HasStudyLab = hasStudyLabColumn
+            HasStudyLab = hasStudyLabColumn,
+            HasBooks = hasBooksColumn
         };
         db.Programs.Add(program);
         summary.InsertedPrograms++;
