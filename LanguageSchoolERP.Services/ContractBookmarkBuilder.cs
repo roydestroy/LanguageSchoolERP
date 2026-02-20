@@ -19,7 +19,7 @@ public sealed class ContractBookmarkBuilder
             ["tou"] = InferFemale(payload.StudentFullName) ? "της" : "του",
             ["on_up"] = NormalizeNameForContract(payload.GuardianFullName),
             ["on_sp"] = NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
-            ["per_prg"] = NormalizeProgramTextForContractBookmark(payload.ProgramNameUpper),
+            ["per_prg"] = NormalizeProgramTextForContractBookmark(ToGenitiveProgramName(payload.ProgramNameUpper)),
             ["tit_prg"] = NormalizeProgramTextForContractBookmark(enrollment.LevelOrClass ?? string.Empty),
             ["sun_pos"] = FormatPlainAmount(payload.AgreementTotal),
             ["prok_pos"] = FormatPlainAmount(payload.DownPayment),
@@ -180,6 +180,23 @@ public sealed class ContractBookmarkBuilder
         return normalized;
     }
 
+
+    private static string ToGenitiveProgramName(string value)
+    {
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0)
+            return value;
+
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (!ContainsGreek(parts[i]))
+                continue;
+
+            parts[i] = ToGenitiveGreekWord(parts[i]);
+        }
+
+        return string.Join(' ', parts);
+    }
     private static string NormalizeNameForContract(string value)
     {
         var noTonos = RemoveGreekTonos(value ?? "");

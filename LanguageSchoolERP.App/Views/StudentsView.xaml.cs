@@ -15,7 +15,10 @@ public partial class StudentsView : UserControl
     private void ClearStudentSearch_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is StudentsViewModel vm)
+        {
             vm.SearchText = string.Empty;
+            vm.IsSearchSuggestionsOpen = false;
+        }
 
         StudentSearchTextBox.Focus();
     }

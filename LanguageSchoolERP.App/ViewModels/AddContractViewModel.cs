@@ -184,7 +184,7 @@ public partial class AddContractViewModel : ObservableObject
                 StudentFirstName = firstName,
                 StudentLastName = lastName,
                 GuardianFullName = effectiveGuardianName,
-                ProgramNameUpper = (enrollment.Program?.Name ?? "").ToUpperInvariant(),
+                ProgramNameUpper = enrollment.Program?.Name ?? "",
                 ProgramTitleUpperWithExtras = ContractBookmarkBuilder.BuildProgramTitleUpperWithExtras(enrollment),
                 AgreementTotal = enrollment.AgreementTotal,
                 DownPayment = enrollment.DownPayment,
