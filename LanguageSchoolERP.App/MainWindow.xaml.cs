@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Globalization;
 using System.Windows.Controls;
+using System.Windows.Media;
 using LanguageSchoolERP.Services;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageSchoolERP.App.Views;
@@ -107,6 +108,8 @@ public partial class MainWindow : Window
         };
 
         _state.PropertyChanged += OnAppStateChanged;
+
+        AddHandler(PreviewMouseDownEvent, new System.Windows.Input.MouseButtonEventHandler(OnPreviewMouseDownCloseOpenDropdowns), true);
         SyncTopBarState();
 
         NavigateToStudents();
@@ -119,6 +122,79 @@ public partial class MainWindow : Window
         SettingsBtn.Click += (_, __) => NavigateToDatabaseImport();
 
         _ = RefreshAcademicYearProgressAsync();
+    }
+
+
+    private void OnPreviewMouseDownCloseOpenDropdowns(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject source)
+            return;
+
+        var openCombos = FindVisualChildren<ComboBox>(this)
+            .Where(c => c.IsDropDownOpen)
+            .ToList();
+
+        if (openCombos.Count == 0)
+            return;
+
+        if (openCombos.Any(combo => IsClickInsideCombo(source, combo)))
+            return;
+
+        foreach (var combo in openCombos)
+            combo.IsDropDownOpen = false;
+    }
+
+    private static bool IsClickInsideCombo(DependencyObject source, ComboBox combo)
+    {
+        if (IsVisualAncestorOf(source, combo))
+            return true;
+
+        var node = source;
+        while (node is not null)
+        {
+            if (node is ComboBoxItem item)
+            {
+                var owner = ItemsControl.ItemsControlFromItemContainer(item) as ComboBox;
+                if (ReferenceEquals(owner, combo))
+                    return true;
+            }
+
+            node = VisualTreeHelper.GetParent(node);
+        }
+
+        return false;
+    }
+
+    private static bool IsVisualAncestorOf(DependencyObject current, DependencyObject ancestor)
+    {
+        var node = current;
+        while (node is not null)
+        {
+            if (ReferenceEquals(node, ancestor))
+                return true;
+
+            node = VisualTreeHelper.GetParent(node);
+        }
+
+        return false;
+    }
+
+    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
+    {
+        if (parent is null)
+            yield break;
+
+        var childCount = VisualTreeHelper.GetChildrenCount(parent);
+        for (var i = 0; i < childCount; i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+
+            if (child is T typedChild)
+                yield return typedChild;
+
+            foreach (var nestedChild in FindVisualChildren<T>(child))
+                yield return nestedChild;
+        }
     }
 
     private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
