@@ -62,10 +62,18 @@ public partial class StudentsView : UserControl
 
         if (DataContext is StudentsViewModel vm)
         {
-            vm.SearchText = string.Empty;
+            if (!string.IsNullOrWhiteSpace(vm.SearchText))
+            {
+                vm.SearchText = string.Empty;
+                vm.IsSearchSuggestionsOpen = false;
+                e.Handled = true;
+                return;
+            }
+
             vm.IsSearchSuggestionsOpen = false;
         }
 
+        Keyboard.ClearFocus();
         e.Handled = true;
     }
 }
