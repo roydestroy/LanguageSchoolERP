@@ -318,7 +318,8 @@ public partial class StudentProfileViewModel : ObservableObject
                 return;
             }
 
-            student.FullName = JoinName(EditableStudentName, EditableStudentSurname);
+            student.FirstName = (EditableStudentName ?? string.Empty).Trim();
+            student.LastName = (EditableStudentSurname ?? string.Empty).Trim();
             student.DateOfBirth = EditableDateOfBirth;
             student.Mobile = EditableMobile.Trim();
             student.Landline = EditableLandline.Trim();
@@ -926,10 +927,8 @@ public partial class StudentProfileViewModel : ObservableObject
             ContactLine = BuildPreferredContactLine(student);
             Notes = student.Notes ?? "";
 
-            var (studentName, studentSurname) = SplitName(student.FullName);
-
-            _originalStudentName = studentName;
-            _originalStudentSurname = studentSurname;
+            _originalStudentName = student.FirstName ?? "";
+            _originalStudentSurname = student.LastName ?? "";
             _originalDateOfBirth = student.DateOfBirth;
             _originalMobile = student.Mobile ?? "";
             _originalLandline = student.Landline ?? "";
@@ -1425,25 +1424,6 @@ public partial class StudentProfileViewModel : ObservableObject
         return string.IsNullOrWhiteSpace(additionalNotes)
             ? PaymentAgreementHelper.ExcludeFromAgreementDisplayText
             : $"{additionalNotes} | {PaymentAgreementHelper.ExcludeFromAgreementDisplayText}";
-    }
-
-    private static (string Name, string Surname) SplitName(string? fullName)
-    {
-        var value = (fullName ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(value)) return ("", "");
-
-        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1) return (parts[0], "");
-
-        var surname = parts[^1];
-        var name = string.Join(" ", parts[..^1]);
-        return (name, surname);
-    }
-
-    private static string JoinName(string? name, string? surname)
-    {
-        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
-            .Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 
     private static void TryDeleteFile(string? path, string label, ICollection<string> errors)

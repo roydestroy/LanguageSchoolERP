@@ -10,16 +10,21 @@ public sealed class ContractBookmarkBuilder
 
     public Dictionary<string, string> BuildBookmarkValues(ContractPayload payload, Enrollment enrollment)
     {
+        var guardianSameAsStudent = AreSamePersonName(payload.GuardianFullName, payload.StudentFullName);
+        var studentIsFemale = InferFemale(payload.StudentFullName);
+
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["cur1"] = payload.CreatedAt.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
             ["cur"] = BuildGreekLongDate(payload.CreatedAt),
             ["gen"] = InferFemale(payload.GuardianFullName) ? "η" : "ο",
             ["gen1"] = InferFemale(payload.GuardianFullName) ? "υπογεγραμμένη" : "υπογεγραμμένος",
-            ["tou"] = InferFemale(payload.StudentFullName) ? "της" : "του",
+            ["tou"] = studentIsFemale ? "της" : "του",
             ["on_up"] = NormalizeNameForContract(payload.GuardianFullName),
-            ["on_sp"] = NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
-            ["per_prg"] = NormalizeProgramTextForContractBookmark(payload.ProgramNameUpper),
+            ["on_sp"] = guardianSameAsStudent
+                ? (studentIsFemale ? "ΙΔΙΑΣ" : "ΙΔΙΟΥ")
+                : NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
+            ["per_prg"] = NormalizeProgramTextForContractBookmark(ToGenitiveProgramName(payload.ProgramNameUpper)),
             ["tit_prg"] = NormalizeProgramTextForContractBookmark(enrollment.LevelOrClass ?? string.Empty),
             ["sun_pos"] = FormatPlainAmount(payload.AgreementTotal),
             ["prok_pos"] = FormatPlainAmount(payload.DownPayment),
@@ -177,7 +182,47 @@ public sealed class ContractBookmarkBuilder
         if (normalized.EndsWith("ης", StringComparison.OrdinalIgnoreCase))
             return normalized[..^2] + "η";
 
+        // Common feminine noun/adjective forms (e.g. ΓΛΩΣΣΑ -> ΓΛΩΣΣΑΣ, ΑΓΓΛΙΚΗ -> ΑΓΓΛΙΚΗΣ)
+        if (normalized.EndsWith("η", StringComparison.OrdinalIgnoreCase))
+            return normalized + "ς";
+        if (normalized.EndsWith("α", StringComparison.OrdinalIgnoreCase))
+            return normalized + "ς";
+
         return normalized;
+    }
+
+
+    private static string ToGenitiveProgramName(string value)
+    {
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0)
+            return value;
+
+        for (var i = 0; i < parts.Length; i++)
+        {
+            if (!ContainsGreek(parts[i]))
+                continue;
+
+            parts[i] = ToGenitiveGreekWord(parts[i]);
+        }
+
+        return string.Join(' ', parts);
+    }
+
+    private static bool AreSamePersonName(string a, string b)
+    {
+        var left = NormalizeNameToken(a);
+        var right = NormalizeNameToken(b);
+        return left == right;
+    }
+
+    private static string NormalizeNameToken(string value)
+    {
+        var noTonos = RemoveGreekTonos(value ?? string.Empty);
+        var parts = noTonos
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return string.Join(' ', parts).ToUpper(GreekCulture);
     }
 
     private static string NormalizeNameForContract(string value)

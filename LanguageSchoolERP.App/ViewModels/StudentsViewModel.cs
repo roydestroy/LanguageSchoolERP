@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.Core.Models;
 using LanguageSchoolERP.Services;
+using LanguageSchoolERP.Data;
 using Microsoft.EntityFrameworkCore;
 using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +41,8 @@ public partial class StudentsViewModel : ObservableObject
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
+    private bool _suppressProgramFilterReload;
+    private bool _suppressSuggestionsOpenOnce;
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
@@ -62,11 +65,18 @@ public partial class StudentsViewModel : ObservableObject
     [ObservableProperty] private string searchText = "";
     [ObservableProperty] private string selectedStudentStatusFilter = ActiveStudentsFilter;
     [ObservableProperty] private string selectedStudentSortOption = SortByName;
+    [ObservableProperty] private ProgramFilterItemVm? selectedProgramFilter;
+    [ObservableProperty] private bool isSearchSuggestionsOpen;
+
+    public ObservableCollection<ProgramFilterItemVm> ProgramFilters { get; } = new();
+    public ObservableCollection<string> SearchSuggestions { get; } = new();
 
     public IRelayCommand RefreshCommand { get; }
     public IRelayCommand NewStudentCommand { get; }
     public IRelayCommand<Guid> OpenStudentCommand { get; }
     public IRelayCommand<Guid> QuickAddPaymentCommand { get; }
+    public IRelayCommand<ProgramFilterItemVm> SelectProgramFilterCommand { get; }
+    public IRelayCommand<string> ApplySearchSuggestionCommand { get; }
 
     public StudentsViewModel(AppState state, DbContextFactory dbFactory)
     {
@@ -77,6 +87,12 @@ public partial class StudentsViewModel : ObservableObject
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
         OpenStudentCommand = new RelayCommand<Guid>(OpenStudent);
         QuickAddPaymentCommand = new RelayCommand<Guid>(OpenQuickPaymentDialog, CanOpenQuickPayment);
+        SelectProgramFilterCommand = new RelayCommand<ProgramFilterItemVm>(SelectProgramFilter);
+        ApplySearchSuggestionCommand = new RelayCommand<string>(ApplySearchSuggestion);
+
+        var allProgramsFilter = new ProgramFilterItemVm(null, "ΟΛΑ") { IsSelected = true };
+        ProgramFilters.Add(allProgramsFilter);
+        selectedProgramFilter = allProgramsFilter;
 
         // Refresh automatically when DB/year changes
         _state.PropertyChanged += OnAppStateChanged;
@@ -102,7 +118,12 @@ public partial class StudentsViewModel : ObservableObject
 
     partial void OnSearchTextChanged(string value)
     {
-        // lightweight debounce not needed yet; refresh on typing is fine for now
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            SearchSuggestions.Clear();
+            IsSearchSuggestionsOpen = false;
+        }
+
         _ = LoadAsync();
     }
 
@@ -113,6 +134,17 @@ public partial class StudentsViewModel : ObservableObject
 
     partial void OnSelectedStudentSortOptionChanged(string value)
     {
+        _ = LoadAsync();
+    }
+
+    partial void OnSelectedProgramFilterChanged(ProgramFilterItemVm? value)
+    {
+        foreach (var item in ProgramFilters)
+            item.IsSelected = ReferenceEquals(item, value);
+
+        if (_suppressProgramFilterReload)
+            return;
+
         _ = LoadAsync();
     }
 
@@ -189,9 +221,26 @@ public partial class StudentsViewModel : ObservableObject
         // Initialize the VM for this specific student + global year default
         win.Initialize(studentId);
 
-        win.Closed += (_, __) => _ = LoadAsync();
         win.Show();
 
+    }
+
+    private void SelectProgramFilter(ProgramFilterItemVm? filter)
+    {
+        if (filter is null)
+            return;
+
+        SelectedProgramFilter = filter;
+    }
+
+    private void ApplySearchSuggestion(string? suggestion)
+    {
+        if (string.IsNullOrWhiteSpace(suggestion))
+            return;
+
+        _suppressSuggestionsOpenOnce = true;
+        SearchText = suggestion;
+        IsSearchSuggestionsOpen = false;
     }
 
     private async Task LoadAsync()
@@ -213,27 +262,15 @@ public partial class StudentsViewModel : ObservableObject
                 .FirstOrDefaultAsync(p => p.Name == year);
             var selectedPeriodId = period?.AcademicPeriodId;
 
-            var baseQuery = db.Students.AsNoTracking();
+            var availablePrograms = await db.Programs
+                .AsNoTracking()
+                .OrderBy(p => p.Name)
+                .ToListAsync();
 
-            baseQuery = SelectedStudentStatusFilter switch
-            {
-                ActiveStudentsFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
-                InactiveStudentsFilter => selectedPeriodId == null
-                    ? baseQuery
-                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
-                ContractPendingFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
-                OverdueFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
-                DiscontinuedFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
-                _ => baseQuery
-            };
+            SyncProgramFilters(availablePrograms);
+            await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation);
+
+            var baseQuery = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
@@ -433,6 +470,103 @@ public partial class StudentsViewModel : ObservableObject
 
     }
 
+    private void SyncProgramFilters(IReadOnlyCollection<StudyProgram> programs)
+    {
+        var selectedProgramId = SelectedProgramFilter?.ProgramId;
+        var items = new List<ProgramFilterItemVm>
+        {
+            new(null, "ΟΛΑ")
+        };
+
+        items.AddRange(programs.Select(p => new ProgramFilterItemVm(p.Id, p.Name)));
+
+        _suppressProgramFilterReload = true;
+
+        ProgramFilters.Clear();
+        foreach (var item in items)
+            ProgramFilters.Add(item);
+
+        SelectedProgramFilter = ProgramFilters.FirstOrDefault(f => f.ProgramId == selectedProgramId) ?? ProgramFilters.First();
+
+        _suppressProgramFilterReload = false;
+    }
+
+    private IQueryable<Student> ApplyActiveFilters(IQueryable<Student> query, SchoolDbContext db, Guid? selectedPeriodId)
+    {
+        if (SelectedProgramFilter?.ProgramId is int selectedProgramId)
+        {
+            query = query.Where(s => db.Enrollments.Any(e =>
+                e.StudentId == s.StudentId &&
+                e.ProgramId == selectedProgramId &&
+                (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId)));
+        }
+
+        query = SelectedStudentStatusFilter switch
+        {
+            ActiveStudentsFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
+            InactiveStudentsFilter => selectedPeriodId == null
+                ? query
+                : query.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
+            ContractPendingFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
+            OverdueFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
+            DiscontinuedFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
+            _ => query
+        };
+
+        return query;
+    }
+
+    private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+            return;
+
+        var term = SearchText.Trim();
+
+        var filteredStudents = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
+
+        var suggestions = await filteredStudents
+            .Where(s =>
+                (s.FirstName + " " + s.LastName).Contains(term) ||
+                s.Mobile.Contains(term) ||
+                s.Landline.Contains(term) ||
+                s.Email.Contains(term) ||
+                db.Enrollments.Any(e =>
+                    e.StudentId == s.StudentId &&
+                    (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
+                    ((e.LevelOrClass != null && e.LevelOrClass.Contains(term)) || e.Program.Name.Contains(term))))
+            .OrderBy(s => s.LastName)
+            .ThenBy(s => s.FirstName)
+            .Select(s => (s.FirstName + " " + s.LastName).Trim())
+            .Distinct()
+            .Take(8)
+            .ToListAsync();
+
+        if (generation != Volatile.Read(ref _loadGeneration))
+            return;
+
+        SearchSuggestions.Clear();
+        foreach (var suggestion in suggestions)
+            SearchSuggestions.Add(suggestion);
+
+        if (_suppressSuggestionsOpenOnce)
+        {
+            _suppressSuggestionsOpenOnce = false;
+            IsSearchSuggestionsOpen = false;
+            return;
+        }
+
+        IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
+    }
+
     private static string FormatCurrency(decimal amount)
         => amount.ToString("#,##0.#", new CultureInfo("el-GR")) + " €";
 
@@ -507,4 +641,12 @@ public partial class StudentsViewModel : ObservableObject
         return parts.Count == 0 ? "—" : string.Join("  |  ", parts);
     }
 
+}
+
+public partial class ProgramFilterItemVm(int? programId, string name) : ObservableObject
+{
+    public int? ProgramId { get; } = programId;
+    public string Name { get; } = name;
+
+    [ObservableProperty] private bool isSelected;
 }
