@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,6 +9,7 @@ namespace LanguageSchoolERP.App.ViewModels;
 public partial class StudentRowVm : ObservableObject
 {
     private static readonly Brush DefaultProgressBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
+    private static readonly CultureInfo CurrencyCulture = new("el-GR");
 
     public Guid StudentId { get; set; }
 
@@ -22,7 +24,7 @@ public partial class StudentRowVm : ObservableObject
     public string ActiveStatusText => HasOnlyStoppedPrograms ? "Διακοπή" : (IsActive ? "Ενεργός" : "Ανενεργός");
 
     [ObservableProperty] private decimal balance;
-    public string BalanceText => $"{Balance:0.00} €";
+    public string BalanceText => $"{Balance.ToString("#,##0.#", CurrencyCulture)} €";
 
     [ObservableProperty] private decimal overdueAmount;
 
