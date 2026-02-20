@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Data.SqlClient;
 using Microsoft.Win32;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.App.Views;
@@ -394,6 +395,16 @@ public partial class DatabaseImportViewModel : ObservableObject
 
             _appState.SelectedLocalDatabaseName = localDbName;
             _appState.SelectedDatabaseMode = DatabaseMode.Local;
+
+            try
+            {
+                await RefreshLocalDatabaseAvailabilityAsync(settings.Local.Server, _cts.Token);
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"WARNING: Could not refresh local DB availability. {ex.Message}");
+            }
+
             _appState.NotifyDataChanged();
 
             MessageBox.Show(
@@ -556,6 +567,40 @@ public partial class DatabaseImportViewModel : ObservableObject
         {
             return null;
         }
+    }
+
+    private async Task RefreshLocalDatabaseAvailabilityAsync(string server, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(server))
+            return;
+
+        var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, "master");
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(ct);
+
+        const string sql = """
+SELECT [name]
+FROM sys.databases
+WHERE [name] IN (N'FilotheiSchoolERP', N'NeaIoniaSchoolERP');
+""";
+
+        await using var command = new SqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+
+        var hasFilothei = false;
+        var hasNeaIonia = false;
+
+        while (await reader.ReadAsync(ct))
+        {
+            var name = reader.GetString(0);
+            if (string.Equals(name, "FilotheiSchoolERP", StringComparison.OrdinalIgnoreCase))
+                hasFilothei = true;
+            else if (string.Equals(name, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase))
+                hasNeaIonia = true;
+        }
+
+        _appState.UpdateLocalDatabaseAvailability(hasFilothei, hasNeaIonia);
     }
 
     private bool ConfirmImport()
