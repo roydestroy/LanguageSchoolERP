@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Windows;
+using System.Globalization;
 using System.Windows.Controls;
 using LanguageSchoolERP.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -132,7 +133,7 @@ public partial class MainWindow : Window
         if (period is null)
         {
             YearProgressBar.Value = 0;
-            YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0,00 € / 0,00 €";
+            YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0 € / 0 €";
             return;
         }
 
@@ -154,7 +155,8 @@ public partial class MainWindow : Window
         if (progress < 0) progress = 0;
 
         YearProgressBar.Value = progress;
-        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum:0.00} € / {collectibleSum:0.00} €";
+        var culture = new CultureInfo("el-GR");
+        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum.ToString("N0", culture)} € / {collectibleSum.ToString("N0", culture)} €";
     }
 
 
