@@ -116,6 +116,7 @@ public partial class AcademicYearsViewModel : ObservableObject
         await db.SaveChangesAsync();
 
         _state.SelectedAcademicYear = name;
+        _state.NotifyDataChanged();
         NewAcademicYearName = "";
         await LoadAsync();
     }
@@ -143,6 +144,7 @@ public partial class AcademicYearsViewModel : ObservableObject
 
         db.AcademicPeriods.Remove(period);
         await db.SaveChangesAsync();
+        _state.NotifyDataChanged();
 
         if (_state.SelectedAcademicYear == period.Name)
         {
