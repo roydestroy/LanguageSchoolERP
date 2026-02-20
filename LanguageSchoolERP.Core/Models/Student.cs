@@ -25,6 +25,7 @@ public class Student
     public string MotherLandline { get; set; } = "";
 
     public PreferredPhoneSource PreferredPhoneSource { get; set; } = PreferredPhoneSource.Student;
+    public PreferredLandlineSource PreferredLandlineSource { get; set; } = PreferredLandlineSource.Student;
     public PreferredEmailSource PreferredEmailSource { get; set; } = PreferredEmailSource.Student;
 
     public string Notes { get; set; } = "";
@@ -74,6 +75,13 @@ public class Student
 }
 
 public enum PreferredPhoneSource
+{
+    Student = 0,
+    Father = 1,
+    Mother = 2
+}
+
+public enum PreferredLandlineSource
 {
     Student = 0,
     Father = 1,

@@ -205,6 +205,7 @@ public partial class MainWindow : Window
 
     private void NavigateToDailyPayments()
     {
+        ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<DailyPaymentsView>();
         MainContent.Content = view;
         SetActiveNavigationButton(DailyPaymentsBtn);
@@ -212,6 +213,7 @@ public partial class MainWindow : Window
 
     private void NavigateToPrograms()
     {
+        ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<ProgramsView>();
         MainContent.Content = view;
         SetActiveNavigationButton(ProgramsBtn);
@@ -219,6 +221,7 @@ public partial class MainWindow : Window
 
     private void NavigateToAcademicYears()
     {
+        ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<AcademicYearsView>();
         MainContent.Content = view;
         SetActiveNavigationButton(AcademicYearsBtn);
@@ -226,6 +229,7 @@ public partial class MainWindow : Window
 
     private void NavigateToStatistics()
     {
+        ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<StatisticsView>();
         MainContent.Content = view;
         SetActiveNavigationButton(StatisticsBtn);
@@ -233,9 +237,19 @@ public partial class MainWindow : Window
 
     private void NavigateToDatabaseImport()
     {
+        ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<DatabaseImportView>();
         MainContent.Content = view;
         SetActiveNavigationButton(SettingsBtn);
+    }
+
+    private void ClearStudentsSearchIfNeeded()
+    {
+        if (MainContent.Content is StudentsView studentsView &&
+            studentsView.DataContext is ViewModels.StudentsViewModel vm)
+        {
+            vm.SearchText = string.Empty;
+        }
     }
 
     private void SettingsBtn_Click(object sender, RoutedEventArgs e)

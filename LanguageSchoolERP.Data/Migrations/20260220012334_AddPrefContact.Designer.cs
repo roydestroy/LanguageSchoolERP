@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LanguageSchoolERP.Data.Migrations
 {
     [DbContext(typeof(SchoolDbContext))]
-    [Migration("20260219233837_SplitStudentData")]
-    partial class SplitStudentData
+    [Migration("20260220012334_AddPrefContact")]
+    partial class AddPrefContact
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -360,6 +360,9 @@ namespace LanguageSchoolERP.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PreferredEmailSource")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredLandlineSource")
                         .HasColumnType("int");
 
                     b.Property<int>("PreferredPhoneSource")
