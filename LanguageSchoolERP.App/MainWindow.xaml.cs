@@ -7,6 +7,7 @@ using System.Windows;
 using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Input;
 using LanguageSchoolERP.Services;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageSchoolERP.App.Views;
@@ -108,9 +109,9 @@ public partial class MainWindow : Window
         };
 
         _state.PropertyChanged += OnAppStateChanged;
+        InputManager.Current.PreProcessInput += OnGlobalPreProcessInput;
+        Closed += (_, __) => InputManager.Current.PreProcessInput -= OnGlobalPreProcessInput;
 
-        AddHandler(PreviewMouseDownEvent, new System.Windows.Input.MouseButtonEventHandler(OnPreviewMouseDownCloseOpenDropdowns), true);
-        AddHandler(PreviewMouseMoveEvent, new System.Windows.Input.MouseEventHandler(OnPreviewMouseMoveCloseOpenDropdowns), true);
         SyncTopBarState();
 
         NavigateToStudents();
@@ -127,16 +128,23 @@ public partial class MainWindow : Window
 
 
 
-    private void OnPreviewMouseMoveCloseOpenDropdowns(object sender, System.Windows.Input.MouseEventArgs e)
+    private void OnGlobalPreProcessInput(object? sender, PreProcessInputEventArgs e)
     {
-        if (e.OriginalSource is not DependencyObject source)
+        if (e.StagingItem.Input is not MouseButtonEventArgs mouseArgs)
             return;
 
-        var openCombos = FindVisualChildren<ComboBox>(this)
+        if (mouseArgs.ChangedButton != MouseButton.Left || mouseArgs.ButtonState != MouseButtonState.Pressed)
+            return;
+
+        var openCombos = GetTopBarCombos()
             .Where(c => c.IsDropDownOpen)
             .ToList();
 
         if (openCombos.Count == 0)
+            return;
+
+        var source = mouseArgs.OriginalSource as DependencyObject ?? Mouse.DirectlyOver as DependencyObject;
+        if (source is null)
             return;
 
         if (openCombos.Any(combo => IsClickInsideCombo(source, combo)))
@@ -146,23 +154,12 @@ public partial class MainWindow : Window
             combo.IsDropDownOpen = false;
     }
 
-    private void OnPreviewMouseDownCloseOpenDropdowns(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private IEnumerable<ComboBox> GetTopBarCombos()
     {
-        if (e.OriginalSource is not DependencyObject source)
-            return;
-
-        var openCombos = FindVisualChildren<ComboBox>(this)
-            .Where(c => c.IsDropDownOpen)
-            .ToList();
-
-        if (openCombos.Count == 0)
-            return;
-
-        if (openCombos.Any(combo => IsClickInsideCombo(source, combo)))
-            return;
-
-        foreach (var combo in openCombos)
-            combo.IsDropDownOpen = false;
+        yield return ModeCombo;
+        yield return DbCombo;
+        yield return LocalDbCombo;
+        yield return YearCombo;
     }
 
     private static bool IsClickInsideCombo(DependencyObject source, ComboBox combo)
@@ -198,24 +195,6 @@ public partial class MainWindow : Window
         }
 
         return false;
-    }
-
-    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
-    {
-        if (parent is null)
-            yield break;
-
-        var childCount = VisualTreeHelper.GetChildrenCount(parent);
-        for (var i = 0; i < childCount; i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-
-            if (child is T typedChild)
-                yield return typedChild;
-
-            foreach (var nestedChild in FindVisualChildren<T>(child))
-                yield return nestedChild;
-        }
     }
 
     private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
