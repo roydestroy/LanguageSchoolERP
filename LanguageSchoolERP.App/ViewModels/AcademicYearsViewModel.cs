@@ -133,6 +133,15 @@ public partial class AcademicYearsViewModel : ObservableObject
         if (SelectedAcademicYear is null)
             return;
 
+        var confirmResult = System.Windows.MessageBox.Show(
+            $"Είστε σίγουροι ότι θέλετε να διαγράψετε το ακαδημαϊκό έτος \"{SelectedAcademicYear.Name}\";",
+            "Επιβεβαίωση διαγραφής",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirmResult != System.Windows.MessageBoxResult.Yes)
+            return;
+
         using var db = _dbFactory.Create();
         DbSeeder.EnsureSeeded(db);
 
