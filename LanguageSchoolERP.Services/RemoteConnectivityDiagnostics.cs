@@ -30,17 +30,23 @@ public static class RemoteConnectivityDiagnostics
         try
         {
             using var tcpClient = new TcpClient();
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(TimeSpan.FromSeconds(3));
-            await tcpClient.ConnectAsync(host, port, timeoutCts.Token);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return ConnectivityCheckResult.Fail("Tailscale disconnected", $"TCP connection timed out for {host}:{port}.");
+            var connectTask = tcpClient.ConnectAsync(host, port);
+            var completed = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(3), cancellationToken));
+
+            if (completed != connectTask)
+            {
+                return ConnectivityCheckResult.Fail("Tailscale disconnected", $"TCP connection timed out for {host}:{port}.");
+            }
+
+            await connectTask;
         }
         catch (SocketException ex)
         {
             return ConnectivityCheckResult.Fail("Tailscale disconnected", $"TCP connection failed for {host}:{port}. {ex.Message}");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return ConnectivityCheckResult.Fail("Tailscale disconnected", "Connectivity check was cancelled.");
         }
 
         try
