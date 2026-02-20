@@ -42,7 +42,7 @@ public partial class StudentsViewModel : ObservableObject
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
     private CancellationTokenSource? _loadCts;
-    private CancellationTokenSource? _searchDebounceCts;
+    private int _searchDebounceVersion;
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
 
@@ -249,20 +249,19 @@ public partial class StudentsViewModel : ObservableObject
 
     private async Task TriggerLoadAsync(bool debounceSearch)
     {
+        int debounceVersion;
+
         if (debounceSearch)
         {
-            _searchDebounceCts?.Cancel();
-            _searchDebounceCts?.Dispose();
-            _searchDebounceCts = new CancellationTokenSource();
+            debounceVersion = Interlocked.Increment(ref _searchDebounceVersion);
+            await Task.Delay(250);
 
-            try
-            {
-                await Task.Delay(250, _searchDebounceCts.Token);
-            }
-            catch (OperationCanceledException)
-            {
+            if (debounceVersion != Volatile.Read(ref _searchDebounceVersion))
                 return;
-            }
+        }
+        else
+        {
+            Interlocked.Increment(ref _searchDebounceVersion);
         }
 
         _loadCts?.Cancel();
