@@ -1405,26 +1405,14 @@ public partial class StudentProfileViewModel : ObservableObject
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool DeleteFile(string lpFileName);
     }
+}
 
-    private static (string Name, string Surname) SplitName(string? fullName)
-    {
-        var value = (fullName ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(value)) return ("", "");
 
-        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1) return (parts[0], "");
-
-        // Prefer last token as surname so multi-word first names remain intact
-        // (e.g. "DAN ALEXANDER JAHRE" -> Name="DAN ALEXANDER", Surname="JAHRE").
-        var surname = parts[^1];
-        var name = string.Join(" ", parts[..^1]);
-        return (name, surname);
-    }
-
-    private static string JoinName(string? name, string? surname)
-    {
-        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
-            .Where(x => !string.IsNullOrWhiteSpace(x)));
-    }
+public enum PreferredLandlineSource
+{
+    Student = 0,
+    Father = 1,
+    Mother = 2
+}
 
 }
