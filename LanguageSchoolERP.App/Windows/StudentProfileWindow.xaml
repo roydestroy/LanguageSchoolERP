@@ -298,7 +298,23 @@
 								</DockPanel>
 								<TextBox Text="{Binding EditableMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Σταθερό" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Σταθερό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectStudentPhonePreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsStudentPhonePreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
@@ -327,11 +343,8 @@
 							<StackPanel Grid.Column="2">
 								<TextBlock Text="Γονείς" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-								<TextBlock Text="Όνομα πατέρα" Foreground="#666666" FontSize="12"/>
+								<TextBlock Text="Ονοματεπώνυμο πατέρα" Foreground="#666666" FontSize="12"/>
 								<TextBox Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<TextBlock Text="Επώνυμο πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-								<TextBox Text="{Binding EditableFatherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Κινητό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
@@ -352,7 +365,23 @@
 								</DockPanel>
 								<TextBox Text="{Binding EditableFatherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Σταθερό πατέρα" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Σταθερό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectFatherPhonePreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsFatherPhonePreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableFatherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
@@ -374,11 +403,8 @@
 								</DockPanel>
 								<TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Όνομα μητέρας" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
+								<TextBlock Text="Ονοματεπώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
 								<TextBox Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<TextBlock Text="Επώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-								<TextBox Text="{Binding EditableMotherSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Κινητό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
@@ -399,7 +425,23 @@
 								</DockPanel>
 								<TextBox Text="{Binding EditableMotherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Σταθερό μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<DockPanel Margin="0,8,0,0" LastChildFill="False">
+									<TextBlock Text="Σταθερό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+									<Button Command="{Binding SelectMotherPhonePreferredCommand}">
+										<Button.Style>
+											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+												<Setter Property="Content" Value="☆"/>
+												<Setter Property="Foreground" Value="#9AA7B4"/>
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding IsMotherPhonePreferred}" Value="True">
+														<Setter Property="Content" Value="★"/>
+														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Button.Style>
+									</Button>
+								</DockPanel>
 								<TextBox Text="{Binding EditableMotherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">

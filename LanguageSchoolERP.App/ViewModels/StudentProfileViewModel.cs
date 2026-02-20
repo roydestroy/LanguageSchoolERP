@@ -42,12 +42,10 @@ public partial class StudentProfileViewModel : ObservableObject
     private string _originalLandline = "";
     private string _originalEmail = "";
     private string _originalFatherName = "";
-    private string _originalFatherSurname = "";
     private string _originalFatherMobile = "";
     private string _originalFatherLandline = "";
     private string _originalFatherEmail = "";
     private string _originalMotherName = "";
-    private string _originalMotherSurname = "";
     private string _originalMotherMobile = "";
     private string _originalMotherLandline = "";
     private string _originalMotherEmail = "";
@@ -78,12 +76,10 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string editableLandline = "";
     [ObservableProperty] private string editableEmail = "";
     [ObservableProperty] private string editableFatherName = "";
-    [ObservableProperty] private string editableFatherSurname = "";
     [ObservableProperty] private string editableFatherMobile = "";
     [ObservableProperty] private string editableFatherLandline = "";
     [ObservableProperty] private string editableFatherEmail = "";
     [ObservableProperty] private string editableMotherName = "";
-    [ObservableProperty] private string editableMotherSurname = "";
     [ObservableProperty] private string editableMotherMobile = "";
     [ObservableProperty] private string editableMotherLandline = "";
     [ObservableProperty] private string editableMotherEmail = "";
@@ -106,9 +102,9 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string motherLine = "";
 
     [ObservableProperty] private string enrollmentSummaryLine = "";
-    [ObservableProperty] private string agreementText = "0.00 €";
-    [ObservableProperty] private string paidText = "0.00 €";
-    [ObservableProperty] private string balanceText = "0.00 €";
+    [ObservableProperty] private string agreementText = "0,0 €";
+    [ObservableProperty] private string paidText = "0,0 €";
+    [ObservableProperty] private string balanceText = "0,0 €";
     [ObservableProperty] private string progressText = "0%";
     [ObservableProperty] private double progressPercent = 0;
     [ObservableProperty] private Brush progressBrush = ProgressBlueBrush;
@@ -274,12 +270,10 @@ public partial class StudentProfileViewModel : ObservableObject
         EditableLandline = _originalLandline;
         EditableEmail = _originalEmail;
         EditableFatherName = _originalFatherName;
-        EditableFatherSurname = _originalFatherSurname;
         EditableFatherMobile = _originalFatherMobile;
         EditableFatherLandline = _originalFatherLandline;
         EditableFatherEmail = _originalFatherEmail;
         EditableMotherName = _originalMotherName;
-        EditableMotherSurname = _originalMotherSurname;
         EditableMotherMobile = _originalMotherMobile;
         EditableMotherLandline = _originalMotherLandline;
         EditableMotherEmail = _originalMotherEmail;
@@ -316,11 +310,11 @@ public partial class StudentProfileViewModel : ObservableObject
             student.Mobile = EditableMobile.Trim();
             student.Landline = EditableLandline.Trim();
             student.Email = EditableEmail.Trim();
-            student.FatherName = JoinName(EditableFatherName, EditableFatherSurname);
+            student.FatherName = EditableFatherName.Trim();
             student.FatherMobile = EditableFatherMobile.Trim();
             student.FatherLandline = EditableFatherLandline.Trim();
             student.FatherEmail = EditableFatherEmail.Trim();
-            student.MotherName = JoinName(EditableMotherName, EditableMotherSurname);
+            student.MotherName = EditableMotherName.Trim();
             student.MotherMobile = EditableMotherMobile.Trim();
             student.MotherLandline = EditableMotherLandline.Trim();
             student.MotherEmail = EditableMotherEmail.Trim();
@@ -919,8 +913,6 @@ public partial class StudentProfileViewModel : ObservableObject
             Notes = student.Notes ?? "";
 
             var (studentName, studentSurname) = SplitName(student.FullName);
-            var (fatherName, fatherSurname) = SplitName(student.FatherName);
-            var (motherName, motherSurname) = SplitName(student.MotherName);
 
             _originalStudentName = studentName;
             _originalStudentSurname = studentSurname;
@@ -928,13 +920,11 @@ public partial class StudentProfileViewModel : ObservableObject
             _originalMobile = student.Mobile ?? "";
             _originalLandline = student.Landline ?? "";
             _originalEmail = student.Email ?? "";
-            _originalFatherName = fatherName;
-            _originalFatherSurname = fatherSurname;
+            _originalFatherName = student.FatherName ?? "";
             _originalFatherMobile = student.FatherMobile ?? "";
             _originalFatherLandline = student.FatherLandline ?? "";
             _originalFatherEmail = student.FatherEmail ?? "";
-            _originalMotherName = motherName;
-            _originalMotherSurname = motherSurname;
+            _originalMotherName = student.MotherName ?? "";
             _originalMotherMobile = student.MotherMobile ?? "";
             _originalMotherLandline = student.MotherLandline ?? "";
             _originalMotherEmail = student.MotherEmail ?? "";
@@ -949,13 +939,11 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableLandline = _originalLandline;
             EditableEmail = _originalEmail;
             EditableFatherName = _originalFatherName;
-            EditableFatherSurname = _originalFatherSurname;
-            EditableFatherMobile = _originalFatherMobile;
+                EditableFatherMobile = _originalFatherMobile;
             EditableFatherLandline = _originalFatherLandline;
             EditableFatherEmail = _originalFatherEmail;
             EditableMotherName = _originalMotherName;
-            EditableMotherSurname = _originalMotherSurname;
-            EditableMotherMobile = _originalMotherMobile;
+                EditableMotherMobile = _originalMotherMobile;
             EditableMotherLandline = _originalMotherLandline;
             EditableMotherEmail = _originalMotherEmail;
             EditablePreferredPhoneSource = _originalPreferredPhoneSource;
@@ -983,9 +971,9 @@ public partial class StudentProfileViewModel : ObservableObject
                     EnrollmentId = e.EnrollmentId,
                     ProgramText = ProgramLabel(e),
                     LevelOrClassText = string.IsNullOrWhiteSpace(e.LevelOrClass) ? "—" : e.LevelOrClass,
-                    AgreementTotalText = $"{InstallmentPlanHelper.GetEffectiveAgreementTotal(e):0.00} €",
-                    BooksText = $"{e.BooksAmount:0.00} €",
-                    DownPaymentText = $"{e.DownPayment:0.00} €",
+                    AgreementTotalText = FormatCurrency(InstallmentPlanHelper.GetEffectiveAgreementTotal(e)),
+                    BooksText = FormatCurrency(e.BooksAmount),
+                    DownPaymentText = FormatCurrency(e.DownPayment),
                     InstallmentsText = e.InstallmentCount > 0 && e.InstallmentStartMonth != null
                         ? BuildInstallmentPlanText(e)
                         : "—",
@@ -994,7 +982,7 @@ public partial class StudentProfileViewModel : ObservableObject
                         : "—",
                     StatusText = e.IsStopped
                         ? $"Διακοπή ({(e.StoppedOn.HasValue ? e.StoppedOn.Value.ToString("dd/MM/yyyy") : "—")})"
-                        : (string.IsNullOrWhiteSpace(e.Status) ? "Ενεργός" : e.Status),
+                        : (string.Equals(e.Status, "Active", StringComparison.OrdinalIgnoreCase) ? "Ενεργό" : (string.IsNullOrWhiteSpace(e.Status) ? "Ενεργό" : e.Status)),
                     CommentsText = string.IsNullOrWhiteSpace(e.Comments) ? "—" : e.Comments
                 });
             }
@@ -1048,9 +1036,9 @@ public partial class StudentProfileViewModel : ObservableObject
             EnrollmentSummaryLine = baseSummary + planText;
 
 
-            AgreementText = $"{agreementSum:0.00} €";
-            PaidText = $"{paidTotal:0.00} €";
-            BalanceText = $"{balance:0.00} €";
+            AgreementText = FormatCurrency(agreementSum);
+            PaidText = FormatCurrency(paidTotal);
+            BalanceText = FormatCurrency(balance);
 
             var progress = agreementSum <= 0 ? 0 : (double)(paidTotal / agreementSum * 100m);
             if (progress > 100) progress = 100;
@@ -1097,7 +1085,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     IsSyntheticEntry = true,
                     TypeText = "Προκαταβολή",
                     DateText = downpaymentDate,
-                    AmountText = $"{enrollment.DownPayment:0.00} €",
+                    AmountText = FormatCurrency(enrollment.DownPayment),
                     Method = "Εγγραφή",
                     ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     Notes = "Προκαταβολή εγγραφής"
@@ -1112,7 +1100,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     IsSyntheticEntry = false,
                     TypeText = "Πληρωμή",
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
-                    AmountText = $"{row.Payment.Amount:0.00} €",
+                    AmountText = FormatCurrency(row.Payment.Amount),
                     Method = row.Payment.Method.ToGreekLabel(),
                     ReasonText = ParseReason(row.Payment.Notes),
                     Notes = ParseAdditionalNotes(row.Payment.Notes)
@@ -1131,7 +1119,7 @@ public partial class StudentProfileViewModel : ObservableObject
                 {
                     NumberText = x.r.ReceiptNumber.ToString(),
                     DateText = x.r.IssueDate.ToString("dd/MM/yyyy"),
-                    AmountText = $"{x.p.Amount:0.00} €",
+                    AmountText = FormatCurrency(x.p.Amount),
                     MethodText = x.p.Method.ToGreekLabel(),
                     ReasonText = ParseReason(x.p.Notes),
                     ProgramText = ProgramLabel(x.e),
@@ -1149,7 +1137,7 @@ public partial class StudentProfileViewModel : ObservableObject
                     EnrollmentId = enrollment.EnrollmentId,
                     NumberText = "DP",
                     DateText = downpaymentDate,
-                    AmountText = $"{enrollment.DownPayment:0.00} €",
+                    AmountText = FormatCurrency(enrollment.DownPayment),
                     MethodText = "Εγγραφή",
                     ReasonText = "ΠΡΟΚΑΤΑΒΟΛΗ",
                     ProgramText = ProgramLabel(enrollment),
@@ -1243,10 +1231,10 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         return EditablePreferredPhoneSource switch
         {
-            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherMobile) => PreferredPhoneSource.Student,
-            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherMobile) => PreferredPhoneSource.Student,
-            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && !string.IsNullOrWhiteSpace(EditableFatherMobile) => PreferredPhoneSource.Father,
-            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && string.IsNullOrWhiteSpace(EditableFatherMobile) && !string.IsNullOrWhiteSpace(EditableMotherMobile) => PreferredPhoneSource.Mother,
+            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherMobile) && string.IsNullOrWhiteSpace(EditableFatherLandline) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherMobile) && string.IsNullOrWhiteSpace(EditableMotherLandline) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && (!string.IsNullOrWhiteSpace(EditableFatherMobile) || !string.IsNullOrWhiteSpace(EditableFatherLandline)) => PreferredPhoneSource.Father,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && string.IsNullOrWhiteSpace(EditableFatherMobile) && string.IsNullOrWhiteSpace(EditableFatherLandline) && (!string.IsNullOrWhiteSpace(EditableMotherMobile) || !string.IsNullOrWhiteSpace(EditableMotherLandline)) => PreferredPhoneSource.Mother,
             _ => EditablePreferredPhoneSource
         };
     }
@@ -1311,9 +1299,9 @@ public partial class StudentProfileViewModel : ObservableObject
         var last = schedule[schedule.Count - 1];
 
         if (first == last)
-            return $"{first:0} €";
+            return FormatCurrency(first);
 
-        return $"{first:0} € (τελευταία {last:0} €)";
+        return $"{FormatCurrency(first)} (τελευταία {FormatCurrency(last)})";
     }
 
 
@@ -1345,6 +1333,11 @@ public partial class StudentProfileViewModel : ObservableObject
         return DateTime.Today.ToString("dd/MM/yyyy");
     }
 
+    private static string FormatCurrency(decimal amount)
+    {
+        return amount.ToString("N1", new CultureInfo("el-GR")) + " €";
+    }
+
     private static string ParseReason(string? notes)
     {
         var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
@@ -1369,6 +1362,25 @@ public partial class StudentProfileViewModel : ObservableObject
         return string.IsNullOrWhiteSpace(additionalNotes)
             ? PaymentAgreementHelper.ExcludeFromAgreementDisplayText
             : $"{additionalNotes} | {PaymentAgreementHelper.ExcludeFromAgreementDisplayText}";
+    }
+
+    private static (string Name, string Surname) SplitName(string? fullName)
+    {
+        var value = (fullName ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(value)) return ("", "");
+
+        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return (parts[0], "");
+
+        var surname = parts[^1];
+        var name = string.Join(" ", parts[..^1]);
+        return (name, surname);
+    }
+
+    private static string JoinName(string? name, string? surname)
+    {
+        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 
     private static void TryDeleteFile(string? path, string label, ICollection<string> errors)
@@ -1406,25 +1418,4 @@ public partial class StudentProfileViewModel : ObservableObject
         internal static extern bool DeleteFile(string lpFileName);
     }
 
-    private static (string Name, string Surname) SplitName(string? fullName)
-    {
-        var value = (fullName ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(value)) return ("", "");
 
-        var parts = value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1) return (parts[0], "");
-
-        // Prefer last token as surname so multi-word first names remain intact
-        // (e.g. "DAN ALEXANDER JAHRE" -> Name="DAN ALEXANDER", Surname="JAHRE").
-        var surname = parts[^1];
-        var name = string.Join(" ", parts[..^1]);
-        return (name, surname);
-    }
-
-    private static string JoinName(string? name, string? surname)
-    {
-        return string.Join(" ", new[] { name?.Trim(), surname?.Trim() }
-            .Where(x => !string.IsNullOrWhiteSpace(x)));
-    }
-
-}
