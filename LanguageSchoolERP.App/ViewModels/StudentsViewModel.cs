@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -379,9 +380,9 @@ public partial class StudentsViewModel : ObservableObject
                         EnrollmentId = en.EnrollmentId,
                         Title = en.Program?.Name ?? "—",
                         Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
-                        AgreementText = $"Συμφωνία: {en.AgreementTotal:0.00} €",
-                        PaidText = $"Πληρωμένα: {enPaid:0.00} €",
-                        BalanceText = $"Υπόλοιπο: {enBalance:0.00} €",
+                        AgreementText = $"Συμφωνία: {FormatCurrency(en.AgreementTotal)}",
+                        PaidText = $"Πληρωμένα: {FormatCurrency(enPaid)}",
+                        BalanceText = $"Υπόλοιπο: {FormatCurrency(enBalance)}",
                         ProgressPercent = enrollmentProgress,
                         ProgressText = $"{enrollmentProgress:0}%",
                         ProgressBrush = enrollmentProgressBrush,
@@ -420,6 +421,9 @@ public partial class StudentsViewModel : ObservableObject
         }
 
     }
+
+    private static string FormatCurrency(decimal amount)
+        => amount.ToString("#,##0.#", new CultureInfo("el-GR")) + " €";
 
     private static string ToSurnameFirst(string? fullName)
     {
