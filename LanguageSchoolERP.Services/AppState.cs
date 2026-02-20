@@ -18,6 +18,7 @@ public class AppState : INotifyPropertyChanged
     private bool _hasFilotheiLocalDatabase = true;
     private bool _hasNeaIoniaLocalDatabase = true;
     private bool _isLocalModeEnabled = true;
+    private bool _isRemoteModeEnabled = true;
     private bool _isDatabaseImportEnabled = true;
 
     public AppState(DatabaseAppSettingsProvider settingsProvider)
@@ -124,6 +125,19 @@ public class AppState : INotifyPropertyChanged
         }
     }
 
+    public bool IsRemoteModeEnabled
+    {
+        get => _isRemoteModeEnabled;
+        private set
+        {
+            if (_isRemoteModeEnabled == value)
+                return;
+
+            _isRemoteModeEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
     public bool IsDatabaseImportEnabled
     {
         get => _isDatabaseImportEnabled;
@@ -208,7 +222,7 @@ public class AppState : INotifyPropertyChanged
 
         if (!IsLocalModeEnabled && SelectedDatabaseMode == DatabaseMode.Local)
         {
-            SelectedDatabaseMode = DatabaseMode.Remote;
+            SelectedDatabaseMode = IsRemoteModeEnabled ? DatabaseMode.Remote : SelectedDatabaseMode;
         }
         else if (SelectedDatabaseMode == DatabaseMode.Local && !AvailableLocalDatabases.Contains(SelectedLocalDatabaseName))
         {
@@ -221,6 +235,22 @@ public class AppState : INotifyPropertyChanged
     public void SetDatabaseImportEnabled(bool enabled)
     {
         IsDatabaseImportEnabled = enabled;
+    }
+
+    public void SetRemoteModeEnabled(bool enabled)
+    {
+        IsRemoteModeEnabled = enabled;
+
+        if (!IsRemoteModeEnabled && SelectedDatabaseMode == DatabaseMode.Remote)
+        {
+            if (IsLocalModeEnabled)
+                SelectedDatabaseMode = DatabaseMode.Local;
+        }
+
+        if (!IsRemoteModeEnabled && !IsLocalModeEnabled)
+        {
+            SelectedDatabaseMode = DatabaseMode.Remote;
+        }
     }
 
 

@@ -9,12 +9,18 @@ namespace LanguageSchoolERP.Services;
 public sealed class DatabaseAppSettingsProvider
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private const string SettingsFolder = @"C:\ProgramData\LanguageSchoolERP";
     private const string SettingsFile = "appsettings.json";
-    private readonly string _fullPath = Path.Combine(SettingsFolder, SettingsFile);
+    private readonly string _legacyPath = Path.Combine(@"C:\ProgramData\LanguageSchoolERP", SettingsFile);
+    private readonly string _userPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "LanguageSchoolERP",
+        SettingsFile);
+
+    private readonly string _fullPath;
 
     public DatabaseAppSettingsProvider()
     {
+        _fullPath = ResolveWritableSettingsPath();
         Settings = LoadOrCreate();
     }
 
@@ -35,34 +41,74 @@ public sealed class DatabaseAppSettingsProvider
     public void Save()
     {
         Normalize(Settings);
+        var settingsDirectory = Path.GetDirectoryName(_fullPath);
+        if (!string.IsNullOrWhiteSpace(settingsDirectory))
+            Directory.CreateDirectory(settingsDirectory);
+
         File.WriteAllText(_fullPath, JsonSerializer.Serialize(Settings, JsonOptions));
     }
 
-    private static DatabaseAppSettings LoadOrCreate()
+    private string ResolveWritableSettingsPath()
     {
-        Directory.CreateDirectory(SettingsFolder);
-        var fullPath = Path.Combine(SettingsFolder, SettingsFile);
-
-        if (!File.Exists(fullPath))
+        var preferredDirectory = Path.GetDirectoryName(_userPath);
+        if (!string.IsNullOrWhiteSpace(preferredDirectory))
         {
-            var defaults = CreateDefaults();
-            File.WriteAllText(fullPath, JsonSerializer.Serialize(defaults, JsonOptions));
-            return defaults;
+            try
+            {
+                Directory.CreateDirectory(preferredDirectory);
+                return _userPath;
+            }
+            catch
+            {
+                // fallback below
+            }
         }
 
-        try
+        var legacyDirectory = Path.GetDirectoryName(_legacyPath);
+        if (!string.IsNullOrWhiteSpace(legacyDirectory))
+            Directory.CreateDirectory(legacyDirectory);
+
+        return _legacyPath;
+    }
+
+    private DatabaseAppSettings LoadOrCreate()
+    {
+        var candidatePaths = new[] { _userPath, _legacyPath };
+
+        foreach (var candidate in candidatePaths)
         {
-            var json = File.ReadAllText(fullPath);
-            var parsed = JsonSerializer.Deserialize<DatabaseAppSettings>(json) ?? CreateDefaults();
-            Normalize(parsed);
-            return parsed;
+            if (!File.Exists(candidate))
+                continue;
+
+            try
+            {
+                var json = File.ReadAllText(candidate);
+                var parsed = JsonSerializer.Deserialize<DatabaseAppSettings>(json) ?? CreateDefaults();
+                Normalize(parsed);
+
+                // persist to selected writable path (migrate from legacy if needed)
+                SaveMigratedSettings(parsed);
+                return parsed;
+            }
+            catch
+            {
+                // try next candidate
+            }
         }
-        catch
-        {
-            var defaults = CreateDefaults();
-            File.WriteAllText(fullPath, JsonSerializer.Serialize(defaults, JsonOptions));
-            return defaults;
-        }
+
+        var defaults = CreateDefaults();
+        Normalize(defaults);
+        SaveMigratedSettings(defaults);
+        return defaults;
+    }
+
+    private void SaveMigratedSettings(DatabaseAppSettings settings)
+    {
+        var settingsDirectory = Path.GetDirectoryName(_fullPath);
+        if (!string.IsNullOrWhiteSpace(settingsDirectory))
+            Directory.CreateDirectory(settingsDirectory);
+
+        File.WriteAllText(_fullPath, JsonSerializer.Serialize(settings, JsonOptions));
     }
 
     private static DatabaseAppSettings CreateDefaults() => new()

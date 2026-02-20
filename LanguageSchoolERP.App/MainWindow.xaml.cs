@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -58,11 +59,23 @@ public partial class MainWindow : Window
             {
                 if (mode == DatabaseMode.Local && !_state.IsLocalModeEnabled)
                 {
-                    _state.SelectedDatabaseMode = DatabaseMode.Remote;
-                    ModeCombo.SelectedItem = DatabaseMode.Remote;
+                    _state.SelectedDatabaseMode = _state.IsRemoteModeEnabled ? DatabaseMode.Remote : _state.SelectedDatabaseMode;
+                    ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
                     MessageBox.Show(
                         "Η local λειτουργία δεν είναι διαθέσιμη μέχρι να γίνει εισαγωγή τοπικής βάσης.",
                         "Τοπική βάση",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                if (mode == DatabaseMode.Remote && !_state.IsRemoteModeEnabled)
+                {
+                    _state.SelectedDatabaseMode = _state.IsLocalModeEnabled ? DatabaseMode.Local : _state.SelectedDatabaseMode;
+                    ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
+                    MessageBox.Show(
+                        "Η remote λειτουργία δεν είναι διαθέσιμη. Ελέγξτε το Tailscale και τη σύνδεσή σας.",
+                        "Remote βάση",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                     return;
@@ -120,6 +133,8 @@ public partial class MainWindow : Window
             e.PropertyName == nameof(AppState.SelectedLocalDatabaseName) ||
             e.PropertyName == nameof(AppState.HasBothLocalDatabases) ||
             e.PropertyName == nameof(AppState.IsLocalModeEnabled) ||
+            e.PropertyName == nameof(AppState.IsRemoteModeEnabled) ||
+            e.PropertyName == nameof(AppState.IsDatabaseImportEnabled) ||
             e.PropertyName == nameof(AppState.AvailableLocalDatabases))
         {
             RefreshModeOptions();
@@ -139,7 +154,7 @@ public partial class MainWindow : Window
         ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
         DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
         LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
-        RemoteDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Remote
+        RemoteDbGrid.Visibility = _state.IsRemoteModeEnabled && _state.SelectedDatabaseMode == DatabaseMode.Remote
             ? Visibility.Visible
             : Visibility.Collapsed;
         LocalDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Local
@@ -151,20 +166,39 @@ public partial class MainWindow : Window
             LocalDbGrid.Visibility = Visibility.Collapsed;
         }
 
-        var databaseFeaturesEnabled = _state.IsDatabaseImportEnabled;
-        ModeCombo.IsEnabled = databaseFeaturesEnabled;
-        DbCombo.IsEnabled = databaseFeaturesEnabled;
-        LocalDbCombo.IsEnabled = databaseFeaturesEnabled;
+        if (!_state.IsRemoteModeEnabled)
+        {
+            RemoteDbGrid.Visibility = Visibility.Collapsed;
+        }
+
+        var hasAnyMode = _state.IsLocalModeEnabled || _state.IsRemoteModeEnabled;
+        ModeGrid.Visibility = hasAnyMode ? Visibility.Visible : Visibility.Collapsed;
+
+        ModeCombo.IsEnabled = hasAnyMode;
+        DbCombo.IsEnabled = _state.IsRemoteModeEnabled;
+        LocalDbCombo.IsEnabled = _state.IsLocalModeEnabled;
     }
 
     private void RefreshModeOptions()
     {
-        ModeCombo.ItemsSource = _state.IsLocalModeEnabled
-            ? new[] { DatabaseMode.Local, DatabaseMode.Remote }
-            : new[] { DatabaseMode.Remote };
-
-        if (!_state.IsLocalModeEnabled)
+        if (_state.IsLocalModeEnabled && _state.IsRemoteModeEnabled)
+        {
+            ModeCombo.ItemsSource = new[] { DatabaseMode.Local, DatabaseMode.Remote };
+        }
+        else if (_state.IsLocalModeEnabled)
+        {
+            ModeCombo.ItemsSource = new[] { DatabaseMode.Local };
+            _state.SelectedDatabaseMode = DatabaseMode.Local;
+        }
+        else if (_state.IsRemoteModeEnabled)
+        {
+            ModeCombo.ItemsSource = new[] { DatabaseMode.Remote };
             _state.SelectedDatabaseMode = DatabaseMode.Remote;
+        }
+        else
+        {
+            ModeCombo.ItemsSource = Array.Empty<DatabaseMode>();
+        }
     }
 
     private void RefreshLocalDatabaseOptions()

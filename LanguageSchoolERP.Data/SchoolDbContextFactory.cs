@@ -6,7 +6,11 @@ namespace LanguageSchoolERP.Data;
 
 public class SchoolDbContextFactory : IDesignTimeDbContextFactory<SchoolDbContext>
 {
-    private const string SettingsPath = @"C:\ProgramData\LanguageSchoolERP\appsettings.json";
+    private static readonly string[] SettingsPaths =
+    [
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LanguageSchoolERP", "appsettings.json"),
+        @"C:\ProgramData\LanguageSchoolERP\appsettings.json"
+    ];
 
     public SchoolDbContext CreateDbContext(string[] args)
     {
@@ -24,12 +28,13 @@ public class SchoolDbContextFactory : IDesignTimeDbContextFactory<SchoolDbContex
         const string defaultServer = @".\SQLEXPRESS";
         const string defaultDatabase = "FilotheiSchoolERP";
 
-        if (!File.Exists(SettingsPath))
+        var settingsPath = SettingsPaths.FirstOrDefault(File.Exists);
+        if (string.IsNullOrWhiteSpace(settingsPath))
             return (defaultServer, defaultDatabase);
 
         try
         {
-            using var doc = JsonDocument.Parse(File.ReadAllText(SettingsPath));
+            using var doc = JsonDocument.Parse(File.ReadAllText(settingsPath));
             var local = doc.RootElement.TryGetProperty("Local", out var localNode) ? localNode : default;
 
             var server = local.ValueKind != JsonValueKind.Undefined && local.TryGetProperty("Server", out var serverNode)

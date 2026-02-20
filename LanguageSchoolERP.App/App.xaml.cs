@@ -124,9 +124,25 @@ public partial class App : Application
         if (!tailscaleInstalled)
         {
             appState.SetDatabaseImportEnabled(false);
+            appState.SetRemoteModeEnabled(false);
             MessageBox.Show(
-                "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.\nΕγκαταστήστε το Tailscale και επανεκκινήστε την εφαρμογή.",
+                "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι απομακρυσμένες λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.\nΕγκαταστήστε το Tailscale, συνδεθείτε στον λογαριασμό σας και επανεκκινήστε την εφαρμογή.",
                 "Tailscale",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+
+        var remoteConnectivity = tailscaleInstalled
+            ? await CheckRemoteConnectivityAsync(settingsProvider.Settings, appState.SelectedRemoteDatabaseName)
+            : ConnectivityCheckResult.Fail("Tailscale disconnected", "Tailscale is not installed.");
+
+        appState.SetRemoteModeEnabled(remoteConnectivity.IsSuccess);
+
+        if (tailscaleInstalled && !remoteConnectivity.IsSuccess)
+        {
+            MessageBox.Show(
+                "Δεν υπάρχει σύνδεση με τη remote βάση.\nΕλέγξτε ότι το Tailscale είναι συνδεδεμένο και ότι έχετε κάνει login στον σωστό λογαριασμό.",
+                "Remote βάση μη διαθέσιμη",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }
@@ -137,12 +153,23 @@ public partial class App : Application
         var navigateToImportOnStartup = false;
         if (!localAvailability.HasAny)
         {
-            var choice = MessageBox.Show(
-                "Δεν βρέθηκε καμία τοπική βάση (Filothei/Nea Ionia).\nΘέλετε να μεταβείτε στις Ρυθμίσεις για εισαγωγή βάσης;",
-                "Τοπική βάση",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Information);
-            navigateToImportOnStartup = choice == MessageBoxResult.Yes;
+            if (remoteConnectivity.IsSuccess)
+            {
+                var choice = MessageBox.Show(
+                    "Δεν βρέθηκε καμία τοπική βάση (Filothei/Nea Ionia).\nΘέλετε να μεταβείτε στις Ρυθμίσεις για εισαγωγή βάσης από remote;",
+                    "Τοπική βάση",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+                navigateToImportOnStartup = choice == MessageBoxResult.Yes;
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Δεν βρέθηκε τοπική βάση και η remote σύνδεση δεν είναι διαθέσιμη.\nΕγκαταστήστε/συνδεθείτε στο Tailscale και μετά κάντε εισαγωγή βάσης.",
+                    "Βάση μη διαθέσιμη",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         // 3) Normal startup (UI)
@@ -293,6 +320,24 @@ public partial class App : Application
         catch
         {
             return false;
+        }
+    }
+
+    private static async Task<ConnectivityCheckResult> CheckRemoteConnectivityAsync(DatabaseAppSettings settings, string remoteDatabaseName)
+    {
+        try
+        {
+            var targetDb = string.IsNullOrWhiteSpace(remoteDatabaseName)
+                ? settings.Remote.Databases.FirstOrDefault()?.Database ?? settings.Startup.RemoteDatabase
+                : remoteDatabaseName;
+
+            var remoteConnection = ConnectionStringHelpers.ReplaceDatabase(settings.Remote.ConnectionString, targetDb);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+            return await RemoteConnectivityDiagnostics.CheckRemoteSqlAsync(remoteConnection, cts.Token);
+        }
+        catch (Exception ex)
+        {
+            return ConnectivityCheckResult.Fail("Tailscale disconnected", ex.Message);
         }
     }
 
