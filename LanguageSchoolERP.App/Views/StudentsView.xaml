@@ -146,6 +146,7 @@
                              MinHeight="34"
                              VerticalAlignment="Center"
                              Padding="10,4,30,4"
+                             PreviewKeyDown="StudentSearchTextBox_PreviewKeyDown"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Αναζήτηση με όνομα, τηλέφωνο, ηλ. ταχυδρομείο ή πρόγραμμα"/>
                     <Popup x:Name="StudentSearchSuggestionsPopup" PlacementTarget="{Binding ElementName=StudentSearchTextBox}"

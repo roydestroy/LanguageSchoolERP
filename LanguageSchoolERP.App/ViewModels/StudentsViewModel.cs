@@ -41,6 +41,9 @@ public partial class StudentsViewModel : ObservableObject
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
+    private int _searchDebounceVersion;
+    private int _latestRequestedGeneration;
+    private int _isLoadLoopRunning;
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
 
@@ -83,7 +86,7 @@ public partial class StudentsViewModel : ObservableObject
         _state = state;
         _dbFactory = dbFactory;
 
-        RefreshCommand = new AsyncRelayCommand(LoadAsync);
+        RefreshCommand = new AsyncRelayCommand(() => StartLatestLoadAsync());
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
         OpenStudentCommand = new RelayCommand<Guid>(OpenStudent);
         QuickAddPaymentCommand = new RelayCommand<Guid>(OpenQuickPaymentDialog, CanOpenQuickPayment);
@@ -98,7 +101,7 @@ public partial class StudentsViewModel : ObservableObject
         _state.PropertyChanged += OnAppStateChanged;
 
         // Initial load
-        _ = LoadAsync();
+        _ = StartLatestLoadAsync();
     }
 
     private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
@@ -106,7 +109,7 @@ public partial class StudentsViewModel : ObservableObject
         if (e.PropertyName == nameof(AppState.SelectedAcademicYear) ||
             e.PropertyName == nameof(AppState.SelectedDatabaseName))
         {
-            _ = LoadAsync();
+            _ = StartLatestLoadAsync();
         }
 
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
@@ -124,17 +127,17 @@ public partial class StudentsViewModel : ObservableObject
             IsSearchSuggestionsOpen = false;
         }
 
-        _ = LoadAsync();
+        _ = ScheduleSearchLoad();
     }
 
     partial void OnSelectedStudentStatusFilterChanged(string value)
     {
-        _ = LoadAsync();
+        _ = StartLatestLoadAsync();
     }
 
     partial void OnSelectedStudentSortOptionChanged(string value)
     {
-        _ = LoadAsync();
+        _ = StartLatestLoadAsync();
     }
 
     partial void OnSelectedProgramFilterChanged(ProgramFilterItemVm? value)
@@ -145,7 +148,7 @@ public partial class StudentsViewModel : ObservableObject
         if (_suppressProgramFilterReload)
             return;
 
-        _ = LoadAsync();
+        _ = StartLatestLoadAsync();
     }
 
     private bool CanCreateStudent() => !_state.IsReadOnlyMode;
@@ -194,7 +197,7 @@ public partial class StudentsViewModel : ObservableObject
 
         var result = win.ShowDialog();
         if (result == true)
-            await LoadAsync();
+            await StartLatestLoadAsync();
     }
 
     private void OpenNewStudentDialog()
@@ -210,7 +213,7 @@ public partial class StudentsViewModel : ObservableObject
         var result = win.ShowDialog();
         if (result == true)
         {
-            _ = LoadAsync();
+            _ = StartLatestLoadAsync();
         }
     }
     private void OpenStudent(Guid studentId)
@@ -243,10 +246,64 @@ public partial class StudentsViewModel : ObservableObject
         IsSearchSuggestionsOpen = false;
     }
 
-    private async Task LoadAsync()
+    private Task ScheduleSearchLoad()
+    {
+        var debounceVersion = Interlocked.Increment(ref _searchDebounceVersion);
+        return DebouncedLoadAsync(debounceVersion);
+    }
+
+    private async Task DebouncedLoadAsync(int debounceVersion)
+    {
+        await Task.Delay(250);
+
+        if (debounceVersion != Volatile.Read(ref _searchDebounceVersion))
+            return;
+
+        await StartLatestLoadAsync();
+    }
+
+    private Task StartLatestLoadAsync()
     {
         var generation = Interlocked.Increment(ref _loadGeneration);
+        Volatile.Write(ref _latestRequestedGeneration, generation);
 
+        if (Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) != 0)
+            return Task.CompletedTask;
+
+        return ProcessLatestLoadsAsync();
+    }
+
+    private async Task ProcessLatestLoadsAsync()
+    {
+        var processedGeneration = 0;
+
+        try
+        {
+            while (true)
+            {
+                var generationToProcess = Volatile.Read(ref _latestRequestedGeneration);
+                processedGeneration = generationToProcess;
+
+                await LoadAsync(generationToProcess);
+
+                if (generationToProcess == Volatile.Read(ref _latestRequestedGeneration))
+                    break;
+            }
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isLoadLoopRunning, 0);
+
+            if (processedGeneration != Volatile.Read(ref _latestRequestedGeneration) &&
+                Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) == 0)
+            {
+                _ = ProcessLatestLoadsAsync();
+            }
+        }
+    }
+
+    private async Task LoadAsync(int generation)
+    {
         try
         {
             using var db = _dbFactory.Create();
@@ -467,7 +524,6 @@ public partial class StudentsViewModel : ObservableObject
             System.Diagnostics.Debug.WriteLine(ex.ToString());
             System.Windows.MessageBox.Show(msg, "Αποτυχία φόρτωσης μαθητών");
         }
-
     }
 
     private void SyncProgramFilters(IReadOnlyCollection<StudyProgram> programs)
