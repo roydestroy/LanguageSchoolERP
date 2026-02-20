@@ -235,7 +235,7 @@
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
 
-                <Border Grid.Row="1" Grid.ColumnSpan="9" Margin="0,7,0,0" Padding="6,5" CornerRadius="10" Background="#F4F8FD" BorderBrush="#D8E3F3" BorderThickness="1">
+                <Border Grid.Row="1" Grid.ColumnSpan="9" Margin="0,7,0,0" Padding="6,5" CornerRadius="10" Background="#FFFFFF" BorderBrush="#D8E3F3" BorderThickness="1">
                     <ItemsControl ItemsSource="{Binding ProgramFilters}"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center">
