@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.Core.Models;
@@ -316,12 +315,8 @@ public partial class StudentsViewModel : ObservableObject
     {
         try
         {
-            var loadStopwatch = Stopwatch.StartNew();
             using var db = _dbFactory.Create();
-            System.Diagnostics.Debug.WriteLine("DB=" + db.Database.GetDbConnection().DataSource + " | " + db.Database.GetDbConnection().Database);
-
             DbSeeder.EnsureSeeded(db);
-            System.Diagnostics.Debug.WriteLine($"Students load ({generation}) seeding/ms={loadStopwatch.ElapsedMilliseconds}");
 
             var year = _state.SelectedAcademicYear;
 
@@ -330,13 +325,11 @@ public partial class StudentsViewModel : ObservableObject
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Name == year);
             var selectedPeriodId = period?.AcademicPeriodId;
-            System.Diagnostics.Debug.WriteLine($"Students load ({generation}) period/ms={loadStopwatch.ElapsedMilliseconds}");
 
             var availablePrograms = await db.Programs
                 .AsNoTracking()
                 .OrderBy(p => p.Name)
                 .ToListAsync();
-            System.Diagnostics.Debug.WriteLine($"Students load ({generation}) programs/ms={loadStopwatch.ElapsedMilliseconds}");
 
             SyncProgramFilters(availablePrograms);
             await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation);
@@ -366,7 +359,6 @@ public partial class StudentsViewModel : ObservableObject
                 .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
                 .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
                 .ToListAsync();
-            System.Diagnostics.Debug.WriteLine($"Students load ({generation}) query/ms={loadStopwatch.ElapsedMilliseconds} count={students.Count}");
 
             var rows = new List<StudentRowVm>();
 
@@ -518,7 +510,6 @@ public partial class StudentsViewModel : ObservableObject
             foreach (var row in sortedRows)
                 Students.Add(row);
 
-            System.Diagnostics.Debug.WriteLine($"Students load ({generation}) done/ms={loadStopwatch.ElapsedMilliseconds} rows={Students.Count}");
         }
         catch (Exception ex)
         {
