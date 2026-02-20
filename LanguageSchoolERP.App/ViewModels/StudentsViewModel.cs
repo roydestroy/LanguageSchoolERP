@@ -41,8 +41,9 @@ public partial class StudentsViewModel : ObservableObject
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
-    private CancellationTokenSource? _loadCancellationTokenSource;
-    private CancellationTokenSource? _searchDebounceCancellationTokenSource;
+    private int _searchDebounceVersion;
+    private int _latestRequestedGeneration;
+    private int _isLoadLoopRunning;
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
 
@@ -247,52 +248,61 @@ public partial class StudentsViewModel : ObservableObject
 
     private Task ScheduleSearchLoad()
     {
-        var debounceCts = new CancellationTokenSource();
-        var previous = Interlocked.Exchange(ref _searchDebounceCancellationTokenSource, debounceCts);
-        previous?.Cancel();
-        previous?.Dispose();
-
-        return DebouncedLoadAsync(debounceCts);
+        var debounceVersion = Interlocked.Increment(ref _searchDebounceVersion);
+        return DebouncedLoadAsync(debounceVersion);
     }
 
-    private async Task DebouncedLoadAsync(CancellationTokenSource debounceCts)
+    private async Task DebouncedLoadAsync(int debounceVersion)
     {
-        try
-        {
-            await Task.Delay(250, debounceCts.Token);
-            await StartLatestLoadAsync();
-        }
-        catch (OperationCanceledException)
-        {
-            // A newer search input superseded this scheduled load.
-        }
-        finally
-        {
-            if (ReferenceEquals(Volatile.Read(ref _searchDebounceCancellationTokenSource), debounceCts))
-            {
-                Interlocked.Exchange(ref _searchDebounceCancellationTokenSource, null);
-            }
+        await Task.Delay(250);
 
-            debounceCts.Dispose();
-        }
+        if (debounceVersion != Volatile.Read(ref _searchDebounceVersion))
+            return;
+
+        await StartLatestLoadAsync();
     }
 
     private Task StartLatestLoadAsync()
     {
-        var debounce = Interlocked.Exchange(ref _searchDebounceCancellationTokenSource, null);
-        debounce?.Cancel();
-        debounce?.Dispose();
-
-        var loadCts = new CancellationTokenSource();
-        var previousLoad = Interlocked.Exchange(ref _loadCancellationTokenSource, loadCts);
-        previousLoad?.Cancel();
-        previousLoad?.Dispose();
-
         var generation = Interlocked.Increment(ref _loadGeneration);
-        return LoadAsync(generation, loadCts.Token);
+        Volatile.Write(ref _latestRequestedGeneration, generation);
+
+        if (Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) != 0)
+            return Task.CompletedTask;
+
+        return ProcessLatestLoadsAsync();
     }
 
-    private async Task LoadAsync(int generation, CancellationToken cancellationToken)
+    private async Task ProcessLatestLoadsAsync()
+    {
+        var processedGeneration = 0;
+
+        try
+        {
+            while (true)
+            {
+                var generationToProcess = Volatile.Read(ref _latestRequestedGeneration);
+                processedGeneration = generationToProcess;
+
+                await LoadAsync(generationToProcess);
+
+                if (generationToProcess == Volatile.Read(ref _latestRequestedGeneration))
+                    break;
+            }
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _isLoadLoopRunning, 0);
+
+            if (processedGeneration != Volatile.Read(ref _latestRequestedGeneration) &&
+                Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) == 0)
+            {
+                _ = ProcessLatestLoadsAsync();
+            }
+        }
+    }
+
+    private async Task LoadAsync(int generation)
     {
         try
         {
@@ -306,16 +316,16 @@ public partial class StudentsViewModel : ObservableObject
             // Selected academic period is optional; students should remain visible even if no period exists.
             var period = await db.AcademicPeriods
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Name == year, cancellationToken);
+                .FirstOrDefaultAsync(p => p.Name == year);
             var selectedPeriodId = period?.AcademicPeriodId;
 
             var availablePrograms = await db.Programs
                 .AsNoTracking()
                 .OrderBy(p => p.Name)
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             SyncProgramFilters(availablePrograms);
-            await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation, cancellationToken);
+            await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation);
 
             var baseQuery = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
@@ -341,7 +351,7 @@ public partial class StudentsViewModel : ObservableObject
                     .ThenInclude(en => en.Payments)
                 .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
                 .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             var rows = new List<StudentRowVm>();
 
@@ -486,21 +496,17 @@ public partial class StudentsViewModel : ObservableObject
             };
 
             // Ignore stale completion from older overlapping loads.
-            if (cancellationToken.IsCancellationRequested || generation != Volatile.Read(ref _loadGeneration))
+            if (generation != Volatile.Read(ref _loadGeneration))
                 return;
 
             Students.Clear();
             foreach (var row in sortedRows)
                 Students.Add(row);
         }
-        catch (OperationCanceledException)
-        {
-            // Newer user intent is already loading.
-        }
         catch (Exception ex)
         {
             // Ignore stale completion from older overlapping loads.
-            if (cancellationToken.IsCancellationRequested || generation != Volatile.Read(ref _loadGeneration))
+            if (generation != Volatile.Read(ref _loadGeneration))
                 return;
 
             var msg = ex.InnerException?.Message ?? ex.Message;
@@ -518,16 +524,6 @@ public partial class StudentsViewModel : ObservableObject
             System.Diagnostics.Debug.WriteLine(ex.ToString());
             System.Windows.MessageBox.Show(msg, "Αποτυχία φόρτωσης μαθητών");
         }
-        finally
-        {
-            var current = Volatile.Read(ref _loadCancellationTokenSource);
-            if (current is not null && current.Token == cancellationToken)
-            {
-                if (ReferenceEquals(Interlocked.CompareExchange(ref _loadCancellationTokenSource, null, current), current))
-                    current.Dispose();
-            }
-        }
-
     }
 
     private void SyncProgramFilters(IReadOnlyCollection<StudyProgram> programs)
@@ -584,7 +580,7 @@ public partial class StudentsViewModel : ObservableObject
         return query;
     }
 
-    private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation, CancellationToken cancellationToken)
+    private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation)
     {
         if (string.IsNullOrWhiteSpace(SearchText))
             return;
@@ -608,9 +604,9 @@ public partial class StudentsViewModel : ObservableObject
             .Select(s => (s.FirstName + " " + s.LastName).Trim())
             .Distinct()
             .Take(8)
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
-        if (cancellationToken.IsCancellationRequested || generation != Volatile.Read(ref _loadGeneration))
+        if (generation != Volatile.Read(ref _loadGeneration))
             return;
 
         SearchSuggestions.Clear();
