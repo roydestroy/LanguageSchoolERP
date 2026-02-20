@@ -19,6 +19,8 @@ namespace LanguageSchoolERP.App;
 public partial class App : Application
 {
     private const string DefaultLocalSqlServer = @".\SQLEXPRESS";
+    private const string TailscaleDownloadUrl = "https://tailscale.com/download";
+    private const string SqlExpressDownloadUrl = "https://www.microsoft.com/en-us/sql-server/sql-server-downloads";
     public static ServiceProvider Services { get; private set; } = null!;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -126,11 +128,11 @@ public partial class App : Application
         {
             appState.SetDatabaseImportEnabled(false);
             appState.SetRemoteModeEnabled(false);
-            MessageBox.Show(
+            ShowWarningWithDownload(
                 "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι απομακρυσμένες λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.\nΕγκαταστήστε το Tailscale, συνδεθείτε στον λογαριασμό σας και επανεκκινήστε την εφαρμογή.",
                 "Tailscale",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                TailscaleDownloadUrl,
+                "Λήψη Tailscale");
 
             Shutdown();
             return;
@@ -144,11 +146,11 @@ public partial class App : Application
 
         if (tailscaleInstalled && !remoteConnectivity.IsSuccess)
         {
-            MessageBox.Show(
+            ShowWarningWithDownload(
                 "Δεν υπάρχει σύνδεση με τη remote βάση.\nΕλέγξτε ότι το Tailscale είναι συνδεδεμένο και ότι έχετε κάνει login στον σωστό λογαριασμό.",
                 "Remote βάση μη διαθέσιμη",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                TailscaleDownloadUrl,
+                "Λήψη Tailscale");
 
             Shutdown();
             return;
@@ -233,13 +235,16 @@ public partial class App : Application
             return settings.Local.Server;
         }
 
-        if (availableServers.Count == 0)
+        var onlyDefaultCandidate = availableServers.Count == 1 &&
+                                   string.Equals(availableServers[0], DefaultLocalSqlServer, StringComparison.OrdinalIgnoreCase);
+
+        if (availableServers.Count == 0 || onlyDefaultCandidate)
         {
-            MessageBox.Show(
+            ShowWarningWithDownload(
                 "Δεν βρέθηκε διαθέσιμο local SQL instance.\nΕγκαταστήστε SQL Server/SQLEXPRESS και επανεκκινήστε την εφαρμογή.",
                 "Σύνδεση Βάσης",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                SqlExpressDownloadUrl,
+                "Λήψη SQL Express");
             return settings.Local.Server;
         }
 
@@ -410,6 +415,35 @@ public partial class App : Application
 
         servers.Add(DefaultLocalSqlServer);
         return servers.OrderBy(x => x).ToList();
+    }
+
+    private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
+    {
+        var choice = MessageBox.Show(
+            $"{message}\n\nΘέλετε να ανοίξει η σελίδα: {buttonText};",
+            caption,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (choice != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = downloadUrl,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            MessageBox.Show(
+                "Δεν ήταν δυνατό να ανοίξει ο browser. Αντιγράψτε το link χειροκίνητα από το μήνυμα.",
+                caption,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     /// <summary>
