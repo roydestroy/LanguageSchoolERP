@@ -332,6 +332,7 @@ public partial class StudentProfileViewModel : ObservableObject
             student.MotherLandline = EditableMotherLandline.Trim();
             student.MotherEmail = EditableMotherEmail.Trim();
             student.PreferredPhoneSource = ResolvePreferredPhoneSource();
+            student.PreferredLandlineSource = ResolvePreferredLandlineSource();
             student.PreferredEmailSource = ResolvePreferredEmailSource();
             student.Notes = EditableNotes.Trim();
 
@@ -942,7 +943,7 @@ public partial class StudentProfileViewModel : ObservableObject
             _originalMotherLandline = student.MotherLandline ?? "";
             _originalMotherEmail = student.MotherEmail ?? "";
             _originalPreferredPhoneSource = student.PreferredPhoneSource;
-            _originalPreferredLandlineSource = (PreferredLandlineSource)student.PreferredPhoneSource;
+            _originalPreferredLandlineSource = student.PreferredLandlineSource;
             _originalPreferredEmailSource = student.PreferredEmailSource;
             _originalNotes = student.Notes ?? "";
 
@@ -1312,7 +1313,7 @@ public partial class StudentProfileViewModel : ObservableObject
                 : student.MotherMobile;
         }
 
-        var landline = ((PreferredLandlineSource)student.PreferredPhoneSource) switch
+        var landline = student.PreferredLandlineSource switch
         {
             PreferredLandlineSource.Father => student.FatherLandline,
             PreferredLandlineSource.Mother => student.MotherLandline,
@@ -1480,12 +1481,3 @@ public partial class StudentProfileViewModel : ObservableObject
         internal static extern bool DeleteFile(string lpFileName);
     }
 }
-
-
-public enum PreferredLandlineSource
-{
-    Student = 0,
-    Father = 1,
-    Mother = 2
-}
-

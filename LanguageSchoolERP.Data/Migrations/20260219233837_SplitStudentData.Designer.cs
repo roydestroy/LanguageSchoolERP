@@ -362,6 +362,9 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<int>("PreferredEmailSource")
                         .HasColumnType("int");
 
+                    b.Property<int>("PreferredLandlineSource")
+                        .HasColumnType("int");
+
                     b.Property<int>("PreferredPhoneSource")
                         .HasColumnType("int");
 

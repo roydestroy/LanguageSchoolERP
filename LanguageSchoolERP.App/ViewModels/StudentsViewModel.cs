@@ -440,23 +440,35 @@ public partial class StudentsViewModel : ObservableObject
 
     private static string BuildPreferredContactLine(Student student)
     {
-        var fatherPhone = !string.IsNullOrWhiteSpace(student.FatherMobile) ? student.FatherMobile : student.FatherLandline;
-        var motherPhone = !string.IsNullOrWhiteSpace(student.MotherMobile) ? student.MotherMobile : student.MotherLandline;
         var fatherEmail = student.FatherEmail;
         var motherEmail = student.MotherEmail;
 
-        var phone = student.PreferredPhoneSource switch
+        var mobile = student.PreferredPhoneSource switch
         {
-            PreferredPhoneSource.Father => fatherPhone,
-            PreferredPhoneSource.Mother => motherPhone,
+            PreferredPhoneSource.Father => student.FatherMobile,
+            PreferredPhoneSource.Mother => student.MotherMobile,
             _ => student.Mobile
         };
 
-        if (string.IsNullOrWhiteSpace(phone))
+        if (string.IsNullOrWhiteSpace(mobile))
         {
-            phone = !string.IsNullOrWhiteSpace(student.Mobile) ? student.Mobile
-                : !string.IsNullOrWhiteSpace(fatherPhone) ? fatherPhone
-                : motherPhone;
+            mobile = !string.IsNullOrWhiteSpace(student.Mobile) ? student.Mobile
+                : !string.IsNullOrWhiteSpace(student.FatherMobile) ? student.FatherMobile
+                : student.MotherMobile;
+        }
+
+        var landline = student.PreferredLandlineSource switch
+        {
+            PreferredLandlineSource.Father => student.FatherLandline,
+            PreferredLandlineSource.Mother => student.MotherLandline,
+            _ => student.Landline
+        };
+
+        if (string.IsNullOrWhiteSpace(landline))
+        {
+            landline = !string.IsNullOrWhiteSpace(student.Landline) ? student.Landline
+                : !string.IsNullOrWhiteSpace(student.FatherLandline) ? student.FatherLandline
+                : student.MotherLandline;
         }
 
         var email = student.PreferredEmailSource switch
@@ -473,7 +485,15 @@ public partial class StudentsViewModel : ObservableObject
                 : motherEmail;
         }
 
-        return $"{phone}  |  {email}".Trim(' ', '|');
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(mobile))
+            parts.Add(mobile);
+        if (!string.IsNullOrWhiteSpace(landline))
+            parts.Add($"Σταθερό: {landline}");
+        if (!string.IsNullOrWhiteSpace(email))
+            parts.Add(email);
+
+        return parts.Count == 0 ? "—" : string.Join("  |  ", parts);
     }
 
 }
