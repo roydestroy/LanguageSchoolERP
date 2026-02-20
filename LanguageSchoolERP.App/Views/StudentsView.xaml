@@ -8,6 +8,7 @@
              SnapsToDevicePixels="True"
              TextOptions.TextFormattingMode="Display">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
             <Setter Property="Foreground" Value="White"/>
@@ -304,9 +305,10 @@
         </Border>
 
         <!-- List -->
-        <Border Grid.Row="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Students}">
+        <Grid Grid.Row="1">
+            <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Students}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,12" Background="#FBFDFF">
@@ -481,8 +483,22 @@
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+
+            <Border Background="#66FFFFFF"
+                    CornerRadius="10"
+                    Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="Φόρτωση μαθητών..."
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource Brush.TextPrimary}"
+                               HorizontalAlignment="Center"/>
+                    <ProgressBar Width="180" Height="10" Margin="0,10,0,0" IsIndeterminate="True"/>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
