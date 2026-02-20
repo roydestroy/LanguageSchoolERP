@@ -70,6 +70,7 @@ public partial class StudentsViewModel : ObservableObject
     [ObservableProperty] private string selectedStudentSortOption = SortByName;
     [ObservableProperty] private ProgramFilterItemVm? selectedProgramFilter;
     [ObservableProperty] private bool isSearchSuggestionsOpen;
+    [ObservableProperty] private bool isLoading;
 
     public ObservableCollection<ProgramFilterItemVm> ProgramFilters { get; } = new();
     public ObservableCollection<string> SearchSuggestions { get; } = new();
@@ -270,6 +271,8 @@ public partial class StudentsViewModel : ObservableObject
         if (Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) != 0)
             return Task.CompletedTask;
 
+        IsLoading = true;
+
         return ProcessLatestLoadsAsync();
     }
 
@@ -294,10 +297,16 @@ public partial class StudentsViewModel : ObservableObject
         {
             Interlocked.Exchange(ref _isLoadLoopRunning, 0);
 
-            if (processedGeneration != Volatile.Read(ref _latestRequestedGeneration) &&
-                Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) == 0)
+            var shouldRestart = processedGeneration != Volatile.Read(ref _latestRequestedGeneration) &&
+                Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) == 0;
+
+            if (shouldRestart)
             {
                 _ = ProcessLatestLoadsAsync();
+            }
+            else
+            {
+                IsLoading = false;
             }
         }
     }
@@ -307,8 +316,6 @@ public partial class StudentsViewModel : ObservableObject
         try
         {
             using var db = _dbFactory.Create();
-            System.Diagnostics.Debug.WriteLine("DB=" + db.Database.GetDbConnection().DataSource + " | " + db.Database.GetDbConnection().Database);
-
             DbSeeder.EnsureSeeded(db);
 
             var year = _state.SelectedAcademicYear;
@@ -502,6 +509,7 @@ public partial class StudentsViewModel : ObservableObject
             Students.Clear();
             foreach (var row in sortedRows)
                 Students.Add(row);
+
         }
         catch (Exception ex)
         {
