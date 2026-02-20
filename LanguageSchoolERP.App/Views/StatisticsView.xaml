@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              UseLayoutRounding="True"
-             SnapsToDevicePixels="True">
+             SnapsToDevicePixels="True"
+             Language="el-GR">
 
     <UserControl.Resources>
 
@@ -80,19 +81,19 @@
             <Border Grid.Column="2" Margin="0,0,8,0" Padding="12" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="8">
                 <StackPanel>
                     <TextBlock Text="Συμφωνηθέν ποσό" FontSize="12" Foreground="{StaticResource Brush.TextSecondary}"/>
-                    <TextBlock Text="{Binding AgreementsTotal, StringFormat={}{0:#,##0.0} €}" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding CollectibleTotal, StringFormat=Εισπράξιμο ποσό: {0:#,##0.0} €}" Foreground="#2E7D32"/>
+                    <TextBlock Text="{Binding AgreementsTotal, StringFormat={}{0:#,##0.#} €}" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding CollectibleTotal, StringFormat=Εισπράξιμο ποσό: {0:#,##0.#} €}" Foreground="#2E7D32"/>
                     <TextBlock Text="Πρόοδος είσπραξης (εισπράξιμο)" Margin="0,8,0,2" FontSize="11" Foreground="{StaticResource Brush.TextSecondary}"/>
                     <ProgressBar Height="10" Minimum="0" Maximum="100" Value="{Binding CollectibleProgressPercent}"/>
-                    <TextBlock Text="{Binding LostRevenueTotal, StringFormat=Απώλειες: {0:#,##0.0} €}" Margin="0,8,0,0" Foreground="#A64949"/>
+                    <TextBlock Text="{Binding LostRevenueTotal, StringFormat=Απώλειες: {0:#,##0.#} €}" Margin="0,8,0,0" Foreground="#A64949"/>
                 </StackPanel>
             </Border>
 
             <Border Grid.Column="3" Padding="12" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="8">
                 <StackPanel>
                     <TextBlock Text="Οικονομική εικόνα" FontSize="12" Foreground="{StaticResource Brush.TextSecondary}"/>
-                    <TextBlock Text="{Binding CollectedTotal, StringFormat=Εισπραχθέντα: {0:#,##0.0} €}" FontSize="18" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding OutstandingTotal, StringFormat=Υπόλοιπο: {0:#,##0.0} €}" Foreground="#A66F2F"/>
+                    <TextBlock Text="{Binding CollectedTotal, StringFormat=Εισπραχθέντα: {0:#,##0.#} €}" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding OutstandingTotal, StringFormat=Υπόλοιπο: {0:#,##0.#} €}" Foreground="#A66F2F"/>
                     <TextBlock Text="Πρόοδος έτους (συνολικό συμφωνηθέν)" Margin="0,8,0,2" FontSize="11" Foreground="{StaticResource Brush.TextSecondary}"/>
                     <ProgressBar Height="10" Minimum="0" Maximum="100" Value="{Binding AgreementProgressPercent}"/>
                 </StackPanel>
@@ -135,13 +136,13 @@
                         HeaderStyle="{StaticResource CenterHeader}"/>
 
                         <DataGridTextColumn Header="Συμφωνηθέν"
-                        Binding="{Binding AgreementTotal, StringFormat={}{0:#,##0.0} €}"
+                        Binding="{Binding AgreementTotal, StringFormat={}{0:#,##0.#} €}"
                         Width="150"
                         ElementStyle="{StaticResource CenterCellText}"
                         HeaderStyle="{StaticResource CenterHeader}"/>
 
                         <DataGridTextColumn Header="Εισπραχθέν"
-                        Binding="{Binding CollectedTotal, StringFormat={}{0:#,##0.0} €}"
+                        Binding="{Binding CollectedTotal, StringFormat={}{0:#,##0.#} €}"
                         Width="140"
                         ElementStyle="{StaticResource CenterCellText}"
                         HeaderStyle="{StaticResource CenterHeader}"/>
@@ -153,13 +154,13 @@
                         HeaderStyle="{StaticResource CenterHeader}"/>
 
                         <DataGridTextColumn Header="Απώλειες"
-                        Binding="{Binding LostAmount, StringFormat={}{0:#,##0.0} €}"
+                        Binding="{Binding LostAmount, StringFormat={}{0:#,##0.#} €}"
                         Width="130"
                         ElementStyle="{StaticResource CenterCellText}"
                         HeaderStyle="{StaticResource CenterHeader}"/>
 
                         <DataGridTextColumn Header="Υπόλοιπο"
-                        Binding="{Binding OutstandingTotal, StringFormat={}{0:#,##0.0} €}"
+                        Binding="{Binding OutstandingTotal, StringFormat={}{0:#,##0.#} €}"
                         Width="120"
                         ElementStyle="{StaticResource CenterCellText}"
                         HeaderStyle="{StaticResource CenterHeader}"/>

@@ -50,6 +50,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private string _originalMotherLandline = "";
     private string _originalMotherEmail = "";
     private PreferredPhoneSource _originalPreferredPhoneSource = PreferredPhoneSource.Student;
+    private PreferredLandlineSource _originalPreferredLandlineSource = PreferredLandlineSource.Student;
     private PreferredEmailSource _originalPreferredEmailSource = PreferredEmailSource.Student;
     private string _originalNotes = "";
 
@@ -84,12 +85,17 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string editableMotherLandline = "";
     [ObservableProperty] private string editableMotherEmail = "";
     [ObservableProperty] private PreferredPhoneSource editablePreferredPhoneSource = PreferredPhoneSource.Student;
+    [ObservableProperty] private PreferredLandlineSource editablePreferredLandlineSource = PreferredLandlineSource.Student;
     [ObservableProperty] private PreferredEmailSource editablePreferredEmailSource = PreferredEmailSource.Student;
     [ObservableProperty] private string editableNotes = "";
 
     public bool IsStudentPhonePreferred => EditablePreferredPhoneSource == PreferredPhoneSource.Student;
     public bool IsFatherPhonePreferred => EditablePreferredPhoneSource == PreferredPhoneSource.Father;
     public bool IsMotherPhonePreferred => EditablePreferredPhoneSource == PreferredPhoneSource.Mother;
+
+    public bool IsStudentLandlinePreferred => EditablePreferredLandlineSource == PreferredLandlineSource.Student;
+    public bool IsFatherLandlinePreferred => EditablePreferredLandlineSource == PreferredLandlineSource.Father;
+    public bool IsMotherLandlinePreferred => EditablePreferredLandlineSource == PreferredLandlineSource.Mother;
 
     public bool IsStudentEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Student;
     public bool IsFatherEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Father;
@@ -124,6 +130,9 @@ public partial class StudentProfileViewModel : ObservableObject
     public IRelayCommand SelectStudentPhonePreferredCommand { get; }
     public IRelayCommand SelectFatherPhonePreferredCommand { get; }
     public IRelayCommand SelectMotherPhonePreferredCommand { get; }
+    public IRelayCommand SelectStudentLandlinePreferredCommand { get; }
+    public IRelayCommand SelectFatherLandlinePreferredCommand { get; }
+    public IRelayCommand SelectMotherLandlinePreferredCommand { get; }
     public IRelayCommand SelectStudentEmailPreferredCommand { get; }
     public IRelayCommand SelectFatherEmailPreferredCommand { get; }
     public IRelayCommand SelectMotherEmailPreferredCommand { get; }
@@ -160,6 +169,9 @@ public partial class StudentProfileViewModel : ObservableObject
         SelectStudentPhonePreferredCommand = new RelayCommand(() => SelectPreferredPhone(PreferredPhoneSource.Student));
         SelectFatherPhonePreferredCommand = new RelayCommand(() => SelectPreferredPhone(PreferredPhoneSource.Father));
         SelectMotherPhonePreferredCommand = new RelayCommand(() => SelectPreferredPhone(PreferredPhoneSource.Mother));
+        SelectStudentLandlinePreferredCommand = new RelayCommand(() => SelectPreferredLandline(PreferredLandlineSource.Student));
+        SelectFatherLandlinePreferredCommand = new RelayCommand(() => SelectPreferredLandline(PreferredLandlineSource.Father));
+        SelectMotherLandlinePreferredCommand = new RelayCommand(() => SelectPreferredLandline(PreferredLandlineSource.Mother));
         SelectStudentEmailPreferredCommand = new RelayCommand(() => SelectPreferredEmail(PreferredEmailSource.Student));
         SelectFatherEmailPreferredCommand = new RelayCommand(() => SelectPreferredEmail(PreferredEmailSource.Father));
         SelectMotherEmailPreferredCommand = new RelayCommand(() => SelectPreferredEmail(PreferredEmailSource.Mother));
@@ -278,6 +290,7 @@ public partial class StudentProfileViewModel : ObservableObject
         EditableMotherLandline = _originalMotherLandline;
         EditableMotherEmail = _originalMotherEmail;
         EditablePreferredPhoneSource = _originalPreferredPhoneSource;
+        EditablePreferredLandlineSource = _originalPreferredLandlineSource;
         EditablePreferredEmailSource = _originalPreferredEmailSource;
         EditableNotes = _originalNotes;
         IsEditing = false;
@@ -929,6 +942,7 @@ public partial class StudentProfileViewModel : ObservableObject
             _originalMotherLandline = student.MotherLandline ?? "";
             _originalMotherEmail = student.MotherEmail ?? "";
             _originalPreferredPhoneSource = student.PreferredPhoneSource;
+            _originalPreferredLandlineSource = (PreferredLandlineSource)student.PreferredPhoneSource;
             _originalPreferredEmailSource = student.PreferredEmailSource;
             _originalNotes = student.Notes ?? "";
 
@@ -947,6 +961,7 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableMotherLandline = _originalMotherLandline;
             EditableMotherEmail = _originalMotherEmail;
             EditablePreferredPhoneSource = _originalPreferredPhoneSource;
+            EditablePreferredLandlineSource = _originalPreferredLandlineSource;
             EditablePreferredEmailSource = _originalPreferredEmailSource;
             EditableNotes = _originalNotes;
 
@@ -1198,6 +1213,13 @@ public partial class StudentProfileViewModel : ObservableObject
         OnPropertyChanged(nameof(IsMotherPhonePreferred));
     }
 
+    partial void OnEditablePreferredLandlineSourceChanged(PreferredLandlineSource value)
+    {
+        OnPropertyChanged(nameof(IsStudentLandlinePreferred));
+        OnPropertyChanged(nameof(IsFatherLandlinePreferred));
+        OnPropertyChanged(nameof(IsMotherLandlinePreferred));
+    }
+
     partial void OnEditablePreferredEmailSourceChanged(PreferredEmailSource value)
     {
         OnPropertyChanged(nameof(IsStudentEmailPreferred));
@@ -1216,6 +1238,17 @@ public partial class StudentProfileViewModel : ObservableObject
         EditablePreferredPhoneSource = source;
     }
 
+    private void SelectPreferredLandline(PreferredLandlineSource source)
+    {
+        if (!CanWrite())
+            return;
+
+        if (!IsEditing)
+            IsEditing = true;
+
+        EditablePreferredLandlineSource = source;
+    }
+
     private void SelectPreferredEmail(PreferredEmailSource source)
     {
         if (!CanWrite())
@@ -1231,11 +1264,23 @@ public partial class StudentProfileViewModel : ObservableObject
     {
         return EditablePreferredPhoneSource switch
         {
-            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherMobile) && string.IsNullOrWhiteSpace(EditableFatherLandline) => PreferredPhoneSource.Student,
-            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherMobile) && string.IsNullOrWhiteSpace(EditableMotherLandline) => PreferredPhoneSource.Student,
-            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && (!string.IsNullOrWhiteSpace(EditableFatherMobile) || !string.IsNullOrWhiteSpace(EditableFatherLandline)) => PreferredPhoneSource.Father,
-            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && string.IsNullOrWhiteSpace(EditableFatherMobile) && string.IsNullOrWhiteSpace(EditableFatherLandline) && (!string.IsNullOrWhiteSpace(EditableMotherMobile) || !string.IsNullOrWhiteSpace(EditableMotherLandline)) => PreferredPhoneSource.Mother,
+            PreferredPhoneSource.Father when string.IsNullOrWhiteSpace(EditableFatherMobile) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Mother when string.IsNullOrWhiteSpace(EditableMotherMobile) => PreferredPhoneSource.Student,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && !string.IsNullOrWhiteSpace(EditableFatherMobile) => PreferredPhoneSource.Father,
+            PreferredPhoneSource.Student when string.IsNullOrWhiteSpace(EditableMobile) && string.IsNullOrWhiteSpace(EditableFatherMobile) && !string.IsNullOrWhiteSpace(EditableMotherMobile) => PreferredPhoneSource.Mother,
             _ => EditablePreferredPhoneSource
+        };
+    }
+
+    private PreferredLandlineSource ResolvePreferredLandlineSource()
+    {
+        return EditablePreferredLandlineSource switch
+        {
+            PreferredLandlineSource.Father when string.IsNullOrWhiteSpace(EditableFatherLandline) => PreferredLandlineSource.Student,
+            PreferredLandlineSource.Mother when string.IsNullOrWhiteSpace(EditableMotherLandline) => PreferredLandlineSource.Student,
+            PreferredLandlineSource.Student when string.IsNullOrWhiteSpace(EditableLandline) && !string.IsNullOrWhiteSpace(EditableFatherLandline) => PreferredLandlineSource.Father,
+            PreferredLandlineSource.Student when string.IsNullOrWhiteSpace(EditableLandline) && string.IsNullOrWhiteSpace(EditableFatherLandline) && !string.IsNullOrWhiteSpace(EditableMotherLandline) => PreferredLandlineSource.Mother,
+            _ => EditablePreferredLandlineSource
         };
     }
 
@@ -1253,40 +1298,57 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string BuildPreferredContactLine(Student student)
     {
-        var fatherPhone = !string.IsNullOrWhiteSpace(student.FatherMobile) ? student.FatherMobile : student.FatherLandline;
-        var motherPhone = !string.IsNullOrWhiteSpace(student.MotherMobile) ? student.MotherMobile : student.MotherLandline;
-        var fatherEmail = student.FatherEmail;
-        var motherEmail = student.MotherEmail;
-
-        var phone = student.PreferredPhoneSource switch
+        var mobile = student.PreferredPhoneSource switch
         {
-            PreferredPhoneSource.Father => fatherPhone,
-            PreferredPhoneSource.Mother => motherPhone,
+            PreferredPhoneSource.Father => student.FatherMobile,
+            PreferredPhoneSource.Mother => student.MotherMobile,
             _ => student.Mobile
         };
 
-        if (string.IsNullOrWhiteSpace(phone))
+        if (string.IsNullOrWhiteSpace(mobile))
         {
-            phone = !string.IsNullOrWhiteSpace(student.Mobile) ? student.Mobile
-                : !string.IsNullOrWhiteSpace(fatherPhone) ? fatherPhone
-                : motherPhone;
+            mobile = !string.IsNullOrWhiteSpace(student.Mobile) ? student.Mobile
+                : !string.IsNullOrWhiteSpace(student.FatherMobile) ? student.FatherMobile
+                : student.MotherMobile;
+        }
+
+        var landline = ((PreferredLandlineSource)student.PreferredPhoneSource) switch
+        {
+            PreferredLandlineSource.Father => student.FatherLandline,
+            PreferredLandlineSource.Mother => student.MotherLandline,
+            _ => student.Landline
+        };
+
+        if (string.IsNullOrWhiteSpace(landline))
+        {
+            landline = !string.IsNullOrWhiteSpace(student.Landline) ? student.Landline
+                : !string.IsNullOrWhiteSpace(student.FatherLandline) ? student.FatherLandline
+                : student.MotherLandline;
         }
 
         var email = student.PreferredEmailSource switch
         {
-            PreferredEmailSource.Father => fatherEmail,
-            PreferredEmailSource.Mother => motherEmail,
+            PreferredEmailSource.Father => student.FatherEmail,
+            PreferredEmailSource.Mother => student.MotherEmail,
             _ => student.Email
         };
 
         if (string.IsNullOrWhiteSpace(email))
         {
             email = !string.IsNullOrWhiteSpace(student.Email) ? student.Email
-                : !string.IsNullOrWhiteSpace(fatherEmail) ? fatherEmail
-                : motherEmail;
+                : !string.IsNullOrWhiteSpace(student.FatherEmail) ? student.FatherEmail
+                : student.MotherEmail;
         }
 
-        return $"{phone}  |  {email}".Trim(' ', '|');
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(mobile))
+            parts.Add(mobile);
+        if (!string.IsNullOrWhiteSpace(landline))
+            parts.Add($"Σταθερό: {landline}");
+        if (!string.IsNullOrWhiteSpace(email))
+            parts.Add(email);
+
+        return parts.Count == 0 ? "—" : string.Join("  |  ", parts);
     }
 
     private static string BuildInstallmentAmountText(Enrollment e)
@@ -1335,7 +1397,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string FormatCurrency(decimal amount)
     {
-        return amount.ToString("N1", new CultureInfo("el-GR")) + " €";
+        return amount.ToString("#,##0.#", new CultureInfo("el-GR")) + " €";
     }
 
     private static string ParseReason(string? notes)
@@ -1418,4 +1480,9 @@ public partial class StudentProfileViewModel : ObservableObject
         internal static extern bool DeleteFile(string lpFileName);
     }
 
-
+public enum PreferredLandlineSource
+{
+    Student = 0,
+    Father = 1,
+    Mother = 2
+}

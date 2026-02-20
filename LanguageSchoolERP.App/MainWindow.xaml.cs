@@ -133,7 +133,7 @@ public partial class MainWindow : Window
         if (period is null)
         {
             YearProgressBar.Value = 0;
-            YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0,0 € / 0,0 €";
+            YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0 € / 0 €";
             return;
         }
 
@@ -156,7 +156,7 @@ public partial class MainWindow : Window
 
         YearProgressBar.Value = progress;
         var culture = new CultureInfo("el-GR");
-        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum.ToString("N1", culture)} € / {collectibleSum.ToString("N1", culture)} €";
+        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum.ToString("N0", culture)} € / {collectibleSum.ToString("N0", culture)} €";
     }
 
 

@@ -300,13 +300,13 @@
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Σταθερό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectStudentPhonePreferredCommand}">
+									<Button Command="{Binding SelectStudentLandlinePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
 												<Setter Property="Content" Value="☆"/>
 												<Setter Property="Foreground" Value="#9AA7B4"/>
 												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsStudentPhonePreferred}" Value="True">
+													<DataTrigger Binding="{Binding IsStudentLandlinePreferred}" Value="True">
 														<Setter Property="Content" Value="★"/>
 														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
 													</DataTrigger>
@@ -367,13 +367,13 @@
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Σταθερό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectFatherPhonePreferredCommand}">
+									<Button Command="{Binding SelectFatherLandlinePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
 												<Setter Property="Content" Value="☆"/>
 												<Setter Property="Foreground" Value="#9AA7B4"/>
 												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsFatherPhonePreferred}" Value="True">
+													<DataTrigger Binding="{Binding IsFatherLandlinePreferred}" Value="True">
 														<Setter Property="Content" Value="★"/>
 														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
 													</DataTrigger>
@@ -427,13 +427,13 @@
 
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Σταθερό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectMotherPhonePreferredCommand}">
+									<Button Command="{Binding SelectMotherLandlinePreferredCommand}">
 										<Button.Style>
 											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
 												<Setter Property="Content" Value="☆"/>
 												<Setter Property="Foreground" Value="#9AA7B4"/>
 												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsMotherPhonePreferred}" Value="True">
+													<DataTrigger Binding="{Binding IsMotherLandlinePreferred}" Value="True">
 														<Setter Property="Content" Value="★"/>
 														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
 													</DataTrigger>
