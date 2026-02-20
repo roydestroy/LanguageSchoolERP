@@ -89,7 +89,7 @@ public partial class StudentsViewModel : ObservableObject
         SelectProgramFilterCommand = new RelayCommand<ProgramFilterItemVm>(SelectProgramFilter);
         ApplySearchSuggestionCommand = new RelayCommand<string>(ApplySearchSuggestion);
 
-        var allProgramsFilter = new ProgramFilterItemVm(null, "Όλα τα προγράμματα") { IsSelected = true };
+        var allProgramsFilter = new ProgramFilterItemVm(null, "ΟΛΑ") { IsSelected = true };
         ProgramFilters.Add(allProgramsFilter);
         selectedProgramFilter = allProgramsFilter;
 
@@ -474,7 +474,7 @@ public partial class StudentsViewModel : ObservableObject
         var selectedProgramId = SelectedProgramFilter?.ProgramId;
         var items = new List<ProgramFilterItemVm>
         {
-            new(null, "Όλα τα προγράμματα")
+            new(null, "ΟΛΑ")
         };
 
         items.AddRange(programs.Select(p => new ProgramFilterItemVm(p.Id, p.Name)));

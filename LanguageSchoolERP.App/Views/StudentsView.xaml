@@ -245,7 +245,7 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <ToggleButton Margin="0,0,6,5"
-                                              Padding="14,5"
+                                              Padding="18,5"
                                               MinHeight="30"
                                               BorderThickness="1"
                                               FontSize="11"
@@ -267,7 +267,7 @@
                                                                 Background="{TemplateBinding Background}"
                                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                                 BorderThickness="{TemplateBinding BorderThickness}">
-                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,0"/>
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0"/>
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
