@@ -148,6 +148,8 @@ public sealed class DatabaseAppSettingsProvider
             InstallFolder = @"C:\Apps\LanguageSchoolERP"
         },
         Backup = new BackupSettings()
+        ,
+        Clone = new DatabaseCloneSettings()
     };
 
     private static void Normalize(DatabaseAppSettings settings)
@@ -157,6 +159,7 @@ public sealed class DatabaseAppSettingsProvider
         settings.Startup ??= new StartupDatabaseSettings();
         settings.Update ??= new UpdateSettings();
         settings.Backup ??= new BackupSettings();
+        settings.Clone ??= new DatabaseCloneSettings();
 
 
         if (string.IsNullOrWhiteSpace(settings.Local.Server))
@@ -213,6 +216,12 @@ public sealed class DatabaseAppSettingsProvider
 
         if (string.IsNullOrWhiteSpace(settings.Update.InstallFolder))
             settings.Update.InstallFolder = @"C:\Apps\LanguageSchoolERP";
+
+        if (string.IsNullOrWhiteSpace(settings.Clone.BackupUncRoot))
+            settings.Clone.BackupUncRoot = settings.Backup.RemoteShareRoot;
+
+        if (string.IsNullOrWhiteSpace(settings.Clone.LocalTempDirectory))
+            settings.Clone.LocalTempDirectory = @"C:\ERP\restore-temp";
     }
 
     public static string BuildTrustedConnectionString(string server, string database)
@@ -271,6 +280,13 @@ public sealed class DatabaseAppSettings
     public StartupDatabaseSettings Startup { get; set; } = new();
     public UpdateSettings Update { get; set; } = new();
     public BackupSettings Backup { get; set; } = new();
+    public DatabaseCloneSettings Clone { get; set; } = new();
+}
+
+public sealed class DatabaseCloneSettings
+{
+    public string BackupUncRoot { get; set; } = @"\\100.104.49.73\erp-backups";
+    public string LocalTempDirectory { get; set; } = @"C:\ERP\restore-temp";
 }
 
 public sealed class LocalDatabaseSettings

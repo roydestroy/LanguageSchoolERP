@@ -31,7 +31,7 @@
 
                 <TextBlock Grid.Row="1" Text="Πηγή" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton Content="Απομακρυσμένη DB"
+                    <RadioButton Content="Clone από latest backup"
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"
                                  IsChecked="{Binding IsRemoteImportSelected, Mode=TwoWay}"/>
@@ -59,7 +59,7 @@
 
                 </StackPanel>
 
-                <TextBlock Grid.Row="2" Text="Απομακρυσμένη Βάση" VerticalAlignment="Center" Margin="0,14,10,0">
+                <TextBlock Grid.Row="2" Text="Επιλογή Σχολής" VerticalAlignment="Center" Margin="0,14,10,0">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Visible"/>

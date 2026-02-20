@@ -75,6 +75,7 @@ public partial class App : Application
         services.AddSingleton<IExcelImportRouter, FilenamePatternExcelImportRouter>();
         services.AddSingleton<IExcelWorkbookParser, ExcelInteropWorkbookParser>();
         services.AddTransient<IDatabaseImportService, DatabaseImportService>();
+        services.AddTransient<IDatabaseCloneService, DatabaseCloneService>();
 
         services.AddSingleton<DatabaseAppSettingsProvider>();
         services.AddSingleton<AppState>();
