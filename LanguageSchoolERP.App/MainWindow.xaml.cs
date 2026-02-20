@@ -46,12 +46,7 @@ public partial class MainWindow : Window
         RefreshLocalDatabaseOptions();
         LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
 
-        YearCombo.ItemsSource = new[]
-        {
-            "2024-2025",
-            "2025-2026"
-        };
-        YearCombo.SelectedItem = _state.SelectedAcademicYear;
+        _ = LoadAcademicYearsAsync();
 
         ModeCombo.SelectionChanged += async (_, __) =>
         {
@@ -140,11 +135,13 @@ public partial class MainWindow : Window
             RefreshModeOptions();
             RefreshLocalDatabaseOptions();
             SyncTopBarState();
+            _ = LoadAcademicYearsAsync();
         }
 
         if (e.PropertyName == nameof(AppState.SelectedAcademicYear) ||
             e.PropertyName == nameof(AppState.DataVersion))
         {
+            _ = LoadAcademicYearsAsync();
             _ = RefreshAcademicYearProgressAsync();
         }
     }
@@ -206,6 +203,41 @@ public partial class MainWindow : Window
         LocalDbCombo.ItemsSource = _allLocalDatabases
             .Where(x => _state.AvailableLocalDatabases.Contains(x.Database))
             .ToList();
+    }
+
+
+    private async Task LoadAcademicYearsAsync()
+    {
+        try
+        {
+            using var db = _dbFactory.Create();
+
+            var years = await db.AcademicPeriods
+                .AsNoTracking()
+                .OrderByDescending(p => p.Name)
+                .Select(p => p.Name)
+                .ToListAsync();
+
+            YearCombo.ItemsSource = years;
+
+            if (years.Count == 0)
+            {
+                YearCombo.SelectedItem = null;
+                return;
+            }
+
+            if (!years.Contains(_state.SelectedAcademicYear))
+            {
+                _state.SelectedAcademicYear = years[0];
+            }
+
+            YearCombo.SelectedItem = _state.SelectedAcademicYear;
+        }
+        catch
+        {
+            YearCombo.ItemsSource = Array.Empty<string>();
+            YearCombo.SelectedItem = null;
+        }
     }
 
     private async Task RefreshAcademicYearProgressAsync()

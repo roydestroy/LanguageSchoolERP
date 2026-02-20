@@ -276,9 +276,9 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
     private static int? FindLevelColumn(IReadOnlyDictionary<int, string> headers, string defaultProgramName)
     {
-        // Language enrollment workbooks use an explicit "ΕΠΙΠΕΔΟ" header (commonly on row 3).
-        // Do not treat column D as level/class unless this header exists.
-        var levelColumn = FindColumn(headers, "ΕΠΙΠΕΔΟ", "LEVEL");
+        // Language enrollment workbooks use explicit level headers (commonly on row 3).
+        // Do not treat column D as level/class unless one of these headers exists.
+        var levelColumn = FindColumn(headers, "ΕΠΙΠΕΔΟ", "ΕΝΟΤΗΤΕΣ", "ΕΝΟΤΗΤ", "LEVEL");
         if (levelColumn.HasValue)
             return levelColumn;
 

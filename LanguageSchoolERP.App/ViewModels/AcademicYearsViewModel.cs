@@ -116,6 +116,7 @@ public partial class AcademicYearsViewModel : ObservableObject
         await db.SaveChangesAsync();
 
         _state.SelectedAcademicYear = name;
+        _state.NotifyDataChanged();
         NewAcademicYearName = "";
         await LoadAsync();
     }
@@ -132,6 +133,15 @@ public partial class AcademicYearsViewModel : ObservableObject
         if (SelectedAcademicYear is null)
             return;
 
+        var confirmResult = System.Windows.MessageBox.Show(
+            $"Είστε σίγουροι ότι θέλετε να διαγράψετε το ακαδημαϊκό έτος \"{SelectedAcademicYear.Name}\";",
+            "Επιβεβαίωση διαγραφής",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirmResult != System.Windows.MessageBoxResult.Yes)
+            return;
+
         using var db = _dbFactory.Create();
         DbSeeder.EnsureSeeded(db);
 
@@ -143,6 +153,7 @@ public partial class AcademicYearsViewModel : ObservableObject
 
         db.AcademicPeriods.Remove(period);
         await db.SaveChangesAsync();
+        _state.NotifyDataChanged();
 
         if (_state.SelectedAcademicYear == period.Name)
         {
