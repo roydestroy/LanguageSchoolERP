@@ -141,14 +141,14 @@
                           VerticalAlignment="Center"
                           ItemsSource="{Binding StudentSortOptions}"
                           SelectedItem="{Binding SelectedStudentSortOption, Mode=TwoWay}"/>
-                <Grid Grid.Row="0" Grid.Column="4" MinHeight="34" VerticalAlignment="Center">
+                <Grid x:Name="StudentSearchContainer" Grid.Row="0" Grid.Column="4" MinHeight="34" VerticalAlignment="Center">
                     <TextBox x:Name="StudentSearchTextBox"
                              MinHeight="34"
                              VerticalAlignment="Center"
                              Padding="10,4,30,4"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Αναζήτηση με όνομα, τηλέφωνο, ηλ. ταχυδρομείο ή πρόγραμμα"/>
-                    <Popup PlacementTarget="{Binding ElementName=StudentSearchTextBox}"
+                    <Popup x:Name="StudentSearchSuggestionsPopup" PlacementTarget="{Binding ElementName=StudentSearchTextBox}"
                            Placement="Bottom"
                            AllowsTransparency="True"
                            StaysOpen="False"
