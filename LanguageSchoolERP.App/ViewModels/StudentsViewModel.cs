@@ -416,6 +416,17 @@ public partial class StudentsViewModel : ObservableObject
                 return;
 
             var msg = ex.InnerException?.Message ?? ex.Message;
+            var normalized = msg.ToLowerInvariant();
+
+            if (!_state.IsRemoteModeEnabled && !_state.HasAnyLocalDatabase)
+            {
+                msg = "Δεν υπάρχει διαθέσιμη βάση δεδομένων. Συνδεθείτε στο Tailscale ή εισάγετε τοπική βάση από τις Ρυθμίσεις.";
+            }
+            else if ((normalized.Contains("timeout") || normalized.Contains("timed out")) && !_state.IsRemoteModeEnabled)
+            {
+                msg = "Η remote βάση δεν είναι διαθέσιμη. Συνδεθείτε στο Tailscale ή εργαστείτε με τοπική βάση.";
+            }
+
             System.Diagnostics.Debug.WriteLine(ex.ToString());
             System.Windows.MessageBox.Show(msg, "Αποτυχία φόρτωσης μαθητών");
         }

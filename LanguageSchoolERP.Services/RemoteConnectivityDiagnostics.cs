@@ -25,30 +25,16 @@ public static class RemoteConnectivityDiagnostics
             return ConnectivityCheckResult.Fail("Tailscale disconnected", $"Invalid remote SQL connection string: {ex.Message}");
         }
 
-        ParseDataSource(builder.DataSource, out var host, out var port);
-
-        try
-        {
-            using var tcpClient = new TcpClient();
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(TimeSpan.FromSeconds(3));
-            await tcpClient.ConnectAsync(host, port, timeoutCts.Token);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return ConnectivityCheckResult.Fail("Tailscale disconnected", $"TCP connection timed out for {host}:{port}.");
-        }
-        catch (SocketException ex)
-        {
-            return ConnectivityCheckResult.Fail("Tailscale disconnected", $"TCP connection failed for {host}:{port}. {ex.Message}");
-        }
-
         try
         {
             builder.ConnectTimeout = 3;
             await using var conn = new SqlConnection(builder.ConnectionString);
             await conn.OpenAsync(cancellationToken);
             return ConnectivityCheckResult.Success();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return ConnectivityCheckResult.Fail("Tailscale disconnected", "Connectivity check was cancelled.");
         }
         catch (SqlException ex) when (IsConnectivitySqlException(ex))
         {
@@ -102,28 +88,6 @@ public static class RemoteConnectivityDiagnostics
             error.Number is -2 or 53 or 11001 or 4060 || error.Class >= 20);
     }
 
-    private static void ParseDataSource(string? dataSource, out string host, out int port)
-    {
-        host = "localhost";
-        port = 1433;
-
-        if (string.IsNullOrWhiteSpace(dataSource))
-            return;
-
-        var cleaned = dataSource.Trim();
-
-        var commaIndex = cleaned.LastIndexOf(',');
-        if (commaIndex > 0 && commaIndex < cleaned.Length - 1)
-        {
-            host = cleaned[..commaIndex].Trim();
-            if (int.TryParse(cleaned[(commaIndex + 1)..], out var parsedPort))
-                port = parsedPort;
-            return;
-        }
-
-        var slashIndex = cleaned.IndexOf('\\');
-        host = slashIndex > 0 ? cleaned[..slashIndex] : cleaned;
-    }
 }
 
 public sealed record ConnectivityCheckResult(bool IsSuccess, string? UserMessage, string? Details)
