@@ -110,6 +110,7 @@ public partial class MainWindow : Window
         _state.PropertyChanged += OnAppStateChanged;
 
         AddHandler(PreviewMouseDownEvent, new System.Windows.Input.MouseButtonEventHandler(OnPreviewMouseDownCloseOpenDropdowns), true);
+        AddHandler(PreviewMouseMoveEvent, new System.Windows.Input.MouseEventHandler(OnPreviewMouseMoveCloseOpenDropdowns), true);
         SyncTopBarState();
 
         NavigateToStudents();
@@ -124,6 +125,26 @@ public partial class MainWindow : Window
         _ = RefreshAcademicYearProgressAsync();
     }
 
+
+
+    private void OnPreviewMouseMoveCloseOpenDropdowns(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject source)
+            return;
+
+        var openCombos = FindVisualChildren<ComboBox>(this)
+            .Where(c => c.IsDropDownOpen)
+            .ToList();
+
+        if (openCombos.Count == 0)
+            return;
+
+        if (openCombos.Any(combo => IsClickInsideCombo(source, combo)))
+            return;
+
+        foreach (var combo in openCombos)
+            combo.IsDropDownOpen = false;
+    }
 
     private void OnPreviewMouseDownCloseOpenDropdowns(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
