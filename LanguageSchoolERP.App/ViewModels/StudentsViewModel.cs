@@ -304,10 +304,11 @@ public partial class StudentsViewModel : ObservableObject
             if (shouldRestart)
             {
                 _ = ProcessLatestLoadsAsync();
-                return;
             }
-
-            IsLoading = false;
+            else
+            {
+                IsLoading = false;
+            }
         }
     }
 
