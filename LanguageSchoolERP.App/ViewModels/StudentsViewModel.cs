@@ -42,6 +42,7 @@ public partial class StudentsViewModel : ObservableObject
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
     private bool _suppressProgramFilterReload;
+    private bool _suppressSuggestionsOpenOnce;
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
@@ -238,6 +239,7 @@ public partial class StudentsViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(suggestion))
             return;
 
+        _suppressSuggestionsOpenOnce = true;
         SearchText = suggestion;
         IsSearchSuggestionsOpen = false;
     }
@@ -555,6 +557,13 @@ public partial class StudentsViewModel : ObservableObject
         SearchSuggestions.Clear();
         foreach (var suggestion in suggestions)
             SearchSuggestions.Add(suggestion);
+
+        if (_suppressSuggestionsOpenOnce)
+        {
+            _suppressSuggestionsOpenOnce = false;
+            IsSearchSuggestionsOpen = false;
+            return;
+        }
 
         IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
     }
