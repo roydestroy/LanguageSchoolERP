@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Data.SqlClient;
 using Microsoft.Win32;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.App.Views;
@@ -23,6 +24,7 @@ public partial class DatabaseImportViewModel : ObservableObject
 {
     private readonly DatabaseAppSettingsProvider _settingsProvider;
     private readonly IDatabaseImportService _databaseImportService;
+    private readonly IDatabaseCloneService _databaseCloneService;
     private readonly AppState _appState;
     private readonly StringBuilder _logBuilder = new();
     private CancellationTokenSource? _cts;
@@ -95,10 +97,12 @@ public partial class DatabaseImportViewModel : ObservableObject
     public DatabaseImportViewModel(
         DatabaseAppSettingsProvider settingsProvider,
         IDatabaseImportService databaseImportService,
+        IDatabaseCloneService databaseCloneService,
         AppState appState)
     {
         _settingsProvider = settingsProvider;
         _databaseImportService = databaseImportService;
+        _databaseCloneService = databaseCloneService;
         _appState = appState;
 
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
@@ -338,33 +342,43 @@ public partial class DatabaseImportViewModel : ObservableObject
 
                 var selectedRemoteDbName = SelectedRemoteDatabaseOption.Database;
                 localDbName = ConnectionStringHelpers.EnsureLocalDatabaseName(selectedRemoteDbName);
-                var remoteDbName = ConnectionStringHelpers.EnsureRemoteDatabaseName(localDbName);
-                successTitle = "Import from Remote";
+                successTitle = "Clone from Backup";
 
-                var localConnection = ConnectionStringHelpers.ReplaceDatabase(settings.Local.ConnectionString, localDbName);
-                var remoteConnection = ConnectionStringHelpers.ReplaceDatabase(settings.Remote.ConnectionString, remoteDbName);
+                AppendLog($"Selected school DB: {localDbName}");
 
-                AppendLog($"Remote source: {remoteDbName}");
-                AppendLog($"Local target: {localDbName}");
+                var school = string.Equals(localDbName, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase)
+                    ? School.NeaIonia
+                    : School.Filothei;
 
-                var connectivity = await RemoteConnectivityDiagnostics.CheckRemoteSqlAsync(remoteConnection, _cts.Token);
-                if (!connectivity.IsSuccess)
-                {
-                    var details = string.IsNullOrWhiteSpace(connectivity.Details) ? string.Empty : $"\n\n{connectivity.Details}";
-                    AppendLog($"Connectivity check failed: {connectivity.UserMessage}. {connectivity.Details}");
-                    MessageBox.Show(
-                        $"{connectivity.UserMessage}{details}",
-                        "Import",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    return;
-                }
+                await _databaseCloneService.CloneFromLatestBackupAsync(
+                    school,
+                    new Progress<string>(message =>
+                    {
+                        AppendLog(message);
 
-                await _databaseImportService.ImportFromRemoteAsync(
-                    remoteConnection,
-                    localConnection,
-                    WipeLocalFirst,
-                    progress,
+                        if (message.Contains("Copying backup", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProgressPercent = 15;
+                        }
+                        else if (message.Contains("Dropping existing", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProgressPercent = 35;
+                        }
+                        else if (message.Contains("Reading logical", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProgressPercent = 55;
+                        }
+                        else if (message.Contains("Restoring database", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProgressPercent = 85;
+                        }
+                        else if (message.Contains("Restore complete", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ProgressPercent = 100;
+                        }
+
+                        ProgressValue = ProgressPercent;
+                    }),
                     _cts.Token);
             }
 
@@ -381,6 +395,16 @@ public partial class DatabaseImportViewModel : ObservableObject
 
             _appState.SelectedLocalDatabaseName = localDbName;
             _appState.SelectedDatabaseMode = DatabaseMode.Local;
+
+            try
+            {
+                await RefreshLocalDatabaseAvailabilityAsync(settings.Local.Server, _cts.Token);
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"WARNING: Could not refresh local DB availability. {ex.Message}");
+            }
+
             _appState.NotifyDataChanged();
 
             MessageBox.Show(
@@ -545,9 +569,43 @@ public partial class DatabaseImportViewModel : ObservableObject
         }
     }
 
+    private async Task RefreshLocalDatabaseAvailabilityAsync(string server, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(server))
+            return;
+
+        var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, "master");
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(ct);
+
+        const string sql = """
+SELECT [name]
+FROM sys.databases
+WHERE [name] IN (N'FilotheiSchoolERP', N'NeaIoniaSchoolERP');
+""";
+
+        await using var command = new SqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+
+        var hasFilothei = false;
+        var hasNeaIonia = false;
+
+        while (await reader.ReadAsync(ct))
+        {
+            var name = reader.GetString(0);
+            if (string.Equals(name, "FilotheiSchoolERP", StringComparison.OrdinalIgnoreCase))
+                hasFilothei = true;
+            else if (string.Equals(name, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase))
+                hasNeaIonia = true;
+        }
+
+        _appState.UpdateLocalDatabaseAvailability(hasFilothei, hasNeaIonia);
+    }
+
     private bool ConfirmImport()
     {
-        if (SelectedImportSource == DatabaseImportSource.RemoteDatabase && WipeLocalFirst)
+        if (SelectedImportSource == DatabaseImportSource.RemoteDatabase)
         {
             var dialog = new ConfirmImportDialog
             {
