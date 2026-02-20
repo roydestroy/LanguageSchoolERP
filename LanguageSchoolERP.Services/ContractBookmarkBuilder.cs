@@ -10,15 +10,20 @@ public sealed class ContractBookmarkBuilder
 
     public Dictionary<string, string> BuildBookmarkValues(ContractPayload payload, Enrollment enrollment)
     {
+        var guardianSameAsStudent = AreSamePersonName(payload.GuardianFullName, payload.StudentFullName);
+        var studentIsFemale = InferFemale(payload.StudentFullName);
+
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["cur1"] = payload.CreatedAt.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture),
             ["cur"] = BuildGreekLongDate(payload.CreatedAt),
             ["gen"] = InferFemale(payload.GuardianFullName) ? "η" : "ο",
             ["gen1"] = InferFemale(payload.GuardianFullName) ? "υπογεγραμμένη" : "υπογεγραμμένος",
-            ["tou"] = InferFemale(payload.StudentFullName) ? "της" : "του",
+            ["tou"] = studentIsFemale ? "της" : "του",
             ["on_up"] = NormalizeNameForContract(payload.GuardianFullName),
-            ["on_sp"] = NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
+            ["on_sp"] = guardianSameAsStudent
+                ? (studentIsFemale ? "ΙΔΙΑΣ" : "ΙΔΙΟΥ")
+                : NormalizeNameForContract(ToGenitiveFullName(payload.StudentFullName)),
             ["per_prg"] = NormalizeProgramTextForContractBookmark(ToGenitiveProgramName(payload.ProgramNameUpper)),
             ["tit_prg"] = NormalizeProgramTextForContractBookmark(enrollment.LevelOrClass ?? string.Empty),
             ["sun_pos"] = FormatPlainAmount(payload.AgreementTotal),
@@ -203,6 +208,23 @@ public sealed class ContractBookmarkBuilder
 
         return string.Join(' ', parts);
     }
+
+    private static bool AreSamePersonName(string a, string b)
+    {
+        var left = NormalizeNameToken(a);
+        var right = NormalizeNameToken(b);
+        return left == right;
+    }
+
+    private static string NormalizeNameToken(string value)
+    {
+        var noTonos = RemoveGreekTonos(value ?? string.Empty);
+        var parts = noTonos
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return string.Join(' ', parts).ToUpper(GreekCulture);
+    }
+
     private static string NormalizeNameForContract(string value)
     {
         var noTonos = RemoveGreekTonos(value ?? "");

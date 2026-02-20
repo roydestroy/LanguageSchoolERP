@@ -221,7 +221,6 @@ public partial class StudentsViewModel : ObservableObject
         // Initialize the VM for this specific student + global year default
         win.Initialize(studentId);
 
-        win.Closed += (_, __) => _ = LoadAsync();
         win.Show();
 
     }
