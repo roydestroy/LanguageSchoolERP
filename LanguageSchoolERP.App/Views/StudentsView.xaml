@@ -235,7 +235,7 @@
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>
 
-                <Border Grid.Row="1" Grid.ColumnSpan="9" Margin="0,8,0,0" Padding="8,6" CornerRadius="8" Background="#EEF4FB" BorderBrush="#D4E2F2" BorderThickness="1">
+                <Border Grid.Row="1" Grid.ColumnSpan="9" Margin="0,7,0,0" Padding="6,5" CornerRadius="10" Background="#F4F8FD" BorderBrush="#D8E3F3" BorderThickness="1">
                     <ItemsControl ItemsSource="{Binding ProgramFilters}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -244,8 +244,9 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <ToggleButton Margin="0,0,6,4"
-                                              Padding="10,4"
+                                <ToggleButton Margin="0,0,6,5"
+                                              Padding="14,5"
+                                              MinHeight="30"
                                               BorderThickness="1"
                                               FontSize="11"
                                               FontWeight="SemiBold"
@@ -255,34 +256,36 @@
                                               CommandParameter="{Binding}">
                                     <ToggleButton.Style>
                                         <Style TargetType="ToggleButton">
-                                            <Setter Property="Background" Value="{StaticResource Brush.Accent}"/>
-                                            <Setter Property="BorderBrush" Value="{StaticResource Brush.AccentDark}"/>
-                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Background" Value="#F7FAFF"/>
+                                            <Setter Property="BorderBrush" Value="#CDDDF1"/>
+                                            <Setter Property="Foreground" Value="#285A86"/>
                                             <Setter Property="Cursor" Value="Hand"/>
                                             <Setter Property="Template">
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="ToggleButton">
-                                                        <Border CornerRadius="14"
+                                                        <Border CornerRadius="16"
                                                                 Background="{TemplateBinding Background}"
                                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                                 BorderThickness="{TemplateBinding BorderThickness}">
-                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0"/>
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="1,0"/>
                                                         </Border>
                                                     </ControlTemplate>
                                                 </Setter.Value>
                                             </Setter>
                                             <Style.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#3A78AE"/>
-                                                    <Setter Property="BorderBrush" Value="#316A99"/>
+                                                    <Setter Property="Background" Value="#E8F1FC"/>
+                                                    <Setter Property="BorderBrush" Value="#AFC8E8"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed" Value="True">
-                                                    <Setter Property="Background" Value="#2C6290"/>
-                                                    <Setter Property="BorderBrush" Value="#26537A"/>
+                                                    <Setter Property="Background" Value="#3A78AE"/>
+                                                    <Setter Property="BorderBrush" Value="#2E689A"/>
+                                                    <Setter Property="Foreground" Value="White"/>
                                                 </Trigger>
                                                 <Trigger Property="IsChecked" Value="True">
-                                                    <Setter Property="Background" Value="#2C6290"/>
-                                                    <Setter Property="BorderBrush" Value="#1F4565"/>
+                                                    <Setter Property="Background" Value="#3978AF"/>
+                                                    <Setter Property="BorderBrush" Value="#2B5F8B"/>
+                                                    <Setter Property="Foreground" Value="White"/>
                                                 </Trigger>
                                             </Style.Triggers>
                                         </Style>

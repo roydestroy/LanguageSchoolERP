@@ -269,35 +269,7 @@ public partial class StudentsViewModel : ObservableObject
             SyncProgramFilters(availablePrograms);
             await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation);
 
-            var baseQuery = db.Students.AsNoTracking();
-
-            if (SelectedProgramFilter?.ProgramId is int selectedProgramId)
-            {
-                baseQuery = baseQuery.Where(s => db.Enrollments.Any(e =>
-                    e.StudentId == s.StudentId &&
-                    e.ProgramId == selectedProgramId &&
-                    (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId)));
-            }
-
-            baseQuery = SelectedStudentStatusFilter switch
-            {
-                ActiveStudentsFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
-                InactiveStudentsFilter => selectedPeriodId == null
-                    ? baseQuery
-                    : baseQuery.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
-                ContractPendingFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
-                OverdueFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
-                DiscontinuedFilter => selectedPeriodId == null
-                    ? baseQuery.Where(_ => false)
-                    : baseQuery.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
-                _ => baseQuery
-            };
+            var baseQuery = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
@@ -518,6 +490,39 @@ public partial class StudentsViewModel : ObservableObject
         _suppressProgramFilterReload = false;
     }
 
+    private IQueryable<Student> ApplyActiveFilters(IQueryable<Student> query, SchoolDbContext db, Guid? selectedPeriodId)
+    {
+        if (SelectedProgramFilter?.ProgramId is int selectedProgramId)
+        {
+            query = query.Where(s => db.Enrollments.Any(e =>
+                e.StudentId == s.StudentId &&
+                e.ProgramId == selectedProgramId &&
+                (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId)));
+        }
+
+        query = SelectedStudentStatusFilter switch
+        {
+            ActiveStudentsFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
+            InactiveStudentsFilter => selectedPeriodId == null
+                ? query
+                : query.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
+            ContractPendingFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
+            OverdueFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
+            DiscontinuedFilter => selectedPeriodId == null
+                ? query.Where(_ => false)
+                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
+            _ => query
+        };
+
+        return query;
+    }
+
     private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation)
     {
         if (string.IsNullOrWhiteSpace(SearchText))
@@ -525,8 +530,9 @@ public partial class StudentsViewModel : ObservableObject
 
         var term = SearchText.Trim();
 
-        var suggestions = await db.Students
-            .AsNoTracking()
+        var filteredStudents = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
+
+        var suggestions = await filteredStudents
             .Where(s =>
                 (s.FirstName + " " + s.LastName).Contains(term) ||
                 s.Mobile.Contains(term) ||
@@ -535,7 +541,7 @@ public partial class StudentsViewModel : ObservableObject
                 db.Enrollments.Any(e =>
                     e.StudentId == s.StudentId &&
                     (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
-                    e.Program.Name.Contains(term)))
+                    ((e.LevelOrClass != null && e.LevelOrClass.Contains(term)) || e.Program.Name.Contains(term))))
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
             .Select(s => (s.FirstName + " " + s.LastName).Trim())
