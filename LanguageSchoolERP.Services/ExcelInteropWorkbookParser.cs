@@ -385,13 +385,26 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
         if (string.IsNullOrWhiteSpace(commentText))
             return 0;
 
-        // Example comments: 65+140*8, (65+140)*8, 65+140 x 8.
-        var match = Regex.Match(commentText, @"[\*xX×]\s*(\d+)");
-        if (!match.Success)
-            return 0;
+        // Example comments: 65+140*8, (65+140)*8, 65+8*74.
+        // Installments are valid only in range 1..12 and may appear either before or after the multiply symbol.
+        var matches = Regex.Matches(commentText, @"(\d+)\s*[\*xX×]\s*(\d+)");
+        foreach (Match match in matches)
+        {
+            if (!match.Success)
+                continue;
 
-        return int.TryParse(match.Groups[1].Value, out var count) && count > 0 ? count : 0;
+            if (int.TryParse(match.Groups[2].Value, out var right) && IsValidInstallmentCount(right))
+                return right;
+
+            if (int.TryParse(match.Groups[1].Value, out var left) && IsValidInstallmentCount(left))
+                return left;
+        }
+
+        return 0;
     }
+
+    private static bool IsValidInstallmentCount(int value)
+        => value > 0 && value < 13;
 
     private static string ReadCommentText(Excel.Range cell)
     {
