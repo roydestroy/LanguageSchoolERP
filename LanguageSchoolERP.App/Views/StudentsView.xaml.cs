@@ -27,7 +27,6 @@ public partial class StudentsView : UserControl
         if (DataContext is StudentsViewModel vm)
             vm.IsSearchSuggestionsOpen = false;
 
-        Keyboard.ClearFocus();
     }
 
     private static bool IsDescendantOf(DependencyObject current, DependencyObject parent)
