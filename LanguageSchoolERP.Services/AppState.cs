@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -14,6 +15,10 @@ public class AppState : INotifyPropertyChanged
     private string _selectedDatabaseName = "FilotheiSchoolERP";
     private string _selectedAcademicYear = "2025-2026";
     private long _dataVersion;
+    private bool _hasFilotheiLocalDatabase = true;
+    private bool _hasNeaIoniaLocalDatabase = true;
+    private bool _isLocalModeEnabled = true;
+    private bool _isDatabaseImportEnabled = true;
 
     public AppState(DatabaseAppSettingsProvider settingsProvider)
     {
@@ -57,6 +62,80 @@ public class AppState : INotifyPropertyChanged
     }
 
     public bool IsReadOnlyMode => SelectedDatabaseMode == DatabaseMode.Remote;
+
+    public bool HasFilotheiLocalDatabase
+    {
+        get => _hasFilotheiLocalDatabase;
+        private set
+        {
+            if (_hasFilotheiLocalDatabase == value)
+                return;
+
+            _hasFilotheiLocalDatabase = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasBothLocalDatabases));
+            OnPropertyChanged(nameof(HasAnyLocalDatabase));
+            OnPropertyChanged(nameof(AvailableLocalDatabases));
+        }
+    }
+
+    public bool HasNeaIoniaLocalDatabase
+    {
+        get => _hasNeaIoniaLocalDatabase;
+        private set
+        {
+            if (_hasNeaIoniaLocalDatabase == value)
+                return;
+
+            _hasNeaIoniaLocalDatabase = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasBothLocalDatabases));
+            OnPropertyChanged(nameof(HasAnyLocalDatabase));
+            OnPropertyChanged(nameof(AvailableLocalDatabases));
+        }
+    }
+
+    public bool HasBothLocalDatabases => HasFilotheiLocalDatabase && HasNeaIoniaLocalDatabase;
+    public bool HasAnyLocalDatabase => HasFilotheiLocalDatabase || HasNeaIoniaLocalDatabase;
+
+    public IReadOnlyList<string> AvailableLocalDatabases
+    {
+        get
+        {
+            var available = new List<string>(2);
+            if (HasFilotheiLocalDatabase)
+                available.Add("FilotheiSchoolERP");
+            if (HasNeaIoniaLocalDatabase)
+                available.Add("NeaIoniaSchoolERP");
+            return available;
+        }
+    }
+
+    public bool IsLocalModeEnabled
+    {
+        get => _isLocalModeEnabled;
+        private set
+        {
+            if (_isLocalModeEnabled == value)
+                return;
+
+            _isLocalModeEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsDatabaseImportEnabled
+    {
+        get => _isDatabaseImportEnabled;
+        private set
+        {
+            if (_isDatabaseImportEnabled == value)
+                return;
+
+            _isDatabaseImportEnabled = value;
+            OnPropertyChanged();
+        }
+    }
 
     public string SelectedRemoteDatabaseName
     {
@@ -119,6 +198,30 @@ public class AppState : INotifyPropertyChanged
     }
 
     public string StartupLocalDatabaseName => _settingsProvider.Settings.Startup.LocalDatabase;
+
+    public void UpdateLocalDatabaseAvailability(bool hasFilothei, bool hasNeaIonia)
+    {
+        HasFilotheiLocalDatabase = hasFilothei;
+        HasNeaIoniaLocalDatabase = hasNeaIonia;
+
+        IsLocalModeEnabled = HasAnyLocalDatabase;
+
+        if (!IsLocalModeEnabled && SelectedDatabaseMode == DatabaseMode.Local)
+        {
+            SelectedDatabaseMode = DatabaseMode.Remote;
+        }
+        else if (SelectedDatabaseMode == DatabaseMode.Local && !AvailableLocalDatabases.Contains(SelectedLocalDatabaseName))
+        {
+            var fallbackLocalDb = AvailableLocalDatabases.FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(fallbackLocalDb))
+                SelectedLocalDatabaseName = fallbackLocalDb;
+        }
+    }
+
+    public void SetDatabaseImportEnabled(bool enabled)
+    {
+        IsDatabaseImportEnabled = enabled;
+    }
 
 
     public void SaveStartupLocalDatabase(string databaseName)

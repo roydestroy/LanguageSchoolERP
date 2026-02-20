@@ -16,6 +16,13 @@ public partial class MainWindow : Window
 {
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
+    private readonly IReadOnlyList<LocalDatabaseOption> _allLocalDatabases;
+
+    private sealed class LocalDatabaseOption
+    {
+        public string Key { get; init; } = string.Empty;
+        public string Database { get; init; } = string.Empty;
+    }
 
     public MainWindow(AppState state, DbContextFactory dbFactory, DatabaseAppSettingsProvider settingsProvider)
     {
@@ -23,17 +30,19 @@ public partial class MainWindow : Window
         _state = state;
         _dbFactory = dbFactory;
 
-        ModeCombo.ItemsSource = new[] { DatabaseMode.Local, DatabaseMode.Remote };
+        _allLocalDatabases = new[]
+        {
+            new LocalDatabaseOption { Key = "Filothei", Database = "FilotheiSchoolERP" },
+            new LocalDatabaseOption { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" }
+        };
+
+        RefreshModeOptions();
         ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
 
         DbCombo.ItemsSource = settingsProvider.RemoteDatabases;
         DbCombo.SelectedValue = _state.SelectedRemoteDatabaseName;
 
-        LocalDbCombo.ItemsSource = new[]
-        {
-            new { Key = "Filothei", Database = "FilotheiSchoolERP" },
-            new { Key = "Nea Ionia", Database = "NeaIoniaSchoolERP" }
-        };
+        RefreshLocalDatabaseOptions();
         LocalDbCombo.SelectedValue = _state.SelectedLocalDatabaseName;
 
         YearCombo.ItemsSource = new[]
@@ -47,6 +56,18 @@ public partial class MainWindow : Window
         {
             if (ModeCombo.SelectedItem is DatabaseMode mode)
             {
+                if (mode == DatabaseMode.Local && !_state.IsLocalModeEnabled)
+                {
+                    _state.SelectedDatabaseMode = DatabaseMode.Remote;
+                    ModeCombo.SelectedItem = DatabaseMode.Remote;
+                    MessageBox.Show(
+                        "Η local λειτουργία δεν είναι διαθέσιμη μέχρι να γίνει εισαγωγή τοπικής βάσης.",
+                        "Τοπική βάση",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
                 _state.SelectedDatabaseMode = mode;
                 SyncTopBarState();
                 await RefreshAcademicYearProgressAsync();
@@ -96,8 +117,13 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode) ||
             e.PropertyName == nameof(AppState.SelectedRemoteDatabaseName) ||
-            e.PropertyName == nameof(AppState.SelectedLocalDatabaseName))
+            e.PropertyName == nameof(AppState.SelectedLocalDatabaseName) ||
+            e.PropertyName == nameof(AppState.HasBothLocalDatabases) ||
+            e.PropertyName == nameof(AppState.IsLocalModeEnabled) ||
+            e.PropertyName == nameof(AppState.AvailableLocalDatabases))
         {
+            RefreshModeOptions();
+            RefreshLocalDatabaseOptions();
             SyncTopBarState();
         }
 
@@ -119,44 +145,79 @@ public partial class MainWindow : Window
         LocalDbGrid.Visibility = _state.SelectedDatabaseMode == DatabaseMode.Local
             ? Visibility.Visible
             : Visibility.Collapsed;
+
+        if (!_state.HasBothLocalDatabases)
+        {
+            LocalDbGrid.Visibility = Visibility.Collapsed;
+        }
+
+        var databaseFeaturesEnabled = _state.IsDatabaseImportEnabled;
+        ModeCombo.IsEnabled = databaseFeaturesEnabled;
+        DbCombo.IsEnabled = databaseFeaturesEnabled;
+        LocalDbCombo.IsEnabled = databaseFeaturesEnabled;
+    }
+
+    private void RefreshModeOptions()
+    {
+        ModeCombo.ItemsSource = _state.IsLocalModeEnabled
+            ? new[] { DatabaseMode.Local, DatabaseMode.Remote }
+            : new[] { DatabaseMode.Remote };
+
+        if (!_state.IsLocalModeEnabled)
+            _state.SelectedDatabaseMode = DatabaseMode.Remote;
+    }
+
+    private void RefreshLocalDatabaseOptions()
+    {
+        LocalDbCombo.ItemsSource = _allLocalDatabases
+            .Where(x => _state.AvailableLocalDatabases.Contains(x.Database))
+            .ToList();
     }
 
     private async Task RefreshAcademicYearProgressAsync()
     {
-        using var db = _dbFactory.Create();
+        try
+        {
+            using var db = _dbFactory.Create();
 
-        var year = _state.SelectedAcademicYear;
-        var period = await db.AcademicPeriods
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Name == year);
+            var year = _state.SelectedAcademicYear;
+            var period = await db.AcademicPeriods
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Name == year);
 
-        if (period is null)
+            if (period is null)
+            {
+                YearProgressBar.Value = 0;
+                YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0 € / 0 €";
+                return;
+            }
+
+            var enrollments = await db.Enrollments
+                .AsNoTracking()
+                .Include(e => e.Payments)
+                .Where(e => e.AcademicPeriodId == period.AcademicPeriodId)
+                .ToListAsync();
+
+            decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
+            decimal paidSum = enrollments.Sum(e => e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments));
+            var discontinuedRemaining = enrollments
+                .Where(e => e.IsStopped)
+                .Sum(InstallmentPlanHelper.GetOutstandingAmount);
+            var collectibleSum = Math.Max(0m, agreementSum - discontinuedRemaining);
+
+            var progress = collectibleSum <= 0 ? 0d : (double)(paidSum / collectibleSum * 100m);
+            if (progress > 100) progress = 100;
+            if (progress < 0) progress = 0;
+
+            YearProgressBar.Value = progress;
+            var culture = new CultureInfo("el-GR");
+            YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum.ToString("N0", culture)} € / {collectibleSum.ToString("N0", culture)} €";
+        }
+        catch
         {
             YearProgressBar.Value = 0;
-            YearRevenueSummaryText.Text = "Εισπράξεις έτους: 0 € / 0 €";
-            return;
+            YearRevenueSummaryText.Text = "Εισπράξεις έτους: μη διαθέσιμα δεδομένα";
         }
-
-        var enrollments = await db.Enrollments
-            .AsNoTracking()
-            .Include(e => e.Payments)
-            .Where(e => e.AcademicPeriodId == period.AcademicPeriodId)
-            .ToListAsync();
-
-        decimal agreementSum = enrollments.Sum(InstallmentPlanHelper.GetEffectiveAgreementTotal);
-        decimal paidSum = enrollments.Sum(e => e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments));
-        var discontinuedRemaining = enrollments
-            .Where(e => e.IsStopped)
-            .Sum(InstallmentPlanHelper.GetOutstandingAmount);
-        var collectibleSum = Math.Max(0m, agreementSum - discontinuedRemaining);
-
-        var progress = collectibleSum <= 0 ? 0d : (double)(paidSum / collectibleSum * 100m);
-        if (progress > 100) progress = 100;
-        if (progress < 0) progress = 0;
-
-        YearProgressBar.Value = progress;
-        var culture = new CultureInfo("el-GR");
-        YearRevenueSummaryText.Text = $"Εισπράξεις έτους: {paidSum.ToString("N0", culture)} € / {collectibleSum.ToString("N0", culture)} €";
     }
 
 
@@ -238,9 +299,25 @@ public partial class MainWindow : Window
     private void NavigateToDatabaseImport()
     {
         ClearStudentsSearchIfNeeded();
+
+        if (!_state.IsDatabaseImportEnabled)
+        {
+            MessageBox.Show(
+                "Η εισαγωγή βάσης είναι απενεργοποιημένη. Εγκαταστήστε πρώτα το Tailscale.",
+                "Ρυθμίσεις βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
         var view = App.Services.GetRequiredService<DatabaseImportView>();
         MainContent.Content = view;
         SetActiveNavigationButton(SettingsBtn);
+    }
+
+    public void NavigateToDatabaseImportFromStartup()
+    {
+        NavigateToDatabaseImport();
     }
 
     private void ClearStudentsSearchIfNeeded()

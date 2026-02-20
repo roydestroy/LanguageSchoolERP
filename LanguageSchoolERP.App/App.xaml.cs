@@ -12,6 +12,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using Microsoft.Data.Sql;
+using Microsoft.EntityFrameworkCore;
 
 namespace LanguageSchoolERP.App;
 
@@ -113,11 +114,35 @@ public partial class App : Application
         }
 
         var settingsProvider = Services.GetRequiredService<DatabaseAppSettingsProvider>();
-        var isValid = await EnsureLocalServerSelectionAsync(settingsProvider);
-        if (!isValid)
+        var appState = Services.GetRequiredService<AppState>();
+
+        var resolvedLocalServer = await EnsureLocalServerSelectionAsync(settingsProvider);
+        if (!string.IsNullOrWhiteSpace(resolvedLocalServer))
+            settingsProvider.UpdateLocalServer(resolvedLocalServer);
+
+        var tailscaleInstalled = IsTailscaleInstalled();
+        if (!tailscaleInstalled)
         {
-            Shutdown();
-            return;
+            appState.SetDatabaseImportEnabled(false);
+            MessageBox.Show(
+                "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.\nΕγκαταστήστε το Tailscale και επανεκκινήστε την εφαρμογή.",
+                "Tailscale",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+
+        var localAvailability = await CheckLocalDatabasesAvailabilityAsync(settingsProvider.Settings.Local.Server);
+        appState.UpdateLocalDatabaseAvailability(localAvailability.HasFilothei, localAvailability.HasNeaIonia);
+
+        var navigateToImportOnStartup = false;
+        if (!localAvailability.HasAny)
+        {
+            var choice = MessageBox.Show(
+                "Δεν βρέθηκε καμία τοπική βάση (Filothei/Nea Ionia).\nΘέλετε να μεταβείτε στις Ρυθμίσεις για εισαγωγή βάσης;",
+                "Τοπική βάση",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+            navigateToImportOnStartup = choice == MessageBoxResult.Yes;
         }
 
         // 3) Normal startup (UI)
@@ -125,6 +150,19 @@ public partial class App : Application
 
         var mainWindow = Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
+
+        if (navigateToImportOnStartup)
+            mainWindow.NavigateToDatabaseImportFromStartup();
+
+        if (await CheckSchemaCompatibilityAsync(appState))
+        {
+            MessageBox.Show(mainWindow,
+                "Η δομή της τοπικής βάσης είναι παλιά σε σχέση με την έκδοση της εφαρμογής.\nΠαρακαλώ εισάγετε ξανά τη βάση από το remote περιβάλλον.",
+                "Απαιτείται ενημέρωση βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            mainWindow.NavigateToDatabaseImportFromStartup();
+        }
 
         // Fire-and-forget startup check (silent if not user-initiated)
         _ = CheckForUpdatesInteractiveAsync(mainWindow, userInitiated: false);
@@ -141,15 +179,12 @@ public partial class App : Application
         }
     }
 
-    private static async Task<bool> EnsureLocalServerSelectionAsync(DatabaseAppSettingsProvider settingsProvider)
+    private static async Task<string> EnsureLocalServerSelectionAsync(DatabaseAppSettingsProvider settingsProvider)
     {
         var settings = settingsProvider.Settings;
-        var localDatabase = string.IsNullOrWhiteSpace(settings.Startup.LocalDatabase)
-            ? settings.Local.Database
-            : settings.Startup.LocalDatabase;
 
-        if (await CanConnectAsync(settings.Local.Server, localDatabase))
-            return true;
+        if (await CanConnectToServerAsync(settings.Local.Server))
+            return settings.Local.Server;
 
         var sqlExpressUnavailable = string.Equals(settings.Local.Server, DefaultLocalSqlServer, StringComparison.OrdinalIgnoreCase);
         var availableServers = DiscoverLocalSqlServers();
@@ -160,8 +195,8 @@ public partial class App : Application
                 $"Δεν ήταν δυνατή η σύνδεση με τον SQL Server '{settings.Local.Server}'.\nΕλέγξτε τη ρύθμιση και δοκιμάστε ξανά.",
                 "Σύνδεση Βάσης",
                 MessageBoxButton.OK,
-                MessageBoxImage.Error);
-            return false;
+                MessageBoxImage.Warning);
+            return settings.Local.Server;
         }
 
         if (availableServers.Count == 0)
@@ -171,34 +206,32 @@ public partial class App : Application
                 "Σύνδεση Βάσης",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
-            return false;
+            return settings.Local.Server;
         }
 
         var picker = Services.GetRequiredService<Windows.LocalSqlServerPickerWindow>();
         picker.Initialize(availableServers, settings.Local.Server);
         var result = picker.ShowDialog();
         if (result != true || string.IsNullOrWhiteSpace(picker.SelectedServer))
-            return false;
+            return settings.Local.Server;
 
-        settingsProvider.UpdateLocalServer(picker.SelectedServer);
-
-        if (await CanConnectAsync(picker.SelectedServer, localDatabase))
-            return true;
+        if (await CanConnectToServerAsync(picker.SelectedServer))
+            return picker.SelectedServer;
 
         MessageBox.Show(
-            $"Αποτυχία σύνδεσης με τον SQL Server '{picker.SelectedServer}'.\nΕλέγξτε ότι η βάση '{localDatabase}' υπάρχει και ο server είναι προσβάσιμος.",
+            $"Αποτυχία σύνδεσης με τον SQL Server '{picker.SelectedServer}'.\nΗ εφαρμογή θα συνεχίσει χωρίς local βάση.",
             "Σύνδεση Βάσης",
             MessageBoxButton.OK,
-            MessageBoxImage.Error);
+            MessageBoxImage.Warning);
 
-        return false;
+        return settings.Local.Server;
     }
 
-    private static async Task<bool> CanConnectAsync(string server, string database)
+    private static async Task<bool> CanConnectToServerAsync(string server)
     {
         try
         {
-            var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, database);
+            var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, "master");
             using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
             return true;
@@ -206,6 +239,93 @@ public partial class App : Application
         catch
         {
             return false;
+        }
+    }
+
+    private static bool IsTailscaleInstalled()
+    {
+        if (File.Exists(@"C:\Program Files\Tailscale\tailscale.exe") ||
+            File.Exists(@"C:\Program Files (x86)\Tailscale\tailscale.exe"))
+            return true;
+
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "tailscale",
+                Arguments = "version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(psi);
+            process?.WaitForExit(2000);
+            return process?.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static async Task<(bool HasFilothei, bool HasNeaIonia, bool HasAny)> CheckLocalDatabasesAvailabilityAsync(string server)
+    {
+        var hasFilothei = await LocalDatabaseExistsAsync(server, "FilotheiSchoolERP");
+        var hasNeaIonia = await LocalDatabaseExistsAsync(server, "NeaIoniaSchoolERP");
+        return (hasFilothei, hasNeaIonia, hasFilothei || hasNeaIonia);
+    }
+
+    private static async Task<bool> LocalDatabaseExistsAsync(string server, string databaseName)
+    {
+        try
+        {
+            var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, "master");
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            await using var command = new SqlCommand("SELECT COUNT(1) FROM sys.databases WHERE name = @db", connection);
+            command.Parameters.AddWithValue("@db", databaseName);
+            var count = Convert.ToInt32(await command.ExecuteScalarAsync() ?? 0);
+            return count > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static async Task<bool> CheckSchemaCompatibilityAsync(AppState appState)
+    {
+        if (!appState.HasAnyLocalDatabase)
+            return false;
+
+        var previousMode = appState.SelectedDatabaseMode;
+        var previousLocalDb = appState.SelectedLocalDatabaseName;
+        try
+        {
+            appState.SelectedDatabaseMode = DatabaseMode.Local;
+            if (!appState.AvailableLocalDatabases.Contains(appState.SelectedLocalDatabaseName))
+            {
+                var firstLocalDb = appState.AvailableLocalDatabases.FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(firstLocalDb))
+                    return false;
+                appState.SelectedLocalDatabaseName = firstLocalDb;
+            }
+
+            await using var db = Services.GetRequiredService<DbContextFactory>().Create();
+            var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+            return pendingMigrations.Any();
+        }
+        catch
+        {
+            return false;
+        }
+        finally
+        {
+            appState.SelectedLocalDatabaseName = previousLocalDb;
+            appState.SelectedDatabaseMode = previousMode;
         }
     }
 
