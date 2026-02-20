@@ -489,7 +489,7 @@ public partial class StudentsViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(mobile))
             parts.Add(mobile);
         if (!string.IsNullOrWhiteSpace(landline))
-            parts.Add($"Σταθερό: {landline}");
+            parts.Add(landline);
         if (!string.IsNullOrWhiteSpace(email))
             parts.Add(email);
 
