@@ -41,6 +41,8 @@ public partial class StudentsViewModel : ObservableObject
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
+    private CancellationTokenSource? _loadCts;
+    private CancellationTokenSource? _searchDebounceCts;
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
 
@@ -83,7 +85,7 @@ public partial class StudentsViewModel : ObservableObject
         _state = state;
         _dbFactory = dbFactory;
 
-        RefreshCommand = new AsyncRelayCommand(LoadAsync);
+        RefreshCommand = new AsyncRelayCommand(() => TriggerLoadAsync(false));
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
         OpenStudentCommand = new RelayCommand<Guid>(OpenStudent);
         QuickAddPaymentCommand = new RelayCommand<Guid>(OpenQuickPaymentDialog, CanOpenQuickPayment);
@@ -98,7 +100,7 @@ public partial class StudentsViewModel : ObservableObject
         _state.PropertyChanged += OnAppStateChanged;
 
         // Initial load
-        _ = LoadAsync();
+        _ = TriggerLoadAsync(false);
     }
 
     private void OnAppStateChanged(object? sender, PropertyChangedEventArgs e)
@@ -106,7 +108,7 @@ public partial class StudentsViewModel : ObservableObject
         if (e.PropertyName == nameof(AppState.SelectedAcademicYear) ||
             e.PropertyName == nameof(AppState.SelectedDatabaseName))
         {
-            _ = LoadAsync();
+            _ = TriggerLoadAsync(false);
         }
 
         if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
@@ -122,19 +124,21 @@ public partial class StudentsViewModel : ObservableObject
         {
             SearchSuggestions.Clear();
             IsSearchSuggestionsOpen = false;
+            _ = TriggerLoadAsync(false);
+            return;
         }
 
-        _ = LoadAsync();
+        _ = TriggerLoadAsync(true);
     }
 
     partial void OnSelectedStudentStatusFilterChanged(string value)
     {
-        _ = LoadAsync();
+        _ = TriggerLoadAsync(false);
     }
 
     partial void OnSelectedStudentSortOptionChanged(string value)
     {
-        _ = LoadAsync();
+        _ = TriggerLoadAsync(false);
     }
 
     partial void OnSelectedProgramFilterChanged(ProgramFilterItemVm? value)
@@ -145,7 +149,7 @@ public partial class StudentsViewModel : ObservableObject
         if (_suppressProgramFilterReload)
             return;
 
-        _ = LoadAsync();
+        _ = TriggerLoadAsync(false);
     }
 
     private bool CanCreateStudent() => !_state.IsReadOnlyMode;
@@ -194,7 +198,7 @@ public partial class StudentsViewModel : ObservableObject
 
         var result = win.ShowDialog();
         if (result == true)
-            await LoadAsync();
+            await TriggerLoadAsync(false);
     }
 
     private void OpenNewStudentDialog()
@@ -210,7 +214,7 @@ public partial class StudentsViewModel : ObservableObject
         var result = win.ShowDialog();
         if (result == true)
         {
-            _ = LoadAsync();
+            _ = TriggerLoadAsync(false);
         }
     }
     private void OpenStudent(Guid studentId)
@@ -243,12 +247,39 @@ public partial class StudentsViewModel : ObservableObject
         IsSearchSuggestionsOpen = false;
     }
 
-    private async Task LoadAsync()
+    private async Task TriggerLoadAsync(bool debounceSearch)
+    {
+        if (debounceSearch)
+        {
+            _searchDebounceCts?.Cancel();
+            _searchDebounceCts?.Dispose();
+            _searchDebounceCts = new CancellationTokenSource();
+
+            try
+            {
+                await Task.Delay(250, _searchDebounceCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+
+        _loadCts?.Cancel();
+        _loadCts?.Dispose();
+        _loadCts = new CancellationTokenSource();
+
+        await LoadAsync(_loadCts.Token);
+    }
+
+    private async Task LoadAsync(CancellationToken cancellationToken)
     {
         var generation = Interlocked.Increment(ref _loadGeneration);
 
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             using var db = _dbFactory.Create();
             System.Diagnostics.Debug.WriteLine("DB=" + db.Database.GetDbConnection().DataSource + " | " + db.Database.GetDbConnection().Database);
 
@@ -259,16 +290,16 @@ public partial class StudentsViewModel : ObservableObject
             // Selected academic period is optional; students should remain visible even if no period exists.
             var period = await db.AcademicPeriods
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Name == year);
+                .FirstOrDefaultAsync(p => p.Name == year, cancellationToken);
             var selectedPeriodId = period?.AcademicPeriodId;
 
             var availablePrograms = await db.Programs
                 .AsNoTracking()
                 .OrderBy(p => p.Name)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             SyncProgramFilters(availablePrograms);
-            await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation);
+            await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation, cancellationToken);
 
             var baseQuery = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
@@ -294,7 +325,9 @@ public partial class StudentsViewModel : ObservableObject
                     .ThenInclude(en => en.Payments)
                 .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
                 .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             var rows = new List<StudentRowVm>();
 
@@ -446,6 +479,10 @@ public partial class StudentsViewModel : ObservableObject
             foreach (var row in sortedRows)
                 Students.Add(row);
         }
+        catch (OperationCanceledException)
+        {
+            // Newer load request superseded this execution.
+        }
         catch (Exception ex)
         {
             // Ignore stale completion from older overlapping loads.
@@ -524,7 +561,7 @@ public partial class StudentsViewModel : ObservableObject
         return query;
     }
 
-    private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation)
+    private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(SearchText))
             return;
@@ -548,7 +585,7 @@ public partial class StudentsViewModel : ObservableObject
             .Select(s => (s.FirstName + " " + s.LastName).Trim())
             .Distinct()
             .Take(8)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (generation != Volatile.Read(ref _loadGeneration))
             return;
