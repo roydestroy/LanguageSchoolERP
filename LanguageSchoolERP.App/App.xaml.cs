@@ -130,6 +130,9 @@ public partial class App : Application
                 "Tailscale",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
+
+            Shutdown();
+            return;
         }
 
         var remoteConnectivity = tailscaleInstalled
@@ -145,6 +148,9 @@ public partial class App : Application
                 "Remote βάση μη διαθέσιμη",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
+
+            Shutdown();
+            return;
         }
 
         var localAvailability = await CheckLocalDatabasesAvailabilityAsync(settingsProvider.Settings.Local.Server);
