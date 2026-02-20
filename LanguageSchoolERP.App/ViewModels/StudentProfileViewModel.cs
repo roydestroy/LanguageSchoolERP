@@ -939,11 +939,11 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableLandline = _originalLandline;
             EditableEmail = _originalEmail;
             EditableFatherName = _originalFatherName;
-                EditableFatherMobile = _originalFatherMobile;
+            EditableFatherMobile = _originalFatherMobile;
             EditableFatherLandline = _originalFatherLandline;
             EditableFatherEmail = _originalFatherEmail;
             EditableMotherName = _originalMotherName;
-                EditableMotherMobile = _originalMotherMobile;
+            EditableMotherMobile = _originalMotherMobile;
             EditableMotherLandline = _originalMotherLandline;
             EditableMotherEmail = _originalMotherEmail;
             EditablePreferredPhoneSource = _originalPreferredPhoneSource;
@@ -1417,5 +1417,5 @@ public partial class StudentProfileViewModel : ObservableObject
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool DeleteFile(string lpFileName);
     }
-
+}
 
