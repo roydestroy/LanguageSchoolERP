@@ -54,4 +54,18 @@ public partial class StudentsView : UserControl
 
         StudentSearchTextBox.Focus();
     }
+
+    private void StudentSearchTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape)
+            return;
+
+        if (DataContext is StudentsViewModel vm)
+        {
+            vm.SearchText = string.Empty;
+            vm.IsSearchSuggestionsOpen = false;
+        }
+
+        e.Handled = true;
+    }
 }
