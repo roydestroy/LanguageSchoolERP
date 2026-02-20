@@ -5,7 +5,7 @@
 namespace LanguageSchoolERP.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPreferredLandlineSource : Migration
+    public partial class AddPrefContact : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
