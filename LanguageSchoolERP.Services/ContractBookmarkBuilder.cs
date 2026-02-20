@@ -177,6 +177,12 @@ public sealed class ContractBookmarkBuilder
         if (normalized.EndsWith("ης", StringComparison.OrdinalIgnoreCase))
             return normalized[..^2] + "η";
 
+        // Common feminine noun/adjective forms (e.g. ΓΛΩΣΣΑ -> ΓΛΩΣΣΑΣ, ΑΓΓΛΙΚΗ -> ΑΓΓΛΙΚΗΣ)
+        if (normalized.EndsWith("η", StringComparison.OrdinalIgnoreCase))
+            return normalized + "ς";
+        if (normalized.EndsWith("α", StringComparison.OrdinalIgnoreCase))
+            return normalized + "ς";
+
         return normalized;
     }
 

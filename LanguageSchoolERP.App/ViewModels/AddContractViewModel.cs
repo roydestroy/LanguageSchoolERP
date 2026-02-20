@@ -168,7 +168,10 @@ public partial class AddContractViewModel : ObservableObject
 
             var (_, studentSurname) = SplitName(student.FullName);
             var effectiveStudentName = EnsureSurname((StudentName ?? "").Trim(), studentSurname);
-            var effectiveGuardianName = EnsureSurname((GuardianName ?? "").Trim(), studentSurname);
+            var enteredGuardianName = EnsureSurname((GuardianName ?? "").Trim(), studentSurname);
+            var effectiveGuardianName = string.IsNullOrWhiteSpace(enteredGuardianName)
+                ? effectiveStudentName
+                : enteredGuardianName;
 
             var (firstName, lastName) = SplitName(effectiveStudentName);
             var contractId = Guid.NewGuid();
