@@ -529,7 +529,7 @@
 						<StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
 							<Button Content="Προσθήκη" Width="120" Command="{Binding AddPaymentCommand}"/>
 							<Button Content="Επεξεργασία" Width="100" Margin="8,0,8,0" Command="{Binding EditPaymentCommand}" Style="{StaticResource PaymentSecondarySelectionActionButtonStyle}"/>
-							<Button Content="Διαγραφή" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
+							<Button Content="Ακύρωση" Width="100" Command="{Binding DeletePaymentCommand}" Style="{StaticResource PaymentDangerSelectionActionButtonStyle}"/>
 						</StackPanel>
 					</DockPanel>
 

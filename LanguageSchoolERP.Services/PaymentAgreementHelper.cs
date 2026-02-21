@@ -7,6 +7,7 @@ namespace LanguageSchoolERP.Services;
 public static class PaymentAgreementHelper
 {
     public const string ExcludeFromAgreementMarker = "[ΕΚΤΟΣ_ΣΥΜΦΩΝΗΘΕΝΤΟΣ]";
+    public const string VoidedPaymentMarker = "[ΑΚΥΡΩΜΕΝΗ_ΠΛΗΡΩΜΗ]";
     private const string LegacyExcludeFromAgreementMarker = "[EXCLUDE_FROM_AGREEMENT]";
 
     public const string ExcludeFromAgreementDisplayText = "Εκτός συμφωνηθέντος ποσού";
@@ -48,6 +49,44 @@ public static class PaymentAgreementHelper
         return cleaned;
     }
 
+    public static bool IsVoidedPayment(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return false;
+
+        return notes.Contains(VoidedPaymentMarker, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static string AddVoidedPaymentMarker(string? notes)
+    {
+        var safeNotes = (notes ?? string.Empty).Trim();
+
+        if (IsVoidedPayment(safeNotes))
+            return safeNotes;
+
+        return string.IsNullOrWhiteSpace(safeNotes)
+            ? VoidedPaymentMarker
+            : $"{safeNotes} | {VoidedPaymentMarker}";
+    }
+
+    public static string RemoveVoidedPaymentMarker(string? notes)
+    {
+        var safeNotes = (notes ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(safeNotes))
+            return string.Empty;
+
+        var cleaned = safeNotes.Replace(VoidedPaymentMarker, string.Empty, StringComparison.OrdinalIgnoreCase);
+        cleaned = cleaned.Replace("||", "|");
+        cleaned = cleaned.Trim().Trim('|').Trim();
+        return cleaned;
+    }
+
+    public static string RemoveSystemMarkers(string? notes)
+    {
+        return RemoveVoidedPaymentMarker(RemoveExcludeMarker(notes));
+    }
+
 
     public static string BuildDisplayNotes(string? notes)
     {
@@ -68,6 +107,9 @@ public static class PaymentAgreementHelper
         decimal sum = 0m;
         foreach (var payment in payments)
         {
+            if (IsVoidedPayment(payment.Notes))
+                continue;
+
             if (IsExcludedFromAgreement(payment.Notes))
                 continue;
 
