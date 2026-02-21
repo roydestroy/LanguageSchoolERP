@@ -279,6 +279,9 @@
 								<TextBlock Text="Ημερομηνία γέννησης" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
 								<DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
 
+								<TextBlock Text="Σχολείο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+								<TextBox Text="{Binding EditableSchoolName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+
 								<DockPanel Margin="0,8,0,0" LastChildFill="False">
 									<TextBlock Text="Κινητό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
 									<Button Command="{Binding SelectStudentPhonePreferredCommand}">

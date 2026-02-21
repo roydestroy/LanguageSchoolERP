@@ -33,13 +33,8 @@ public partial class StudentContactsExportViewModel : ObservableObject
     [ObservableProperty] private bool includeMotherEmail;
     [ObservableProperty] private bool includeMotherMobile;
     [ObservableProperty] private bool includeMotherLandline;
-
-    [ObservableProperty] private bool includeFirstName;
-    [ObservableProperty] private bool includeLastName;
-    [ObservableProperty] private bool includeDateOfBirth;
-    [ObservableProperty] private bool includeNotes;
-    [ObservableProperty] private bool includeDiscontinuedStatus;
-    [ObservableProperty] private bool includeNonCollectableStatus;
+    [ObservableProperty] private bool includeStudentDateOfBirth;
+    [ObservableProperty] private bool includeSchoolName;
 
     public IAsyncRelayCommand RefreshCommand { get; }
     public IRelayCommand SelectAllCommand { get; }
@@ -94,12 +89,8 @@ public partial class StudentContactsExportViewModel : ObservableObject
                     StudentName = student.FullName,
                     ProgramName = enrollment?.Program?.Name ?? string.Empty,
                     LevelOrClass = enrollment?.LevelOrClass ?? string.Empty,
-                    FirstName = student.FirstName,
-                    LastName = student.LastName,
-                    DateOfBirthText = student.DateOfBirth?.ToString("dd/MM/yyyy") ?? string.Empty,
-                    Notes = student.Notes,
-                    DiscontinuedStatus = student.Discontinued ? "Ναι" : "Όχι",
-                    NonCollectableStatus = student.NonCollectable ? "Ναι" : "Όχι",
+                    StudentDateOfBirth = student.DateOfBirth?.ToString("dd/MM/yyyy") ?? string.Empty,
+                    SchoolName = student.SchoolName,
                     StudentEmail = student.Email,
                     StudentMobile = student.Mobile,
                     StudentLandline = student.Landline,
@@ -204,12 +195,14 @@ public partial class StudentContactsExportViewModel : ObservableObject
     {
         var headers = new List<string> { "Μαθητής", "Πρόγραμμα", "Τάξη/Επίπεδο" };
 
+        if (IncludeStudentDateOfBirth) headers.Add("Ημ/νία Γέννησης Μαθητή");
         if (IncludeStudentEmail) headers.Add("Email Μαθητή");
         if (IncludeStudentMobile) headers.Add("Κινητό Μαθητή");
         if (IncludeStudentLandline) headers.Add("Σταθερό Μαθητή");
+        if (IncludeSchoolName) headers.Add("Σχολείο");
 
-        if (IncludeFatherName) headers.Add("Όνομα Πατέρα");
-        if (IncludeMotherName) headers.Add("Όνομα Μητέρας");
+        if (IncludeFatherName) headers.Add("Ονοματεπώνυμο Πατέρα");
+        if (IncludeMotherName) headers.Add("Ονοματεπώνυμο Μητέρας");
 
         if (IncludeFatherEmail) headers.Add("Email Πατέρα");
         if (IncludeFatherMobile) headers.Add("Κινητό Πατέρα");
@@ -219,13 +212,6 @@ public partial class StudentContactsExportViewModel : ObservableObject
         if (IncludeMotherMobile) headers.Add("Κινητό Μητέρας");
         if (IncludeMotherLandline) headers.Add("Σταθερό Μητέρας");
 
-        if (IncludeFirstName) headers.Add("Όνομα");
-        if (IncludeLastName) headers.Add("Επώνυμο");
-        if (IncludeDateOfBirth) headers.Add("Ημ/νία Γέννησης");
-        if (IncludeNotes) headers.Add("Σημειώσεις");
-        if (IncludeDiscontinuedStatus) headers.Add("Με διακοπή");
-        if (IncludeNonCollectableStatus) headers.Add("Μη Εισπράξιμος");
-
         return headers;
     }
 
@@ -233,9 +219,11 @@ public partial class StudentContactsExportViewModel : ObservableObject
     {
         var values = new List<string> { s.StudentName, s.ProgramName, s.LevelOrClass };
 
+        if (IncludeStudentDateOfBirth) values.Add(s.StudentDateOfBirth);
         if (IncludeStudentEmail) values.Add(s.StudentEmail);
         if (IncludeStudentMobile) values.Add(s.StudentMobile);
         if (IncludeStudentLandline) values.Add(s.StudentLandline);
+        if (IncludeSchoolName) values.Add(s.SchoolName);
 
         if (IncludeFatherName) values.Add(s.FatherName);
         if (IncludeMotherName) values.Add(s.MotherName);
@@ -247,13 +235,6 @@ public partial class StudentContactsExportViewModel : ObservableObject
         if (IncludeMotherEmail) values.Add(s.MotherEmail);
         if (IncludeMotherMobile) values.Add(s.MotherMobile);
         if (IncludeMotherLandline) values.Add(s.MotherLandline);
-
-        if (IncludeFirstName) values.Add(s.FirstName);
-        if (IncludeLastName) values.Add(s.LastName);
-        if (IncludeDateOfBirth) values.Add(s.DateOfBirthText);
-        if (IncludeNotes) values.Add(s.Notes);
-        if (IncludeDiscontinuedStatus) values.Add(s.DiscontinuedStatus);
-        if (IncludeNonCollectableStatus) values.Add(s.NonCollectableStatus);
 
         return values;
     }
@@ -282,10 +263,6 @@ public partial class StudentContactsGridRowVm : ObservableObject
     [ObservableProperty] private string motherMobile = string.Empty;
     [ObservableProperty] private string motherLandline = string.Empty;
 
-    [ObservableProperty] private string firstName = string.Empty;
-    [ObservableProperty] private string lastName = string.Empty;
-    [ObservableProperty] private string dateOfBirthText = string.Empty;
-    [ObservableProperty] private string notes = string.Empty;
-    [ObservableProperty] private string discontinuedStatus = string.Empty;
-    [ObservableProperty] private string nonCollectableStatus = string.Empty;
+    [ObservableProperty] private string studentDateOfBirth = string.Empty;
+    [ObservableProperty] private string schoolName = string.Empty;
 }

@@ -76,35 +76,25 @@
                 <StackPanel>
                     <TextBlock Text="Πεδία εξαγωγής" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
                     <TextBlock Text="Στοιχεία μαθητή" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <CheckBox Content="Email" IsChecked="{Binding IncludeStudentEmail, Mode=TwoWay}"/>
+                    <CheckBox Content="Ημ/νία Γέννησης" IsChecked="{Binding IncludeStudentDateOfBirth, Mode=TwoWay}"/>
                     <CheckBox Content="Κινητό" IsChecked="{Binding IncludeStudentMobile, Mode=TwoWay}"/>
                     <CheckBox Content="Σταθερό" IsChecked="{Binding IncludeStudentLandline, Mode=TwoWay}"/>
+                    <CheckBox Content="Email" IsChecked="{Binding IncludeStudentEmail, Mode=TwoWay}"/>
+                    <CheckBox Content="Σχολείο" IsChecked="{Binding IncludeSchoolName, Mode=TwoWay}"/>
 
                     <Separator Margin="0,8,0,8"/>
-                    <TextBlock Text="Ονόματα γονέων" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <CheckBox Content="Όνομα Πατέρα" IsChecked="{Binding IncludeFatherName, Mode=TwoWay}"/>
-                    <CheckBox Content="Όνομα Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
+                    <TextBlock Text="Στοιχεία γονέων" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <CheckBox Content="Ονοματεπώνυμο Πατέρα" IsChecked="{Binding IncludeFatherName, Mode=TwoWay}"/>
+                    <CheckBox Content="Ονοματεπώνυμο Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
 
-                    <Separator Margin="0,8,0,8"/>
-                    <TextBlock Text="Στοιχεία πατέρα" FontWeight="SemiBold" Margin="0,0,0,4"/>
                     <CheckBox Content="Email Πατέρα" IsChecked="{Binding IncludeFatherEmail, Mode=TwoWay}"/>
                     <CheckBox Content="Κινητό Πατέρα" IsChecked="{Binding IncludeFatherMobile, Mode=TwoWay}"/>
                     <CheckBox Content="Σταθερό Πατέρα" IsChecked="{Binding IncludeFatherLandline, Mode=TwoWay}"/>
 
-                    <Separator Margin="0,8,0,8"/>
-                    <TextBlock Text="Στοιχεία μητέρας" FontWeight="SemiBold" Margin="0,0,0,4"/>
                     <CheckBox Content="Email Μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
                     <CheckBox Content="Κινητό Μητέρας" IsChecked="{Binding IncludeMotherMobile, Mode=TwoWay}"/>
                     <CheckBox Content="Σταθερό Μητέρας" IsChecked="{Binding IncludeMotherLandline, Mode=TwoWay}"/>
 
-                    <Separator Margin="0,8,0,8"/>
-                    <TextBlock Text="Λοιπά στοιχεία μαθητή (μη προεπιλεγμένα)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <CheckBox Content="Όνομα" IsChecked="{Binding IncludeFirstName, Mode=TwoWay}"/>
-                    <CheckBox Content="Επώνυμο" IsChecked="{Binding IncludeLastName, Mode=TwoWay}"/>
-                    <CheckBox Content="Ημ/νία Γέννησης" IsChecked="{Binding IncludeDateOfBirth, Mode=TwoWay}"/>
-                    <CheckBox Content="Σημειώσεις" IsChecked="{Binding IncludeNotes, Mode=TwoWay}"/>
-                    <CheckBox Content="Με διακοπή" IsChecked="{Binding IncludeDiscontinuedStatus, Mode=TwoWay}"/>
-                    <CheckBox Content="Μη Εισπράξιμος" IsChecked="{Binding IncludeNonCollectableStatus, Mode=TwoWay}"/>
                 </StackPanel>
             </Border>
         </Grid>
