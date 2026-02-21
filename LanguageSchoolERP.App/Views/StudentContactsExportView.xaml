@@ -31,7 +31,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="330"/>
             </Grid.ColumnDefinitions>
 
             <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White" Margin="0,0,12,0">
@@ -42,14 +42,23 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <DockPanel Margin="0,0,0,8">
+                    <DockPanel Margin="0,0,0,8" LastChildFill="False">
                         <TextBox Height="32"
-                                 Width="300"
+                                 Width="280"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="Αναζήτηση μαθητή, προγράμματος ή τάξης/επιπέδου"
                                  DockPanel.Dock="Left"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Επιλογή εμφανιζόμενων" Width="150" Margin="10,0,8,0" Command="{Binding SelectAllCommand}"/>
+
+                        <ComboBox Height="32"
+                                  Width="170"
+                                  Margin="10,0,0,0"
+                                  ItemsSource="{Binding AcademicYears}"
+                                  SelectedItem="{Binding SelectedAcademicYear, Mode=TwoWay}"
+                                  ToolTip="Επιλογή ακαδημαϊκού έτους"
+                                  DockPanel.Dock="Left"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,0,0">
+                            <Button Content="Επιλογή εμφανιζόμενων" Width="150" Margin="0,0,8,0" Command="{Binding SelectAllCommand}"/>
                             <Button Content="Καθαρισμός" Width="100" Command="{Binding ClearSelectionCommand}"/>
                         </StackPanel>
                     </DockPanel>
@@ -72,31 +81,59 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
-                <StackPanel>
-                    <TextBlock Text="Πεδία εξαγωγής" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                    <TextBlock Text="Στοιχεία μαθητή" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <CheckBox Content="Ημ/νία Γέννησης" IsChecked="{Binding IncludeStudentDateOfBirth, Mode=TwoWay}"/>
-                    <CheckBox Content="Κινητό" IsChecked="{Binding IncludeStudentMobile, Mode=TwoWay}"/>
-                    <CheckBox Content="Σταθερό" IsChecked="{Binding IncludeStudentLandline, Mode=TwoWay}"/>
-                    <CheckBox Content="Email" IsChecked="{Binding IncludeStudentEmail, Mode=TwoWay}"/>
-                    <CheckBox Content="Σχολείο" IsChecked="{Binding IncludeSchoolName, Mode=TwoWay}"/>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                    <Separator Margin="0,8,0,8"/>
-                    <TextBlock Text="Στοιχεία γονέων" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                    <CheckBox Content="Ονοματεπώνυμο Πατέρα" IsChecked="{Binding IncludeFatherName, Mode=TwoWay}"/>
-                    <CheckBox Content="Ονοματεπώνυμο Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
+                <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="Πεδία εξαγωγής" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
+                            <TextBlock Text="Στοιχεία μαθητή" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <CheckBox Content="Ημ/νία Γέννησης" IsChecked="{Binding IncludeStudentDateOfBirth, Mode=TwoWay}"/>
+                            <CheckBox Content="Κινητό" IsChecked="{Binding IncludeStudentMobile, Mode=TwoWay}"/>
+                            <CheckBox Content="Σταθερό" IsChecked="{Binding IncludeStudentLandline, Mode=TwoWay}"/>
+                            <CheckBox Content="Email" IsChecked="{Binding IncludeStudentEmail, Mode=TwoWay}"/>
+                            <CheckBox Content="Σχολείο" IsChecked="{Binding IncludeSchoolName, Mode=TwoWay}"/>
 
-                    <CheckBox Content="Email Πατέρα" IsChecked="{Binding IncludeFatherEmail, Mode=TwoWay}"/>
-                    <CheckBox Content="Κινητό Πατέρα" IsChecked="{Binding IncludeFatherMobile, Mode=TwoWay}"/>
-                    <CheckBox Content="Σταθερό Πατέρα" IsChecked="{Binding IncludeFatherLandline, Mode=TwoWay}"/>
+                            <Separator Margin="0,8,0,8"/>
+                            <TextBlock Text="Στοιχεία γονέων" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <CheckBox Content="Ονοματεπώνυμο Πατέρα" IsChecked="{Binding IncludeFatherName, Mode=TwoWay}"/>
+                            <CheckBox Content="Ονοματεπώνυμο Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
+                            <CheckBox Content="Email Πατέρα" IsChecked="{Binding IncludeFatherEmail, Mode=TwoWay}"/>
+                            <CheckBox Content="Κινητό Πατέρα" IsChecked="{Binding IncludeFatherMobile, Mode=TwoWay}"/>
+                            <CheckBox Content="Σταθερό Πατέρα" IsChecked="{Binding IncludeFatherLandline, Mode=TwoWay}"/>
+                            <CheckBox Content="Email Μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
+                            <CheckBox Content="Κινητό Μητέρας" IsChecked="{Binding IncludeMotherMobile, Mode=TwoWay}"/>
+                            <CheckBox Content="Σταθερό Μητέρας" IsChecked="{Binding IncludeMotherLandline, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
 
-                    <CheckBox Content="Email Μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
-                    <CheckBox Content="Κινητό Μητέρας" IsChecked="{Binding IncludeMotherMobile, Mode=TwoWay}"/>
-                    <CheckBox Content="Σταθερό Μητέρας" IsChecked="{Binding IncludeMotherLandline, Mode=TwoWay}"/>
-
-                </StackPanel>
-            </Border>
+                <Border Grid.Row="2" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Επιλεγμένοι μαθητές (όλα τα έτη)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <ListBox Grid.Row="1" ItemsSource="{Binding SelectedStudents}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding StudentName}"/>
+                                        <TextBlock Text=" - " Foreground="Gray"/>
+                                        <TextBlock Text="{Binding AcademicYear}" Foreground="Gray"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>

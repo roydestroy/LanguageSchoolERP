@@ -11,14 +11,17 @@ namespace LanguageSchoolERP.App.ViewModels;
 
 public partial class StudentContactsExportViewModel : ObservableObject
 {
-    private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private readonly StudentContactsExcelExportService _exportService;
     private readonly List<StudentContactsGridRowVm> _allRows = [];
+    private readonly Dictionary<Guid, StudentContactsGridRowVm> _selectedRowsById = [];
 
     public ObservableCollection<StudentContactsGridRowVm> Students { get; } = [];
+    public ObservableCollection<string> AcademicYears { get; } = [];
+    public ObservableCollection<SelectedStudentRowVm> SelectedStudents { get; } = [];
 
     [ObservableProperty] private string searchText = string.Empty;
+    [ObservableProperty] private string selectedAcademicYear = string.Empty;
     [ObservableProperty] private string errorMessage = string.Empty;
 
     [ObservableProperty] private bool includeStudentEmail = true;
@@ -43,9 +46,9 @@ public partial class StudentContactsExportViewModel : ObservableObject
 
     public StudentContactsExportViewModel(AppState state, DbContextFactory dbFactory, StudentContactsExcelExportService exportService)
     {
-        _state = state;
         _dbFactory = dbFactory;
         _exportService = exportService;
+        selectedAcademicYear = state.SelectedAcademicYear;
 
         RefreshCommand = new AsyncRelayCommand(LoadAsync);
         SelectAllCommand = new RelayCommand(SelectAll);
@@ -55,57 +58,21 @@ public partial class StudentContactsExportViewModel : ObservableObject
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
 
+    partial void OnSelectedAcademicYearChanged(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        _ = LoadStudentsForYearAsync();
+    }
+
     public async Task LoadAsync()
     {
         try
         {
             ErrorMessage = string.Empty;
-            await using var db = _dbFactory.Create();
-
-            var students = await db.Students
-                .AsNoTracking()
-                .Include(s => s.Enrollments)
-                    .ThenInclude(e => e.Program)
-                .Include(s => s.Enrollments)
-                    .ThenInclude(e => e.AcademicPeriod)
-                .ToListAsync();
-
-            _allRows.Clear();
-            foreach (var student in students)
-            {
-                var enrollment = student.Enrollments
-                    .Where(e => e.AcademicPeriod?.Name == _state.SelectedAcademicYear)
-                    .OrderByDescending(e => e.AcademicPeriod?.Name)
-                    .ThenByDescending(e => e.EnrollmentId)
-                    .FirstOrDefault()
-                    ?? student.Enrollments
-                        .OrderByDescending(e => e.AcademicPeriod?.Name)
-                        .ThenByDescending(e => e.EnrollmentId)
-                        .FirstOrDefault();
-
-                _allRows.Add(new StudentContactsGridRowVm
-                {
-                    StudentId = student.StudentId,
-                    StudentName = student.FullName,
-                    ProgramName = enrollment?.Program?.Name ?? string.Empty,
-                    LevelOrClass = enrollment?.LevelOrClass ?? string.Empty,
-                    StudentDateOfBirth = student.DateOfBirth?.ToString("dd/MM/yyyy") ?? string.Empty,
-                    SchoolName = student.SchoolName,
-                    StudentEmail = student.Email,
-                    StudentMobile = student.Mobile,
-                    StudentLandline = student.Landline,
-                    FatherName = student.FatherName,
-                    FatherEmail = student.FatherEmail,
-                    FatherMobile = student.FatherMobile,
-                    FatherLandline = student.FatherLandline,
-                    MotherName = student.MotherName,
-                    MotherEmail = student.MotherEmail,
-                    MotherMobile = student.MotherMobile,
-                    MotherLandline = student.MotherLandline
-                });
-            }
-
-            ApplyFilter();
+            await LoadAcademicYearsAsync();
+            await LoadStudentsForYearAsync();
         }
         catch (Exception ex)
         {
@@ -114,9 +81,90 @@ public partial class StudentContactsExportViewModel : ObservableObject
         }
     }
 
+    private async Task LoadAcademicYearsAsync()
+    {
+        await using var db = _dbFactory.Create();
+
+        var years = await db.AcademicPeriods
+            .AsNoTracking()
+            .OrderByDescending(p => p.Name)
+            .Select(p => p.Name)
+            .ToListAsync();
+
+        AcademicYears.Clear();
+        foreach (var year in years)
+            AcademicYears.Add(year);
+
+        if (AcademicYears.Count == 0)
+        {
+            SelectedAcademicYear = string.Empty;
+            return;
+        }
+
+        if (!AcademicYears.Contains(SelectedAcademicYear))
+            SelectedAcademicYear = AcademicYears[0];
+    }
+
+    private async Task LoadStudentsForYearAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedAcademicYear))
+        {
+            _allRows.Clear();
+            Students.Clear();
+            return;
+        }
+
+        await using var db = _dbFactory.Create();
+
+        var enrollmentsForYear = await db.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Program)
+            .Include(e => e.AcademicPeriod)
+            .Where(e => e.AcademicPeriod.Name == SelectedAcademicYear)
+            .OrderByDescending(e => e.EnrollmentId)
+            .ToListAsync();
+
+        _allRows.Clear();
+
+        foreach (var enrollment in enrollmentsForYear
+                     .GroupBy(e => e.StudentId)
+                     .Select(g => g.First())
+                     .OrderBy(x => x.Student.FullName))
+        {
+            var student = enrollment.Student;
+            var row = new StudentContactsGridRowVm
+            {
+                StudentId = student.StudentId,
+                StudentName = student.FullName,
+                ProgramName = enrollment.Program?.Name ?? string.Empty,
+                LevelOrClass = enrollment.LevelOrClass ?? string.Empty,
+                AcademicYear = SelectedAcademicYear,
+                StudentDateOfBirth = student.DateOfBirth?.ToString("dd/MM/yyyy") ?? string.Empty,
+                SchoolName = student.SchoolName,
+                StudentEmail = student.Email,
+                StudentMobile = student.Mobile,
+                StudentLandline = student.Landline,
+                FatherName = student.FatherName,
+                FatherEmail = student.FatherEmail,
+                FatherMobile = student.FatherMobile,
+                FatherLandline = student.FatherLandline,
+                MotherName = student.MotherName,
+                MotherEmail = student.MotherEmail,
+                MotherMobile = student.MotherMobile,
+                MotherLandline = student.MotherLandline,
+                SelectionChanged = OnRowSelectionChanged
+            };
+
+            row.IsSelected = _selectedRowsById.ContainsKey(row.StudentId);
+            _allRows.Add(row);
+        }
+
+        ApplyFilter();
+    }
+
     private void ApplyFilter()
     {
-        var selectedIds = _allRows.Where(x => x.IsSelected).Select(x => x.StudentId).ToHashSet();
         IEnumerable<StudentContactsGridRowVm> filtered = _allRows;
 
         if (!string.IsNullOrWhiteSpace(SearchText))
@@ -130,9 +178,34 @@ public partial class StudentContactsExportViewModel : ObservableObject
 
         Students.Clear();
         foreach (var student in filtered.OrderBy(s => s.StudentName))
-        {
-            student.IsSelected = selectedIds.Contains(student.StudentId);
             Students.Add(student);
+    }
+
+    private void OnRowSelectionChanged(StudentContactsGridRowVm row, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedRowsById[row.StudentId] = row.CloneForExport();
+        }
+        else
+        {
+            _selectedRowsById.Remove(row.StudentId);
+        }
+
+        RefreshSelectedStudents();
+    }
+
+    private void RefreshSelectedStudents()
+    {
+        SelectedStudents.Clear();
+        foreach (var row in _selectedRowsById.Values.OrderBy(x => x.StudentName))
+        {
+            SelectedStudents.Add(new SelectedStudentRowVm
+            {
+                StudentId = row.StudentId,
+                StudentName = row.StudentName,
+                AcademicYear = row.AcademicYear
+            });
         }
     }
 
@@ -150,7 +223,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
 
     private void ExportSelected()
     {
-        var selected = _allRows.Where(x => x.IsSelected).OrderBy(x => x.StudentName).ToList();
+        var selected = _selectedRowsById.Values.OrderBy(x => x.StudentName).ToList();
         if (selected.Count == 0)
         {
             MessageBox.Show("Επιλέξτε τουλάχιστον έναν μαθητή.", "Εξαγωγή", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -248,6 +321,7 @@ public partial class StudentContactsGridRowVm : ObservableObject
     [ObservableProperty] private string studentName = string.Empty;
     [ObservableProperty] private string programName = string.Empty;
     [ObservableProperty] private string levelOrClass = string.Empty;
+    [ObservableProperty] private string academicYear = string.Empty;
 
     [ObservableProperty] private string studentEmail = string.Empty;
     [ObservableProperty] private string studentMobile = string.Empty;
@@ -265,4 +339,43 @@ public partial class StudentContactsGridRowVm : ObservableObject
 
     [ObservableProperty] private string studentDateOfBirth = string.Empty;
     [ObservableProperty] private string schoolName = string.Empty;
+
+    public Action<StudentContactsGridRowVm, bool>? SelectionChanged { get; init; }
+
+    partial void OnIsSelectedChanged(bool value)
+    {
+        SelectionChanged?.Invoke(this, value);
+    }
+
+    public StudentContactsGridRowVm CloneForExport()
+    {
+        return new StudentContactsGridRowVm
+        {
+            StudentId = StudentId,
+            StudentName = StudentName,
+            ProgramName = ProgramName,
+            LevelOrClass = LevelOrClass,
+            AcademicYear = AcademicYear,
+            StudentDateOfBirth = StudentDateOfBirth,
+            SchoolName = SchoolName,
+            StudentEmail = StudentEmail,
+            StudentMobile = StudentMobile,
+            StudentLandline = StudentLandline,
+            FatherName = FatherName,
+            FatherEmail = FatherEmail,
+            FatherMobile = FatherMobile,
+            FatherLandline = FatherLandline,
+            MotherName = MotherName,
+            MotherEmail = MotherEmail,
+            MotherMobile = MotherMobile,
+            MotherLandline = MotherLandline
+        };
+    }
+}
+
+public sealed class SelectedStudentRowVm
+{
+    public Guid StudentId { get; init; }
+    public string StudentName { get; init; } = string.Empty;
+    public string AcademicYear { get; init; } = string.Empty;
 }
