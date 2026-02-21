@@ -23,10 +23,10 @@ internal static class WindowStatePersistence
 
         _isRegistered = true;
 
-        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.InitializedEvent, new RoutedEventHandler(OnWindowInitialized));
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent, new RoutedEventHandler(OnWindowLoaded));
     }
 
-    private static void OnWindowInitialized(object sender, RoutedEventArgs e)
+    private static void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         if (sender is not Window window || !ReferenceEquals(window, e.OriginalSource))
             return;
@@ -34,6 +34,7 @@ internal static class WindowStatePersistence
         if (!ShouldPersist(window))
             return;
 
+        window.Closing -= OnWindowClosing;
         window.Closing += OnWindowClosing;
         Restore(window);
     }
