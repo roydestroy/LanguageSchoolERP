@@ -44,6 +44,9 @@
                     <TextBlock Text="Ημερομηνία γέννησης (προαιρετικό)"/>
                     <DatePicker Margin="0,2,0,6" SelectedDate="{Binding DateOfBirth}"/>
 
+                    <TextBlock Text="Σχολείο"/>
+                    <TextBox Margin="0,2,0,6" Text="{Binding SchoolName, UpdateSourceTrigger=PropertyChanged}"/>
+
                     <TextBlock Text="Κινητό"/>
                     <TextBox Margin="0,2,0,6" Text="{Binding Mobile}"/>
 

@@ -46,6 +46,9 @@ public partial class App : Application
         services.AddTransient<DailyPaymentsViewModel>();
         services.AddTransient<DailyPaymentsView>();
 
+        services.AddTransient<StudentContactsExportViewModel>();
+        services.AddTransient<StudentContactsExportView>();
+
         services.AddTransient<NewStudentViewModel>();
         services.AddTransient<Windows.NewStudentWindow>();
 
@@ -73,6 +76,7 @@ public partial class App : Application
         services.AddSingleton<ContractDocumentService>();
         services.AddSingleton<ContractBookmarkBuilder>();
         services.AddSingleton<DailyPaymentsReportService>();
+        services.AddSingleton<StudentContactsExcelExportService>();
         services.AddTransient<IProgramService, ProgramService>();
         services.AddSingleton<IExcelImportRouter, FilenamePatternExcelImportRouter>();
         services.AddSingleton<IExcelWorkbookParser, ExcelInteropWorkbookParser>();

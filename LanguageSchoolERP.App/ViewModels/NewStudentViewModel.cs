@@ -29,6 +29,7 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private string studentName = "";
     [ObservableProperty] private string studentSurname = "";
     [ObservableProperty] private DateTime? dateOfBirth;
+    [ObservableProperty] private string schoolName = "";
     [ObservableProperty] private string mobile = "";
     [ObservableProperty] private string landline = "";
     [ObservableProperty] private string email = "";
@@ -230,6 +231,7 @@ public partial class NewStudentViewModel : ObservableObject
             {
                 FullName = fullName,
                 DateOfBirth = DateOfBirth,
+                SchoolName = SchoolName.Trim(),
                 Mobile = Mobile.Trim(),
                 Landline = Landline.Trim(),
                 Email = Email.Trim(),

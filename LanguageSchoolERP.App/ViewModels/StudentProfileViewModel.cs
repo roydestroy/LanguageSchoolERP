@@ -39,6 +39,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private string _originalStudentName = "";
     private string _originalStudentSurname = "";
     private DateTime? _originalDateOfBirth;
+    private string _originalSchoolName = "";
     private string _originalMobile = "";
     private string _originalLandline = "";
     private string _originalEmail = "";
@@ -74,6 +75,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string editableStudentName = "";
     [ObservableProperty] private string editableStudentSurname = "";
     [ObservableProperty] private DateTime? editableDateOfBirth;
+    [ObservableProperty] private string editableSchoolName = "";
     [ObservableProperty] private string editableMobile = "";
     [ObservableProperty] private string editableLandline = "";
     [ObservableProperty] private string editableEmail = "";
@@ -103,6 +105,7 @@ public partial class StudentProfileViewModel : ObservableObject
     public bool IsMotherEmailPreferred => EditablePreferredEmailSource == PreferredEmailSource.Mother;
 
     [ObservableProperty] private string dobLine = "";
+    [ObservableProperty] private string schoolLine = "";
     [ObservableProperty] private string mobileLine = "";
     [ObservableProperty] private string emailLine = "";
     [ObservableProperty] private string fatherLine = "";
@@ -285,6 +288,7 @@ public partial class StudentProfileViewModel : ObservableObject
         EditableStudentName = _originalStudentName;
         EditableStudentSurname = _originalStudentSurname;
         EditableDateOfBirth = _originalDateOfBirth;
+        EditableSchoolName = _originalSchoolName;
         EditableMobile = _originalMobile;
         EditableLandline = _originalLandline;
         EditableEmail = _originalEmail;
@@ -328,6 +332,7 @@ public partial class StudentProfileViewModel : ObservableObject
             student.FirstName = (EditableStudentName ?? string.Empty).Trim();
             student.LastName = (EditableStudentSurname ?? string.Empty).Trim();
             student.DateOfBirth = EditableDateOfBirth;
+            student.SchoolName = EditableSchoolName.Trim();
             student.Mobile = EditableMobile.Trim();
             student.Landline = EditableLandline.Trim();
             student.Email = EditableEmail.Trim();
@@ -999,6 +1004,7 @@ public partial class StudentProfileViewModel : ObservableObject
             _originalStudentName = student.FirstName ?? "";
             _originalStudentSurname = student.LastName ?? "";
             _originalDateOfBirth = student.DateOfBirth;
+            _originalSchoolName = student.SchoolName ?? "";
             _originalMobile = student.Mobile ?? "";
             _originalLandline = student.Landline ?? "";
             _originalEmail = student.Email ?? "";
@@ -1018,6 +1024,7 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableStudentName = _originalStudentName;
             EditableStudentSurname = _originalStudentSurname;
             EditableDateOfBirth = _originalDateOfBirth;
+            EditableSchoolName = _originalSchoolName;
             EditableMobile = _originalMobile;
             EditableLandline = _originalLandline;
             EditableEmail = _originalEmail;
