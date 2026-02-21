@@ -184,6 +184,12 @@ public partial class AddPaymentViewModel : ObservableObject
                 return;
             }
 
+            if (PaymentAgreementHelper.IsVoidedPayment(payment.Notes))
+            {
+                ErrorMessage = "Η πληρωμή έχει ακυρωθεί και δεν μπορεί να επεξεργαστεί.";
+                return;
+            }
+
             SelectedEnrollmentOption = EnrollmentOptions.FirstOrDefault(o => o.EnrollmentId == payment.EnrollmentId)
                                       ?? EnrollmentOptions.FirstOrDefault();
             AmountText = payment.Amount.ToString("0.##", CultureInfo.InvariantCulture);

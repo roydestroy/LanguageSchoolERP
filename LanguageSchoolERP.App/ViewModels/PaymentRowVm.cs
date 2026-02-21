@@ -6,6 +6,7 @@ public partial class PaymentRowVm : ObservableObject
 {
     public Guid? PaymentId { get; set; }
     public bool IsSyntheticEntry { get; set; }
+    public bool IsVoided { get; set; }
 
     [ObservableProperty] private string typeText = "";
     [ObservableProperty] private string dateText = "";

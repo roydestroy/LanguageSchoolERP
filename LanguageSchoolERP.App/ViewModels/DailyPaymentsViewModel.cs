@@ -52,6 +52,7 @@ public partial class DailyPaymentsViewModel : ObservableObject
             var payments = await db.Payments
                 .AsNoTracking()
                 .Where(p => p.PaymentDate >= dayStart && p.PaymentDate < dayEnd)
+                .Where(p => !EF.Functions.Like(p.Notes, "%" + PaymentAgreementHelper.VoidedPaymentMarker + "%"))
                 .Include(p => p.Enrollment)
                     .ThenInclude(e => e.Student)
                 .Include(p => p.Enrollment)

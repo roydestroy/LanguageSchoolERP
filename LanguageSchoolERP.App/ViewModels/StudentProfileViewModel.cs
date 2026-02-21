@@ -29,6 +29,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private readonly DbContextFactory _dbFactory;
     private readonly ExcelReceiptGenerator _excelReceiptGenerator;
     private readonly ContractDocumentService _contractDocumentService;
+    private readonly ReceiptNumberService _receiptNumberService;
 
     private Guid _studentId;
     private bool _isLoading;
@@ -148,12 +149,14 @@ public partial class StudentProfileViewModel : ObservableObject
         AppState state,
         DbContextFactory dbFactory,
         ExcelReceiptGenerator excelReceiptGenerator,
-        ContractDocumentService contractDocumentService)
+        ContractDocumentService contractDocumentService,
+        ReceiptNumberService receiptNumberService)
     {
         _state = state;
         _dbFactory = dbFactory;
         _excelReceiptGenerator = excelReceiptGenerator;
         _contractDocumentService = contractDocumentService;
+        _receiptNumberService = receiptNumberService;
 
         AddPaymentCommand = new RelayCommand(OpenAddPaymentDialog, CanWrite);
         EditPaymentCommand = new RelayCommand(OpenEditPaymentDialog, CanModifySelectedPayment);
@@ -190,7 +193,11 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private bool CanModifySelectedPayment()
     {
-        return CanWrite() && SelectedPayment is not null && !SelectedPayment.IsSyntheticEntry && SelectedPayment.PaymentId.HasValue;
+        return CanWrite()
+               && SelectedPayment is not null
+               && !SelectedPayment.IsSyntheticEntry
+               && !SelectedPayment.IsVoided
+               && SelectedPayment.PaymentId.HasValue;
     }
 
     private bool CanDeleteSelectedContract() => CanWrite() && SelectedContract is not null;
@@ -547,8 +554,8 @@ public partial class StudentProfileViewModel : ObservableObject
             return;
 
         var result = System.Windows.MessageBox.Show(
-            "Να διαγραφεί η επιλεγμένη πληρωμή;",
-            "Επιβεβαίωση διαγραφής πληρωμής",
+            "Να ακυρωθεί η επιλεγμένη πληρωμή; Θα εκδοθεί ακυρωτική απόδειξη.",
+            "Επιβεβαίωση ακύρωσης πληρωμής",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);
 
@@ -561,6 +568,13 @@ public partial class StudentProfileViewModel : ObservableObject
             DbSeeder.EnsureSeeded(db);
 
             var payment = await db.Payments
+                .Include(p => p.Enrollment)
+                    .ThenInclude(e => e.Student)
+                .Include(p => p.Enrollment)
+                    .ThenInclude(e => e.AcademicPeriod)
+                .Include(p => p.Enrollment)
+                    .ThenInclude(e => e.Program)
+                .Include(p => p.Receipts)
                 .FirstOrDefaultAsync(p => p.PaymentId == SelectedPayment!.PaymentId!.Value);
 
             if (payment is null)
@@ -569,16 +583,71 @@ public partial class StudentProfileViewModel : ObservableObject
                 return;
             }
 
-            var receipts = await db.Receipts.Where(r => r.PaymentId == payment.PaymentId).ToListAsync();
-            db.Receipts.RemoveRange(receipts);
-            db.Payments.Remove(payment);
-            await db.SaveChangesAsync();
+            if (PaymentAgreementHelper.IsVoidedPayment(payment.Notes))
+            {
+                System.Windows.MessageBox.Show("Η επιλεγμένη πληρωμή έχει ήδη ακυρωθεί.");
+                return;
+            }
 
+            var cancellationReason = $"Ακύρωση πληρωμής στις {DateTime.Now:dd/MM/yyyy HH:mm}";
+            foreach (var receipt in payment.Receipts)
+            {
+                receipt.Voided = true;
+                receipt.VoidReason = cancellationReason;
+            }
+
+            payment.Notes = PaymentAgreementHelper.AddVoidedPaymentMarker(payment.Notes);
+
+            var receiptNumber = await _receiptNumberService.GetNextReceiptNumberAsync(payment.EnrollmentId);
+            var issueDate = DateTime.Now;
+            var baseNotes = PaymentAgreementHelper.BuildDisplayNotes(PaymentAgreementHelper.RemoveSystemMarkers(payment.Notes));
+            var cancellationNotes = string.IsNullOrWhiteSpace(baseNotes)
+                ? "ΑΚΥΡΩΤΙΚΗ ΑΠΟΔΕΙΞΗ"
+                : $"ΑΚΥΡΩΤΙΚΗ ΑΠΟΔΕΙΞΗ | {baseNotes}";
+
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var receiptsRoot = Path.Combine(baseDir, "Receipts");
+            var studentFolder = ReceiptPathService.GetStudentFolder(
+                baseDir: receiptsRoot,
+                dbName: _state.SelectedDatabaseName,
+                academicYear: payment.Enrollment.AcademicPeriod.Name,
+                studentFullName: payment.Enrollment.Student.FullName
+            );
+
+            var pdfPath = ReceiptPathService.GetReceiptPdfPath(studentFolder, receiptNumber);
+            var templatePath = ReceiptTemplateResolver.GetTemplatePath(_state.SelectedDatabaseName);
+
+            var data = new ReceiptPrintData(
+                ReceiptNumber: receiptNumber,
+                IssueDate: issueDate,
+                StudentName: payment.Enrollment.Student.FullName,
+                StudentPhone: payment.Enrollment.Student.Mobile ?? "",
+                StudentEmail: payment.Enrollment.Student.Email ?? "",
+                Amount: payment.Amount,
+                PaymentMethod: payment.Method.ToGreekLabel(),
+                ProgramLabel: payment.Enrollment.Program?.Name ?? "—",
+                AcademicYear: payment.Enrollment.AcademicPeriod.Name,
+                Notes: cancellationNotes
+            );
+
+            _excelReceiptGenerator.GenerateReceiptPdf(templatePath, pdfPath, data);
+
+            db.Receipts.Add(new Receipt
+            {
+                PaymentId = payment.PaymentId,
+                ReceiptNumber = receiptNumber,
+                IssueDate = issueDate,
+                PdfPath = pdfPath,
+                Voided = false,
+                VoidReason = ""
+            });
+
+            await db.SaveChangesAsync();
             await LoadAsync();
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία διαγραφής πληρωμής");
+            System.Windows.MessageBox.Show(ex.ToString(), "Αποτυχία ακύρωσης πληρωμής");
         }
     }
     private void OpenCreateContractDialog()
@@ -1113,12 +1182,13 @@ public partial class StudentProfileViewModel : ObservableObject
                 {
                     PaymentId = row.Payment.PaymentId,
                     IsSyntheticEntry = false,
-                    TypeText = "Πληρωμή",
+                    TypeText = PaymentAgreementHelper.IsVoidedPayment(row.Payment.Notes) ? "Ακυρωμένη πληρωμή" : "Πληρωμή",
                     DateText = row.Payment.PaymentDate.ToString("dd/MM/yyyy"),
                     AmountText = FormatCurrency(row.Payment.Amount),
                     Method = row.Payment.Method.ToGreekLabel(),
                     ReasonText = ParseReason(row.Payment.Notes),
-                    Notes = ParseAdditionalNotes(row.Payment.Notes)
+                    Notes = ParseAdditionalNotes(row.Payment.Notes),
+                    IsVoided = PaymentAgreementHelper.IsVoidedPayment(row.Payment.Notes)
                 });
             }
             var receiptRows = enrollments
@@ -1132,11 +1202,11 @@ public partial class StudentProfileViewModel : ObservableObject
             {
                 Receipts.Add(new ReceiptRowVm
                 {
-                    NumberText = x.r.ReceiptNumber.ToString(),
+                    NumberText = x.r.Voided ? $"{x.r.ReceiptNumber} (VOID)" : x.r.ReceiptNumber.ToString(),
                     DateText = x.r.IssueDate.ToString("dd/MM/yyyy"),
                     AmountText = FormatCurrency(x.p.Amount),
                     MethodText = x.p.Method.ToGreekLabel(),
-                    ReasonText = ParseReason(x.p.Notes),
+                    ReasonText = x.r.Voided ? "ΑΚΥΡΩΘΗΚΕ" : ParseReason(x.p.Notes),
                     ProgramText = ProgramLabel(x.e),
                     HasPdf = !string.IsNullOrWhiteSpace(x.r.PdfPath),
                     PdfPath = x.r.PdfPath
@@ -1402,7 +1472,7 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string ParseReason(string? notes)
     {
-        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
+        var raw = PaymentAgreementHelper.RemoveSystemMarkers(notes);
         if (string.IsNullOrWhiteSpace(raw))
             return "—";
 
@@ -1412,12 +1482,19 @@ public partial class StudentProfileViewModel : ObservableObject
 
     private static string ParseAdditionalNotes(string? notes)
     {
-        var raw = PaymentAgreementHelper.RemoveExcludeMarker(notes);
+        var raw = PaymentAgreementHelper.RemoveSystemMarkers(notes);
         var parts = string.IsNullOrWhiteSpace(raw)
             ? Array.Empty<string>()
             : raw.Split('|', 2, StringSplitOptions.TrimEntries);
 
         var additionalNotes = parts.Length == 2 ? parts[1] : "";
+        if (PaymentAgreementHelper.IsVoidedPayment(notes))
+        {
+            additionalNotes = string.IsNullOrWhiteSpace(additionalNotes)
+                ? "Ακυρωμένη πληρωμή"
+                : $"{additionalNotes} | Ακυρωμένη πληρωμή";
+        }
+
         if (!PaymentAgreementHelper.IsExcludedFromAgreement(notes))
             return additionalNotes;
 
