@@ -113,6 +113,7 @@ public partial class MainWindow : Window
 
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         DailyPaymentsBtn.Click += (_, __) => NavigateToDailyPayments();
+        ContactsExportBtn.Click += (_, __) => NavigateToStudentContactsExport();
         ProgramsBtn.Click += (_, __) => NavigateToPrograms();
         AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
         StatisticsBtn.Click += (_, __) => NavigateToStatistics();
@@ -291,6 +292,7 @@ public partial class MainWindow : Window
     {
         StudentsBtn,
         DailyPaymentsBtn,
+        ContactsExportBtn,
         ProgramsBtn,
         AcademicYearsBtn,
         StatisticsBtn,
@@ -336,6 +338,15 @@ public partial class MainWindow : Window
         var view = App.Services.GetRequiredService<DailyPaymentsView>();
         MainContent.Content = view;
         SetActiveNavigationButton(DailyPaymentsBtn);
+    }
+
+
+    private void NavigateToStudentContactsExport()
+    {
+        ClearStudentsSearchIfNeeded();
+        var view = App.Services.GetRequiredService<StudentContactsExportView>();
+        MainContent.Content = view;
+        SetActiveNavigationButton(ContactsExportBtn);
     }
 
     private void NavigateToPrograms()

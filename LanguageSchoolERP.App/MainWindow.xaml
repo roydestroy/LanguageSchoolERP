@@ -86,6 +86,7 @@
             <WrapPanel Orientation="Horizontal" ItemHeight="34" VerticalAlignment="Center">
                 <Button x:Name="StudentsBtn" Content="Μαθητές" Height="34" MinWidth="130" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
                 <Button x:Name="DailyPaymentsBtn" Content="Πληρωμές Ημέρας" Height="34" MinWidth="150" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
+                <Button x:Name="ContactsExportBtn" Content="Εξαγωγή Επαφών" Height="34" MinWidth="150" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
                 <Button x:Name="ProgramsBtn" Content="Προγράμματα" Height="34" MinWidth="130" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}" Click="ProgramsBtn_Click"/>
                 <Button x:Name="AcademicYearsBtn" Content="Ακαδημαϊκά Έτη" Height="34" MinWidth="140" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
                 <Button x:Name="StatisticsBtn" Content="Στατιστικά" Height="34" MinWidth="130" Margin="0,0,8,0" Style="{StaticResource NavigationButtonStyle}"/>
