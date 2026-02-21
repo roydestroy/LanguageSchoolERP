@@ -3,6 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True">
+    <UserControl.Resources>
+        <Style x:Key="CenteredCheckBoxCellStyle" TargetType="CheckBox">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="CenteredHeaderStyle" TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -72,7 +81,10 @@
                               IsReadOnly="False"
                               SelectionMode="Extended">
                         <DataGrid.Columns>
-                            <DataGridCheckBoxColumn Header="Επιλογή" Binding="{Binding IsSelected, Mode=TwoWay}" Width="80"/>
+                            <DataGridCheckBoxColumn Header="Επιλογή" Binding="{Binding IsSelected, Mode=TwoWay}" Width="80"
+                                                    ElementStyle="{StaticResource CenteredCheckBoxCellStyle}"
+                                                    EditingElementStyle="{StaticResource CenteredCheckBoxCellStyle}"
+                                                    HeaderStyle="{StaticResource CenteredHeaderStyle}"/>
                             <DataGridTextColumn Header="Μαθητής" Binding="{Binding StudentName}" Width="*" IsReadOnly="True"/>
                             <DataGridTextColumn Header="Πρόγραμμα" Binding="{Binding ProgramName}" Width="190" IsReadOnly="True"/>
                             <DataGridTextColumn Header="Τάξη/Επίπεδο" Binding="{Binding LevelOrClass}" Width="150" IsReadOnly="True"/>
@@ -102,12 +114,15 @@
                             <CheckBox Content="Σχολείο" IsChecked="{Binding IncludeSchoolName, Mode=TwoWay}"/>
 
                             <Separator Margin="0,8,0,8"/>
-                            <TextBlock Text="Στοιχεία γονέων" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="Father's Data" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <CheckBox Content="Ονοματεπώνυμο Πατέρα" IsChecked="{Binding IncludeFatherName, Mode=TwoWay}"/>
-                            <CheckBox Content="Ονοματεπώνυμο Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
                             <CheckBox Content="Email Πατέρα" IsChecked="{Binding IncludeFatherEmail, Mode=TwoWay}"/>
                             <CheckBox Content="Κινητό Πατέρα" IsChecked="{Binding IncludeFatherMobile, Mode=TwoWay}"/>
                             <CheckBox Content="Σταθερό Πατέρα" IsChecked="{Binding IncludeFatherLandline, Mode=TwoWay}"/>
+
+                            <Separator Margin="0,8,0,8"/>
+                            <TextBlock Text="Mother's Data" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <CheckBox Content="Ονοματεπώνυμο Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
                             <CheckBox Content="Email Μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
                             <CheckBox Content="Κινητό Μητέρας" IsChecked="{Binding IncludeMotherMobile, Mode=TwoWay}"/>
                             <CheckBox Content="Σταθερό Μητέρας" IsChecked="{Binding IncludeMotherLandline, Mode=TwoWay}"/>
