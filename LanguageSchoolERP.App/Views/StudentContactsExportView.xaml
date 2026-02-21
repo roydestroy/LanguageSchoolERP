@@ -49,7 +49,7 @@
                                  ToolTip="Αναζήτηση μαθητή, προγράμματος ή τάξης/επιπέδου"
                                  DockPanel.Dock="Left"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="Επιλογή όλων" Width="110" Margin="10,0,8,0" Command="{Binding SelectAllCommand}"/>
+                            <Button Content="Επιλογή εμφανιζόμενων" Width="150" Margin="10,0,8,0" Command="{Binding SelectAllCommand}"/>
                             <Button Content="Καθαρισμός" Width="100" Command="{Binding ClearSelectionCommand}"/>
                         </StackPanel>
                     </DockPanel>
@@ -96,6 +96,15 @@
                     <CheckBox Content="Email Μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
                     <CheckBox Content="Κινητό Μητέρας" IsChecked="{Binding IncludeMotherMobile, Mode=TwoWay}"/>
                     <CheckBox Content="Σταθερό Μητέρας" IsChecked="{Binding IncludeMotherLandline, Mode=TwoWay}"/>
+
+                    <Separator Margin="0,8,0,8"/>
+                    <TextBlock Text="Λοιπά στοιχεία μαθητή (μη προεπιλεγμένα)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <CheckBox Content="Όνομα" IsChecked="{Binding IncludeFirstName, Mode=TwoWay}"/>
+                    <CheckBox Content="Επώνυμο" IsChecked="{Binding IncludeLastName, Mode=TwoWay}"/>
+                    <CheckBox Content="Ημ/νία Γέννησης" IsChecked="{Binding IncludeDateOfBirth, Mode=TwoWay}"/>
+                    <CheckBox Content="Σημειώσεις" IsChecked="{Binding IncludeNotes, Mode=TwoWay}"/>
+                    <CheckBox Content="Με διακοπή" IsChecked="{Binding IncludeDiscontinuedStatus, Mode=TwoWay}"/>
+                    <CheckBox Content="Μη Εισπράξιμος" IsChecked="{Binding IncludeNonCollectableStatus, Mode=TwoWay}"/>
                 </StackPanel>
             </Border>
         </Grid>
