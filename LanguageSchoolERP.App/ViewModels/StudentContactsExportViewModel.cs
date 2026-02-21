@@ -24,9 +24,9 @@ public partial class StudentContactsExportViewModel : ObservableObject
     [ObservableProperty] private string selectedAcademicYear = string.Empty;
     [ObservableProperty] private string errorMessage = string.Empty;
 
-    [ObservableProperty] private bool includeStudentEmail = true;
-    [ObservableProperty] private bool includeStudentMobile = true;
-    [ObservableProperty] private bool includeStudentLandline = true;
+    [ObservableProperty] private bool includeStudentEmail;
+    [ObservableProperty] private bool includeStudentMobile;
+    [ObservableProperty] private bool includeStudentLandline;
 
     [ObservableProperty] private bool includeFatherName;
     [ObservableProperty] private bool includeMotherName;

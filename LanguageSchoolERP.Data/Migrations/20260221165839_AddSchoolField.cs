@@ -5,7 +5,7 @@
 namespace LanguageSchoolERP.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStudentSchoolName : Migration
+    public partial class AddSchoolField : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -25,5 +25,6 @@ namespace LanguageSchoolERP.Data.Migrations
                 name: "SchoolName",
                 table: "Students");
         }
+
     }
 }

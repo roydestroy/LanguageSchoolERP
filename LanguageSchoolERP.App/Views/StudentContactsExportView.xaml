@@ -27,7 +27,7 @@
 
                 <StackPanel>
                     <TextBlock Text="Εξαγωγή Επαφών Μαθητών" FontSize="24" FontWeight="SemiBold"/>
-                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="Αναζήτηση και πολλαπλή επιλογή μαθητών για δημιουργία mailing list."/>
+                    <TextBlock Margin="0,4,0,0" Foreground="{StaticResource Brush.TextSecondary}" Text="Αναζήτηση και πολλαπλή επιλογή μαθητών για δημιουργία λίστας Excel."/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -67,7 +67,7 @@
                                   DockPanel.Dock="Left"/>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0,0,0">
-                            <Button Content="Επιλογή εμφανιζόμενων" Width="150" Margin="0,0,8,0" Command="{Binding SelectAllCommand}"/>
+                            <Button Content="Επιλογή εμφανιζόμενων" Width="170" Margin="0,0,8,0" Command="{Binding SelectAllCommand}"/>
                             <Button Content="Καθαρισμός" Width="100" Command="{Binding ClearSelectionCommand}"/>
                         </StackPanel>
                     </DockPanel>
@@ -106,7 +106,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="Πεδία εξαγωγής" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,8"/>
-                            <TextBlock Text="Στοιχεία μαθητή" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="Στοιχεία Μαθητή" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <CheckBox Content="Ημ/νία Γέννησης" IsChecked="{Binding IncludeStudentDateOfBirth, Mode=TwoWay}"/>
                             <CheckBox Content="Κινητό" IsChecked="{Binding IncludeStudentMobile, Mode=TwoWay}"/>
                             <CheckBox Content="Σταθερό" IsChecked="{Binding IncludeStudentLandline, Mode=TwoWay}"/>
@@ -114,14 +114,14 @@
                             <CheckBox Content="Σχολείο" IsChecked="{Binding IncludeSchoolName, Mode=TwoWay}"/>
 
                             <Separator Margin="0,8,0,8"/>
-                            <TextBlock Text="Father's Data" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="Στοιχεία Πατέρα" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <CheckBox Content="Ονοματεπώνυμο Πατέρα" IsChecked="{Binding IncludeFatherName, Mode=TwoWay}"/>
                             <CheckBox Content="Email Πατέρα" IsChecked="{Binding IncludeFatherEmail, Mode=TwoWay}"/>
                             <CheckBox Content="Κινητό Πατέρα" IsChecked="{Binding IncludeFatherMobile, Mode=TwoWay}"/>
                             <CheckBox Content="Σταθερό Πατέρα" IsChecked="{Binding IncludeFatherLandline, Mode=TwoWay}"/>
 
                             <Separator Margin="0,8,0,8"/>
-                            <TextBlock Text="Mother's Data" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="Στοιχεία Μητέρας" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <CheckBox Content="Ονοματεπώνυμο Μητέρας" IsChecked="{Binding IncludeMotherName, Mode=TwoWay}"/>
                             <CheckBox Content="Email Μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
                             <CheckBox Content="Κινητό Μητέρας" IsChecked="{Binding IncludeMotherMobile, Mode=TwoWay}"/>
@@ -136,7 +136,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="Επιλεγμένοι μαθητές (όλα τα έτη)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Επιλεγμένοι Μαθητές" FontWeight="SemiBold" Margin="0,0,0,8"/>
                         <ListBox Grid.Row="1" ItemsSource="{Binding SelectedStudents}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
