@@ -63,7 +63,9 @@
                         </StackPanel>
                     </DockPanel>
 
-                    <DataGrid Grid.Row="1"
+                    <DataGrid x:Name="StudentsGrid"
+                              Grid.Row="1"
+                              PreviewMouseLeftButtonUp="StudentsGrid_PreviewMouseLeftButtonUp"
                               ItemsSource="{Binding Students}"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
