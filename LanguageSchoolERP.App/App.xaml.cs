@@ -25,6 +25,8 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        WindowStatePersistence.Register();
+
         // 1) Build DI first (same container for both modes)
         var services = new ServiceCollection();
 
