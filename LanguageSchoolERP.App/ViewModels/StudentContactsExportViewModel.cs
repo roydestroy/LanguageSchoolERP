@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Mail;
 using System.Runtime.InteropServices;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.App.Windows;
@@ -309,10 +310,13 @@ public partial class StudentContactsExportViewModel : ObservableObject
             return;
         }
 
-        if (!TryOpenMailClient(mailtoUri, recipientType, emails, out var launchError))
+        if (!TryOpenMailClient(mailtoUri, recipientType, emails, out var launchError, out var diagnostics))
         {
-            MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {launchError}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {launchError}\n\nΔιαγνωστικά:\n{diagnostics}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
         }
+
+        MessageBox.Show($"Η κλήση προς την εφαρμογή email στάλθηκε.\n\nΔιαγνωστικά:\n{diagnostics}", "Mailing list diagnostics", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private static IEnumerable<string> GetSelectedEmails(StudentContactsGridRowVm row, EmailComposeOptionsWindow optionsWindow)
@@ -344,16 +348,39 @@ public partial class StudentContactsExportViewModel : ObservableObject
     }
 
 
-    private static bool TryOpenMailClient(string mailtoUri, EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string error)
+    private static bool TryOpenMailClient(string mailtoUri, EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string error, out string diagnostics)
     {
-        if (TryOpenMailto(mailtoUri, out error))
-            return true;
+        var log = new StringBuilder();
+        log.AppendLine($"mailto: {mailtoUri}");
+        log.AppendLine($"recipientType: {recipientType}");
+        log.AppendLine($"emails: {emails.Count}");
 
-        if (TryOpenEmailDraftFile(recipientType, emails, out var draftPath, out error))
+        if (TryOpenMailto(mailtoUri, out error, out var mailtoDiagnostics))
+        {
+            log.AppendLine(mailtoDiagnostics);
+            diagnostics = log.ToString();
             return true;
+        }
 
-        if (TryPromptOpenWith(draftPath, out var openWithError))
+        log.AppendLine(mailtoDiagnostics);
+
+        if (TryOpenEmailDraftFile(recipientType, emails, out var draftPath, out error, out var draftDiagnostics))
+        {
+            log.AppendLine(draftDiagnostics);
+            diagnostics = log.ToString();
             return true;
+        }
+
+        log.AppendLine(draftDiagnostics);
+
+        if (TryPromptOpenWith(draftPath, out var openWithError, out var openWithDiagnostics))
+        {
+            log.AppendLine(openWithDiagnostics);
+            diagnostics = log.ToString();
+            return true;
+        }
+
+        log.AppendLine(openWithDiagnostics);
 
         if (!string.IsNullOrWhiteSpace(openWithError))
         {
@@ -362,12 +389,14 @@ public partial class StudentContactsExportViewModel : ObservableObject
                 : $"{error} {openWithError}";
         }
 
+        diagnostics = log.ToString();
         return false;
     }
 
-    private static bool TryOpenMailto(string mailtoUri, out string error)
+    private static bool TryOpenMailto(string mailtoUri, out string error, out string diagnostics)
     {
         error = string.Empty;
+        diagnostics = "TryOpenMailto: start";
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -380,11 +409,17 @@ public partial class StudentContactsExportViewModel : ObservableObject
                 });
 
                 if (process is not null)
+                {
+                    diagnostics = "TryOpenMailto: non-windows Process.Start returned process.";
                     return true;
+                }
+
+                diagnostics = "TryOpenMailto: non-windows Process.Start returned null.";
             }
             catch (Exception ex)
             {
                 error = ex.Message;
+                diagnostics = $"TryOpenMailto: non-windows exception: {ex.Message}";
             }
 
             if (string.IsNullOrWhiteSpace(error))
@@ -394,17 +429,20 @@ public partial class StudentContactsExportViewModel : ObservableObject
         }
 
         var result = ShellExecute(IntPtr.Zero, "open", mailtoUri, null, null, 1);
-        if (result.ToInt64() > 32)
+        var code = result.ToInt64();
+        diagnostics = $"TryOpenMailto: ShellExecute result code={code}";
+        if (code > 32)
             return true;
 
-        error = "Δεν ήταν δυνατή η εκκίνηση mail app μέσω mailto.";
+        error = $"Δεν ήταν δυνατή η εκκίνηση mail app μέσω mailto (ShellExecute code: {code}).";
         return false;
     }
 
-    private static bool TryOpenEmailDraftFile(EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string draftPath, out string error)
+    private static bool TryOpenEmailDraftFile(EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string draftPath, out string error, out string diagnostics)
     {
         error = string.Empty;
         draftPath = string.Empty;
+        diagnostics = "TryOpenEmailDraftFile: start";
 
         try
         {
@@ -431,6 +469,8 @@ public partial class StudentContactsExportViewModel : ObservableObject
                 UseShellExecute = true
             });
 
+            diagnostics = $"TryOpenEmailDraftFile: path={draftPath}; process-null={process is null}";
+
             if (process is not null)
                 return true;
 
@@ -440,16 +480,21 @@ public partial class StudentContactsExportViewModel : ObservableObject
         catch (Exception ex)
         {
             error = ex.Message;
+            diagnostics = $"TryOpenEmailDraftFile: exception: {ex.Message}";
             return false;
         }
     }
 
-    private static bool TryPromptOpenWith(string draftPath, out string error)
+    private static bool TryPromptOpenWith(string draftPath, out string error, out string diagnostics)
     {
         error = string.Empty;
+        diagnostics = "TryPromptOpenWith: start";
 
         if (string.IsNullOrWhiteSpace(draftPath) || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            diagnostics = "TryPromptOpenWith: skipped (empty path or non-windows).";
             return false;
+        }
 
         try
         {
@@ -460,12 +505,15 @@ public partial class StudentContactsExportViewModel : ObservableObject
                 UseShellExecute = true
             });
 
+            diagnostics = $"TryPromptOpenWith: process-null={process is null}; path={draftPath}";
+
             if (process is not null)
                 return true;
         }
         catch (Exception ex)
         {
             error = ex.Message;
+            diagnostics = $"TryPromptOpenWith: exception: {ex.Message}";
         }
 
         if (string.IsNullOrWhiteSpace(error))
