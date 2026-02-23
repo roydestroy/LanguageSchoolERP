@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net.Mail;
-using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.App.Windows;
@@ -303,7 +302,11 @@ public partial class StudentContactsExportViewModel : ObservableObject
         try
         {
             var mailtoUri = BuildMailtoUri(emails, recipientType);
-            Process.Start(new ProcessStartInfo { FileName = mailtoUri, UseShellExecute = true });
+            var process = Process.Start(new ProcessStartInfo { FileName = mailtoUri, UseShellExecute = true });
+            if (process is null)
+            {
+                throw new InvalidOperationException("Δεν βρέθηκε προεπιλεγμένη εφαρμογή email στο σύστημα.");
+            }
         }
         catch (Exception ex)
         {
@@ -341,27 +344,18 @@ public partial class StudentContactsExportViewModel : ObservableObject
 
     private static string BuildMailtoUri(IReadOnlyCollection<string> emails, EmailRecipientType recipientType)
     {
-        var recipients = string.Join(';', emails);
-        var encodedRecipients = Uri.EscapeDataString(recipients);
+        var recipients = emails
+            .Select(email => Uri.EscapeDataString(email))
+            .ToList();
 
-        var builder = new StringBuilder("mailto:");
-        switch (recipientType)
+        var joinedRecipients = string.Join(",", recipients);
+        return recipientType switch
         {
-            case EmailRecipientType.To:
-                builder.Append(encodedRecipients);
-                break;
-            case EmailRecipientType.Cc:
-                builder.Append("?cc=").Append(encodedRecipients);
-                break;
-            case EmailRecipientType.Bcc:
-                builder.Append("?bcc=").Append(encodedRecipients);
-                break;
-            default:
-                builder.Append(encodedRecipients);
-                break;
-        }
-
-        return builder.ToString();
+            EmailRecipientType.To => $"mailto:{joinedRecipients}",
+            EmailRecipientType.Cc => $"mailto:?cc={joinedRecipients}",
+            EmailRecipientType.Bcc => $"mailto:?bcc={joinedRecipients}",
+            _ => $"mailto:{joinedRecipients}"
+        };
     }
 
     private List<string> BuildHeaders()
