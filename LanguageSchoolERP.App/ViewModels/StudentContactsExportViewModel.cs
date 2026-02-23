@@ -316,7 +316,6 @@ public partial class StudentContactsExportViewModel : ObservableObject
             return;
         }
 
-        MessageBox.Show($"Η κλήση προς την εφαρμογή email στάλθηκε.\n\nΔιαγνωστικά:\n{diagnostics}", "Mailing list diagnostics", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private static IEnumerable<string> GetSelectedEmails(StudentContactsGridRowVm row, EmailComposeOptionsWindow optionsWindow)
@@ -355,15 +354,6 @@ public partial class StudentContactsExportViewModel : ObservableObject
         log.AppendLine($"recipientType: {recipientType}");
         log.AppendLine($"emails: {emails.Count}");
 
-        if (TryOpenMailto(mailtoUri, out error, out var mailtoDiagnostics))
-        {
-            log.AppendLine(mailtoDiagnostics);
-            diagnostics = log.ToString();
-            return true;
-        }
-
-        log.AppendLine(mailtoDiagnostics);
-
         if (TryOpenEmailDraftFile(recipientType, emails, out var draftPath, out error, out var draftDiagnostics))
         {
             log.AppendLine(draftDiagnostics);
@@ -382,12 +372,18 @@ public partial class StudentContactsExportViewModel : ObservableObject
 
         log.AppendLine(openWithDiagnostics);
 
-        if (!string.IsNullOrWhiteSpace(openWithError))
+        if (TryOpenMailto(mailtoUri, out var mailtoError, out var mailtoDiagnostics))
         {
-            error = string.IsNullOrWhiteSpace(error)
-                ? openWithError
-                : $"{error} {openWithError}";
+            log.AppendLine(mailtoDiagnostics);
+            diagnostics = log.ToString();
+            return true;
         }
+
+        log.AppendLine(mailtoDiagnostics);
+
+        error = string.Join(" ", new[] { error, openWithError, mailtoError }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        if (string.IsNullOrWhiteSpace(error))
+            error = "Δεν ήταν δυνατή η εκκίνηση εφαρμογής email.";
 
         diagnostics = log.ToString();
         return false;
