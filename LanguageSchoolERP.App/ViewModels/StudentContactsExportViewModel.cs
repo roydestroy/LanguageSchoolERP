@@ -1,7 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Mail;
+using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LanguageSchoolERP.App.Windows;
 using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
@@ -43,6 +47,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
     public IRelayCommand SelectAllCommand { get; }
     public IRelayCommand ClearSelectionCommand { get; }
     public IRelayCommand ExportCommand { get; }
+    public IRelayCommand CreateMailingListCommand { get; }
 
     public StudentContactsExportViewModel(AppState state, DbContextFactory dbFactory, StudentContactsExcelExportService exportService)
     {
@@ -54,6 +59,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
         SelectAllCommand = new RelayCommand(SelectAll);
         ClearSelectionCommand = new RelayCommand(ClearSelection);
         ExportCommand = new RelayCommand(ExportSelected);
+        CreateMailingListCommand = new RelayCommand(CreateMailingList);
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
@@ -130,13 +136,14 @@ public partial class StudentContactsExportViewModel : ObservableObject
         foreach (var enrollment in enrollmentsForYear
                      .GroupBy(e => e.StudentId)
                      .Select(g => g.First())
-                     .OrderBy(x => x.Student.FullName))
+                     .OrderBy(x => x.Student.LastName)
+                     .ThenBy(x => x.Student.FirstName))
         {
             var student = enrollment.Student;
             var row = new StudentContactsGridRowVm
             {
                 StudentId = student.StudentId,
-                StudentName = student.FullName,
+                StudentName = FormatStudentDisplayName(student),
                 ProgramName = enrollment.Program?.Name ?? string.Empty,
                 LevelOrClass = enrollment.LevelOrClass ?? string.Empty,
                 AcademicYear = SelectedAcademicYear,
@@ -161,6 +168,20 @@ public partial class StudentContactsExportViewModel : ObservableObject
         }
 
         ApplyFilter();
+    }
+
+    private static string FormatStudentDisplayName(LanguageSchoolERP.Core.Models.Student student)
+    {
+        var lastName = student.LastName?.Trim() ?? string.Empty;
+        var firstName = student.FirstName?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(lastName))
+            return firstName;
+
+        if (string.IsNullOrWhiteSpace(firstName))
+            return lastName;
+
+        return $"{lastName} {firstName}";
     }
 
     private void ApplyFilter()
@@ -262,6 +283,225 @@ public partial class StudentContactsExportViewModel : ObservableObject
         {
             MessageBox.Show($"Αποτυχία εξαγωγής: {ex.Message}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void CreateMailingList()
+    {
+        var selected = _selectedRowsById.Values.OrderBy(x => x.StudentName).ToList();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show("Επιλέξτε τουλάχιστον έναν μαθητή.", "Mailing list", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var optionsWindow = new EmailComposeOptionsWindow
+        {
+            Owner = Application.Current?.MainWindow
+        };
+
+        if (optionsWindow.ShowDialog() != true)
+            return;
+
+        var emails = selected
+            .SelectMany(row => GetSelectedEmails(row, optionsWindow))
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Select(email => email.Trim())
+            .Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        if (emails.Count == 0)
+        {
+            MessageBox.Show("Δεν βρέθηκαν έγκυρες διευθύνσεις email για τις επιλογές σας.", "Mailing list", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var mailtoUri = BuildMailtoUri(emails, optionsWindow.SelectedRecipientType);
+        if (mailtoUri.Length > 1800)
+        {
+            MessageBox.Show("Η mailing list είναι πολύ μεγάλη για άνοιγμα σε ένα email. Μειώστε τις επιλογές ή κάντε πολλαπλές αποστολές.", "Mailing list", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (TryOpenMailClient(mailtoUri, optionsWindow.SelectedRecipientType, emails, out var error))
+            return;
+
+        MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {error}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
+
+    private static IEnumerable<string> GetSelectedEmails(StudentContactsGridRowVm row, EmailComposeOptionsWindow optionsWindow)
+    {
+        if (optionsWindow.IncludeStudentEmail && IsValidEmail(row.StudentEmail))
+            yield return row.StudentEmail;
+
+        if (optionsWindow.IncludeFatherEmail && IsValidEmail(row.FatherEmail))
+            yield return row.FatherEmail;
+
+        if (optionsWindow.IncludeMotherEmail && IsValidEmail(row.MotherEmail))
+            yield return row.MotherEmail;
+    }
+
+    private static bool IsValidEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        try
+        {
+            _ = new MailAddress(email);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryOpenMailClient(string mailtoUri, EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string error)
+    {
+        if (TryOpenEmailDraftFile(recipientType, emails, out var draftPath, out error))
+            return true;
+
+        if (TryPromptOpenWith(draftPath, out error))
+            return true;
+
+        if (TryOpenMailto(mailtoUri, out error))
+            return true;
+
+        if (string.IsNullOrWhiteSpace(error))
+            error = "Δεν ήταν δυνατή η εκκίνηση εφαρμογής email.";
+
+        return false;
+    }
+
+    private static bool TryOpenMailto(string mailtoUri, out string error)
+    {
+        error = string.Empty;
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            try
+            {
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = mailtoUri,
+                    UseShellExecute = true
+                });
+
+                if (process is not null)
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+
+            if (string.IsNullOrWhiteSpace(error))
+                error = "Δεν ήταν δυνατή η εκκίνηση της προεπιλεγμένης εφαρμογής email.";
+
+            return false;
+        }
+
+        var result = ShellExecute(IntPtr.Zero, "open", mailtoUri, null, null, 1);
+        var code = result.ToInt64();
+
+        if (code > 32)
+            return true;
+
+        error = $"Δεν ήταν δυνατή η εκκίνηση mail app μέσω mailto (ShellExecute code: {code}).";
+        return false;
+    }
+
+    private static bool TryOpenEmailDraftFile(EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string draftPath, out string error)
+    {
+        error = string.Empty;
+        draftPath = string.Empty;
+
+        try
+        {
+            draftPath = Path.Combine(Path.GetTempPath(), $"LanguageSchoolERP_MailingList_{DateTime.Now:yyyyMMdd_HHmmss}.eml");
+            var headerName = recipientType switch
+            {
+                EmailRecipientType.To => "To",
+                EmailRecipientType.Cc => "Cc",
+                EmailRecipientType.Bcc => "Bcc",
+                _ => "To"
+            };
+
+            var draftContent = $"{headerName}: {string.Join("; ", emails)}\r\n" +
+                               "Subject: \r\n" +
+                               "MIME-Version: 1.0\r\n" +
+                               "Content-Type: text/plain; charset=utf-8\r\n" +
+                               "\r\n";
+
+            File.WriteAllText(draftPath, draftContent);
+
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = draftPath,
+                UseShellExecute = true
+            });
+
+            if (process is not null)
+                return true;
+
+            error = "Δεν βρέθηκε εφαρμογή για άνοιγμα αρχείου email (.eml).";
+            return false;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    private static bool TryPromptOpenWith(string draftPath, out string error)
+    {
+        error = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(draftPath) || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return false;
+
+        try
+        {
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "rundll32.exe",
+                Arguments = $"shell32.dll,OpenAs_RunDLL \"{draftPath}\"",
+                UseShellExecute = true
+            });
+
+            if (process is not null)
+                return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+
+        if (string.IsNullOrWhiteSpace(error))
+            error = "Δεν ήταν δυνατή η εμφάνιση επιλογής εφαρμογής για το αρχείο email.";
+
+        return false;
+    }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string? lpParameters, string? lpDirectory, int nShowCmd);
+
+    private static string BuildMailtoUri(IReadOnlyCollection<string> emails, EmailRecipientType recipientType)
+    {
+        var recipients = emails
+            .Select(Uri.EscapeDataString)
+            .ToList();
+
+        var joinedRecipients = string.Join(",", recipients);
+
+        return recipientType switch
+        {
+            EmailRecipientType.To => $"mailto:{joinedRecipients}",
+            EmailRecipientType.Cc => $"mailto:?cc={joinedRecipients}",
+            EmailRecipientType.Bcc => $"mailto:?bcc={joinedRecipients}",
+            _ => $"mailto:{joinedRecipients}"
+        };
     }
 
     private List<string> BuildHeaders()

@@ -1,0 +1,41 @@
+<Window x:Class="LanguageSchoolERP.App.Windows.EmailComposeOptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Δημιουργία mailing list"
+        Height="320"
+        Width="430"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Νέο email προς επιλεγμένες επαφές"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="1" Text="Προσθήκη παραληπτών στο πεδίο:"/>
+        <ComboBox Grid.Row="2"
+                  Margin="0,4,0,0"
+                  ItemsSource="{Binding RecipientTypes}"
+                  SelectedItem="{Binding SelectedRecipientType, Mode=TwoWay}"/>
+
+        <StackPanel Grid.Row="3" Margin="0,12,0,0">
+            <TextBlock Text="Επιλέξτε μόνο τις διευθύνσεις email που θα χρησιμοποιηθούν:" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <CheckBox Content="Email μαθητή" IsChecked="{Binding IncludeStudentEmail, Mode=TwoWay}"/>
+            <CheckBox Content="Email πατέρα" IsChecked="{Binding IncludeFatherEmail, Mode=TwoWay}"/>
+            <CheckBox Content="Email μητέρας" IsChecked="{Binding IncludeMotherEmail, Mode=TwoWay}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
+            <Button Content="Δημιουργία" Width="110" IsDefault="True" Click="CreateButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
