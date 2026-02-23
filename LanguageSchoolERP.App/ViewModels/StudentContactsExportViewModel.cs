@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Mail;
 using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -308,7 +309,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
             return;
         }
 
-        if (!TryOpenMailClient(mailtoUri, out var launchError))
+        if (!TryOpenMailClient(mailtoUri, recipientType, emails, out var launchError))
         {
             MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {launchError}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -343,56 +344,96 @@ public partial class StudentContactsExportViewModel : ObservableObject
     }
 
 
-    private static bool TryOpenMailClient(string mailtoUri, out string error)
+    private static bool TryOpenMailClient(string mailtoUri, EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string error)
+    {
+        if (TryOpenMailto(mailtoUri, out error))
+            return true;
+
+        return TryOpenEmailDraftFile(recipientType, emails, out error);
+    }
+
+    private static bool TryOpenMailto(string mailtoUri, out string error)
+    {
+        error = string.Empty;
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            try
+            {
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = mailtoUri,
+                    UseShellExecute = true
+                });
+
+                if (process is not null)
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+
+            if (string.IsNullOrWhiteSpace(error))
+                error = "Δεν ήταν δυνατή η εκκίνηση της προεπιλεγμένης εφαρμογής email.";
+
+            return false;
+        }
+
+        var result = ShellExecute(IntPtr.Zero, "open", mailtoUri, null, null, 1);
+        var resultCode = result.ToInt64();
+        if (resultCode > 32)
+            return true;
+
+        error = "Δεν ήταν δυνατή η εκκίνηση mail app μέσω mailto.";
+        return false;
+    }
+
+    private static bool TryOpenEmailDraftFile(EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string error)
     {
         error = string.Empty;
 
         try
         {
-            var shellProcess = Process.Start(new ProcessStartInfo
+            var draftPath = Path.Combine(Path.GetTempPath(), $"LanguageSchoolERP_MailingList_{DateTime.Now:yyyyMMdd_HHmmss}.eml");
+            var headerName = recipientType switch
             {
-                FileName = mailtoUri,
+                EmailRecipientType.To => "To",
+                EmailRecipientType.Cc => "Cc",
+                EmailRecipientType.Bcc => "Bcc",
+                _ => "To"
+            };
+
+            var draftContent = $"{headerName}: {string.Join("; ", emails)}\r\n" +
+                               "Subject: \r\n" +
+                               "MIME-Version: 1.0\r\n" +
+                               "Content-Type: text/plain; charset=utf-8\r\n" +
+                               "\r\n";
+
+            File.WriteAllText(draftPath, draftContent);
+
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = draftPath,
                 UseShellExecute = true
             });
 
-            if (shellProcess is not null)
+            if (process is not null)
                 return true;
-        }
-        catch (Exception ex)
-        {
-            error = ex.Message;
-        }
 
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            if (string.IsNullOrWhiteSpace(error))
-                error = "Δεν ήταν δυνατή η εκκίνηση της προεπιλεγμένης εφαρμογής email.";
+            error = "Δεν βρέθηκε εφαρμογή για άνοιγμα αρχείου email (.eml).";
             return false;
         }
-
-        try
-        {
-            var startProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = $"/c start \"\" \"{mailtoUri}\"",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-
-            if (startProcess is not null)
-                return true;
-        }
         catch (Exception ex)
         {
             error = ex.Message;
+            return false;
         }
-
-        if (string.IsNullOrWhiteSpace(error))
-            error = "Δεν βρέθηκε προεπιλεγμένη εφαρμογή email στο σύστημα.";
-
-        return false;
     }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string? lpParameters, string? lpDirectory, int nShowCmd);
+
 
     private static string BuildMailtoUri(IReadOnlyCollection<string> emails, EmailRecipientType recipientType)
     {
