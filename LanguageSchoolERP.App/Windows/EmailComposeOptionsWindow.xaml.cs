@@ -7,9 +7,9 @@ public partial class EmailComposeOptionsWindow : Window
 {
     public Array RecipientTypes { get; } = Enum.GetValues(typeof(EmailRecipientType));
     public EmailRecipientType SelectedRecipientType { get; set; } = EmailRecipientType.Bcc;
-    public bool IncludeStudentEmail { get; set; } = true;
-    public bool IncludeFatherEmail { get; set; } = true;
-    public bool IncludeMotherEmail { get; set; } = true;
+    public bool IncludeStudentEmail { get; set; }
+    public bool IncludeFatherEmail { get; set; }
+    public bool IncludeMotherEmail { get; set; }
 
     public EmailComposeOptionsWindow()
     {
