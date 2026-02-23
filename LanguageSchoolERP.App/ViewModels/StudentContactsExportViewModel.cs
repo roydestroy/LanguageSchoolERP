@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Net.Mail;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using LanguageSchoolERP.App.Windows;
 using LanguageSchoolERP.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
@@ -43,6 +46,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
     public IRelayCommand SelectAllCommand { get; }
     public IRelayCommand ClearSelectionCommand { get; }
     public IRelayCommand ExportCommand { get; }
+    public IRelayCommand CreateMailingListCommand { get; }
 
     public StudentContactsExportViewModel(AppState state, DbContextFactory dbFactory, StudentContactsExcelExportService exportService)
     {
@@ -54,6 +58,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
         SelectAllCommand = new RelayCommand(SelectAll);
         ClearSelectionCommand = new RelayCommand(ClearSelection);
         ExportCommand = new RelayCommand(ExportSelected);
+        CreateMailingListCommand = new RelayCommand(CreateMailingList);
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
@@ -262,6 +267,101 @@ public partial class StudentContactsExportViewModel : ObservableObject
         {
             MessageBox.Show($"Αποτυχία εξαγωγής: {ex.Message}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void CreateMailingList()
+    {
+        var selected = _selectedRowsById.Values.OrderBy(x => x.StudentName).ToList();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show("Επιλέξτε τουλάχιστον έναν μαθητή.", "Mailing list", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var optionsWindow = new EmailComposeOptionsWindow
+        {
+            Owner = Application.Current?.MainWindow
+        };
+        if (optionsWindow.ShowDialog() != true)
+            return;
+
+        var recipientType = optionsWindow.SelectedRecipientType;
+
+        var emails = selected
+            .SelectMany(row => GetSelectedEmails(row, optionsWindow))
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Select(email => email.Trim())
+            .Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        if (emails.Count == 0)
+        {
+            MessageBox.Show("Δεν βρέθηκαν έγκυρες διευθύνσεις email για τις επιλογές σας.", "Mailing list", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            var mailtoUri = BuildMailtoUri(emails, recipientType);
+            Process.Start(new ProcessStartInfo { FileName = mailtoUri, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {ex.Message}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static IEnumerable<string> GetSelectedEmails(StudentContactsGridRowVm row, EmailComposeOptionsWindow optionsWindow)
+    {
+        if (optionsWindow.IncludeStudentEmail && IsValidEmail(row.StudentEmail))
+            yield return row.StudentEmail;
+
+        if (optionsWindow.IncludeFatherEmail && IsValidEmail(row.FatherEmail))
+            yield return row.FatherEmail;
+
+        if (optionsWindow.IncludeMotherEmail && IsValidEmail(row.MotherEmail))
+            yield return row.MotherEmail;
+    }
+
+    private static bool IsValidEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        try
+        {
+            _ = new MailAddress(email);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string BuildMailtoUri(IReadOnlyCollection<string> emails, EmailRecipientType recipientType)
+    {
+        var recipients = string.Join(';', emails);
+        var encodedRecipients = Uri.EscapeDataString(recipients);
+
+        var builder = new StringBuilder("mailto:");
+        switch (recipientType)
+        {
+            case EmailRecipientType.To:
+                builder.Append(encodedRecipients);
+                break;
+            case EmailRecipientType.Cc:
+                builder.Append("?cc=").Append(encodedRecipients);
+                break;
+            case EmailRecipientType.Bcc:
+                builder.Append("?bcc=").Append(encodedRecipients);
+                break;
+            default:
+                builder.Append(encodedRecipients);
+                break;
+        }
+
+        return builder.ToString();
     }
 
     private List<string> BuildHeaders()

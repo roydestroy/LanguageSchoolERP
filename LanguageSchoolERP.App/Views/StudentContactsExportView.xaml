@@ -32,7 +32,8 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Width="110" Margin="0,0,8,0" Content="Ανανέωση" Command="{Binding RefreshCommand}"/>
-                    <Button Width="145" Content="Εξαγωγή σε Excel" Command="{Binding ExportCommand}"/>
+                    <Button Width="145" Margin="0,0,8,0" Content="Εξαγωγή σε Excel" Command="{Binding ExportCommand}"/>
+                    <Button Width="145" Content="Mailing list" Command="{Binding CreateMailingListCommand}"/>
                 </StackPanel>
             </Grid>
         </Border>
