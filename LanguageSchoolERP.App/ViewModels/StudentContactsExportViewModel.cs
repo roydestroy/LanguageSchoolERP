@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Net.Mail;
+using System.Runtime.InteropServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.App.Windows;
@@ -299,18 +300,17 @@ public partial class StudentContactsExportViewModel : ObservableObject
             return;
         }
 
-        try
+        var mailtoUri = BuildMailtoUri(emails, recipientType);
+
+        if (mailtoUri.Length > 1800)
         {
-            var mailtoUri = BuildMailtoUri(emails, recipientType);
-            var process = Process.Start(new ProcessStartInfo { FileName = mailtoUri, UseShellExecute = true });
-            if (process is null)
-            {
-                throw new InvalidOperationException("Δεν βρέθηκε προεπιλεγμένη εφαρμογή email στο σύστημα.");
-            }
+            MessageBox.Show("Η mailing list είναι πολύ μεγάλη για άνοιγμα σε ένα email. Μειώστε τις επιλογές ή κάντε πολλαπλές αποστολές.", "Mailing list", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
         }
-        catch (Exception ex)
+
+        if (!TryOpenMailClient(mailtoUri, out var launchError))
         {
-            MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {ex.Message}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Αποτυχία δημιουργίας mailing list: {launchError}", "Σφάλμα", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -342,19 +342,72 @@ public partial class StudentContactsExportViewModel : ObservableObject
         }
     }
 
+
+    private static bool TryOpenMailClient(string mailtoUri, out string error)
+    {
+        error = string.Empty;
+
+        try
+        {
+            var shellProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = mailtoUri,
+                UseShellExecute = true
+            });
+
+            if (shellProcess is not null)
+                return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            if (string.IsNullOrWhiteSpace(error))
+                error = "Δεν ήταν δυνατή η εκκίνηση της προεπιλεγμένης εφαρμογής email.";
+            return false;
+        }
+
+        try
+        {
+            var startProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c start \"\" \"{mailtoUri}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+
+            if (startProcess is not null)
+                return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+
+        if (string.IsNullOrWhiteSpace(error))
+            error = "Δεν βρέθηκε προεπιλεγμένη εφαρμογή email στο σύστημα.";
+
+        return false;
+    }
+
     private static string BuildMailtoUri(IReadOnlyCollection<string> emails, EmailRecipientType recipientType)
     {
         var recipients = emails
             .Select(email => Uri.EscapeDataString(email))
             .ToList();
 
-        var joinedRecipients = string.Join(",", recipients);
+        var joinedRecipients = string.Join(";", recipients);
+
         return recipientType switch
         {
-            EmailRecipientType.To => $"mailto:{joinedRecipients}",
+            EmailRecipientType.To => $"mailto:?to={joinedRecipients}",
             EmailRecipientType.Cc => $"mailto:?cc={joinedRecipients}",
             EmailRecipientType.Bcc => $"mailto:?bcc={joinedRecipients}",
-            _ => $"mailto:{joinedRecipients}"
+            _ => $"mailto:?to={joinedRecipients}"
         };
     }
 
