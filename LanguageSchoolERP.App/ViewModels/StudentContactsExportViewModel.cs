@@ -349,7 +349,20 @@ public partial class StudentContactsExportViewModel : ObservableObject
         if (TryOpenMailto(mailtoUri, out error))
             return true;
 
-        return TryOpenEmailDraftFile(recipientType, emails, out error);
+        if (TryOpenEmailDraftFile(recipientType, emails, out var draftPath, out error))
+            return true;
+
+        if (TryPromptOpenWith(draftPath, out var openWithError))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(openWithError))
+        {
+            error = string.IsNullOrWhiteSpace(error)
+                ? openWithError
+                : $"{error} {openWithError}";
+        }
+
+        return false;
     }
 
     private static bool TryOpenMailto(string mailtoUri, out string error)
@@ -381,21 +394,21 @@ public partial class StudentContactsExportViewModel : ObservableObject
         }
 
         var result = ShellExecute(IntPtr.Zero, "open", mailtoUri, null, null, 1);
-        var resultCode = result.ToInt64();
-        if (resultCode > 32)
+        if (result.ToInt64() > 32)
             return true;
 
         error = "Δεν ήταν δυνατή η εκκίνηση mail app μέσω mailto.";
         return false;
     }
 
-    private static bool TryOpenEmailDraftFile(EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string error)
+    private static bool TryOpenEmailDraftFile(EmailRecipientType recipientType, IReadOnlyCollection<string> emails, out string draftPath, out string error)
     {
         error = string.Empty;
+        draftPath = string.Empty;
 
         try
         {
-            var draftPath = Path.Combine(Path.GetTempPath(), $"LanguageSchoolERP_MailingList_{DateTime.Now:yyyyMMdd_HHmmss}.eml");
+            draftPath = Path.Combine(Path.GetTempPath(), $"LanguageSchoolERP_MailingList_{DateTime.Now:yyyyMMdd_HHmmss}.eml");
             var headerName = recipientType switch
             {
                 EmailRecipientType.To => "To",
@@ -431,6 +444,36 @@ public partial class StudentContactsExportViewModel : ObservableObject
         }
     }
 
+    private static bool TryPromptOpenWith(string draftPath, out string error)
+    {
+        error = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(draftPath) || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return false;
+
+        try
+        {
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "rundll32.exe",
+                Arguments = $"shell32.dll,OpenAs_RunDLL \"{draftPath}\"",
+                UseShellExecute = true
+            });
+
+            if (process is not null)
+                return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+
+        if (string.IsNullOrWhiteSpace(error))
+            error = "Δεν ήταν δυνατή η εμφάνιση επιλογής εφαρμογής για το αρχείο email.";
+
+        return false;
+    }
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string? lpParameters, string? lpDirectory, int nShowCmd);
 
@@ -441,14 +484,14 @@ public partial class StudentContactsExportViewModel : ObservableObject
             .Select(email => Uri.EscapeDataString(email))
             .ToList();
 
-        var joinedRecipients = string.Join(";", recipients);
+        var joinedRecipients = string.Join(",", recipients);
 
         return recipientType switch
         {
-            EmailRecipientType.To => $"mailto:?to={joinedRecipients}",
+            EmailRecipientType.To => $"mailto:{joinedRecipients}",
             EmailRecipientType.Cc => $"mailto:?cc={joinedRecipients}",
             EmailRecipientType.Bcc => $"mailto:?bcc={joinedRecipients}",
-            _ => $"mailto:?to={joinedRecipients}"
+            _ => $"mailto:{joinedRecipients}"
         };
     }
 
