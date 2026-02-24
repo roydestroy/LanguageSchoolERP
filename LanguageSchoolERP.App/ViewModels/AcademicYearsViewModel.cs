@@ -21,6 +21,8 @@ public partial class AcademicYearsViewModel : ObservableObject
     public IAsyncRelayCommand AddAcademicYearCommand { get; }
     public IAsyncRelayCommand DeleteAcademicYearCommand { get; }
 
+    public bool CanManageAcademicYears => !_state.IsReadOnlyMode;
+
     public AcademicYearsViewModel(DbContextFactory dbFactory, AppState state)
     {
         _dbFactory = dbFactory;
@@ -39,6 +41,7 @@ public partial class AcademicYearsViewModel : ObservableObject
             {
                 AddAcademicYearCommand.NotifyCanExecuteChanged();
                 DeleteAcademicYearCommand.NotifyCanExecuteChanged();
+                OnPropertyChanged(nameof(CanManageAcademicYears));
             }
         };
 
