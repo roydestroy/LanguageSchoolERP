@@ -21,6 +21,8 @@ public partial class AcademicYearsViewModel : ObservableObject
     public IAsyncRelayCommand AddAcademicYearCommand { get; }
     public IAsyncRelayCommand DeleteAcademicYearCommand { get; }
 
+    public bool CanManageAcademicYears => !_state.IsReadOnlyMode;
+
     public AcademicYearsViewModel(DbContextFactory dbFactory, AppState state)
     {
         _dbFactory = dbFactory;
@@ -39,13 +41,26 @@ public partial class AcademicYearsViewModel : ObservableObject
             {
                 AddAcademicYearCommand.NotifyCanExecuteChanged();
                 DeleteAcademicYearCommand.NotifyCanExecuteChanged();
+                OnPropertyChanged(nameof(CanManageAcademicYears));
             }
+
+            if (ShouldReloadForContextChange(e.PropertyName))
+                _ = LoadAsync();
         };
 
         _ = LoadAsync();
     }
 
     private bool CanWrite() => !_state.IsReadOnlyMode;
+
+
+    private bool ShouldReloadForContextChange(string? propertyName)
+    {
+        return propertyName == nameof(AppState.SelectedDatabaseMode) ||
+               propertyName == nameof(AppState.SelectedDatabaseName) ||
+               propertyName == nameof(AppState.SelectedAcademicYear) ||
+               propertyName == nameof(AppState.DataVersion);
+    }
 
     private async Task LoadAsync()
     {

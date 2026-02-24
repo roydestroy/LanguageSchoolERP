@@ -209,6 +209,9 @@ public partial class MainWindow : Window
 
     private async Task LoadAcademicYearsAsync()
     {
+        var previousYears = (YearCombo.ItemsSource as IEnumerable<string>)?.ToList() ?? [];
+        var previousSelected = YearCombo.SelectedItem as string;
+
         try
         {
             using var db = _dbFactory.Create();
@@ -219,13 +222,23 @@ public partial class MainWindow : Window
                 .Select(p => p.Name)
                 .ToListAsync();
 
-            YearCombo.ItemsSource = years;
-
             if (years.Count == 0)
             {
-                YearCombo.SelectedItem = null;
+                if (previousYears.Count > 0)
+                {
+                    YearCombo.ItemsSource = previousYears;
+                    YearCombo.SelectedItem = previousSelected;
+                }
+                else
+                {
+                    YearCombo.ItemsSource = Array.Empty<string>();
+                    YearCombo.SelectedItem = null;
+                }
+
                 return;
             }
+
+            YearCombo.ItemsSource = years;
 
             if (!years.Contains(_state.SelectedAcademicYear))
             {
@@ -236,8 +249,16 @@ public partial class MainWindow : Window
         }
         catch
         {
-            YearCombo.ItemsSource = Array.Empty<string>();
-            YearCombo.SelectedItem = null;
+            if (previousYears.Count > 0)
+            {
+                YearCombo.ItemsSource = previousYears;
+                YearCombo.SelectedItem = previousSelected;
+            }
+            else
+            {
+                YearCombo.ItemsSource = Array.Empty<string>();
+                YearCombo.SelectedItem = null;
+            }
         }
     }
 

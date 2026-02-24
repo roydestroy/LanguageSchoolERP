@@ -68,6 +68,11 @@
                                 <Setter TargetName="RoundBorder" Property="Background" Value="#2C6290"/>
                                 <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#26537A"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#B9C4D0"/>
+                                <Setter TargetName="RoundBorder" Property="Background" Value="#EEF2F6"/>
+                                <Setter TargetName="RoundBorder" Property="BorderBrush" Value="#D6DEE7"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -232,7 +237,8 @@
                 </Grid>
                 <Button Grid.Row="0" Grid.Column="6" Content="&#xE710;" ToolTip="Νέος μαθητής"
                         Style="{StaticResource RoundIconButtonStyle}"
-                        Command="{Binding NewStudentCommand}" VerticalAlignment="Center"/>
+                        Command="{Binding NewStudentCommand}"
+                        VerticalAlignment="Center"/>
                 <Button Grid.Row="0" Grid.Column="8" Content="&#xE72C;" ToolTip="Ανανέωση"
                         Style="{StaticResource RoundIconButtonStyle}"
                         Command="{Binding RefreshCommand}" VerticalAlignment="Center"/>

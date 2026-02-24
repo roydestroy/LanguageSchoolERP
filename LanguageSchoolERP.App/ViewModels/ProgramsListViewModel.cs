@@ -8,6 +8,7 @@ namespace LanguageSchoolERP.App.ViewModels;
 public partial class ProgramsListViewModel : ObservableObject
 {
     private readonly IProgramService _programService;
+    private readonly AppState _state;
     private readonly List<StudyProgram> _allPrograms = new();
 
     public ObservableCollection<StudyProgram> Programs { get; } = new();
@@ -16,14 +17,47 @@ public partial class ProgramsListViewModel : ObservableObject
     [ObservableProperty] private string errorMessage = string.Empty;
     [ObservableProperty] private string searchText = string.Empty;
 
-    public ProgramsListViewModel(IProgramService programService)
+    public bool CanManagePrograms => !_state.IsReadOnlyMode;
+
+    public ProgramsListViewModel(IProgramService programService, AppState state)
     {
         _programService = programService;
+        _state = state;
+
+        _state.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
+                OnPropertyChanged(nameof(CanManagePrograms));
+
+            if (ShouldReloadForContextChange(e.PropertyName))
+                _ = ReloadForContextChangeAsync();
+        };
     }
 
     partial void OnSearchTextChanged(string value)
     {
         ApplyFilter();
+    }
+
+
+    private bool ShouldReloadForContextChange(string? propertyName)
+    {
+        return propertyName == nameof(AppState.SelectedDatabaseMode) ||
+               propertyName == nameof(AppState.SelectedDatabaseName) ||
+               propertyName == nameof(AppState.SelectedAcademicYear) ||
+               propertyName == nameof(AppState.DataVersion);
+    }
+
+    private async Task ReloadForContextChangeAsync()
+    {
+        try
+        {
+            await LoadAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
     }
 
     public async Task LoadAsync(CancellationToken ct)

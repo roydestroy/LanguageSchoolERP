@@ -28,11 +28,12 @@
                          ToolTip="Αναζήτηση προγράμματος"/>
 
                 <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Νέο" Width="90" Margin="0,0,8,0" Click="AddProgramButton_Click"/>
+                    <Button Content="Νέο" Width="90" Margin="0,0,8,0" Click="AddProgramButton_Click"
+                            IsEnabled="{Binding CanManagePrograms}"/>
                     <Button Content="Επεξεργασία" Width="110" Margin="0,0,8,0" Click="EditProgramButton_Click">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                <Setter Property="IsEnabled" Value="True"/>
+                                <Setter Property="IsEnabled" Value="{Binding CanManagePrograms}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedProgram}" Value="{x:Null}">
                                         <Setter Property="IsEnabled" Value="False"/>
@@ -44,7 +45,7 @@
                     <Button Content="Διαγραφή" Width="95" Background="#A64949" BorderBrush="#8F3939" Click="DeleteProgramButton_Click">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                <Setter Property="IsEnabled" Value="True"/>
+                                <Setter Property="IsEnabled" Value="{Binding CanManagePrograms}"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedProgram}" Value="{x:Null}">
                                         <Setter Property="IsEnabled" Value="False"/>
