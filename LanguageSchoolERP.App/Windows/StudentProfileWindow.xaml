@@ -74,7 +74,7 @@
 			<Setter Property="Background" Value="Transparent"/>
 			<Setter Property="BorderBrush" Value="Transparent"/>
 			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="FontSize" Value="22"/>
+			<Setter Property="FontSize" Value="16"/>
 			<Setter Property="FontWeight" Value="SemiBold"/>
 			<Setter Property="Cursor" Value="Hand"/>
 			<Setter Property="VerticalAlignment" Value="Center"/>
@@ -266,206 +266,217 @@
 								<ColumnDefinition Width="20"/>
 								<ColumnDefinition Width="*"/>
 							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
+							</Grid.RowDefinitions>
 
-							<StackPanel Grid.Column="0">
-								<TextBlock Text="Μαθητής" FontWeight="SemiBold" Margin="0,0,0,10"/>
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="Μαθητής" FontWeight="SemiBold" Margin="0,0,0,10"/>
+							<TextBlock Grid.Row="0" Grid.Column="2" Text="Γονείς" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-								<TextBlock Text="Όνομα μαθητή" Foreground="#666666" FontSize="12"/>
-								<TextBox Text="{Binding EditableStudentName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="Όνομα μαθητή" Foreground="#666666" FontSize="12"/>
+							<TextBlock Grid.Row="1" Grid.Column="2" Text="Ονοματεπώνυμο πατέρα" Foreground="#666666" FontSize="12"/>
+							<TextBox Grid.Row="2" Grid.Column="0" Text="{Binding EditableStudentName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="2" Grid.Column="2" Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Επώνυμο μαθητή" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-								<TextBox Text="{Binding EditableStudentSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBlock Grid.Row="3" Grid.Column="0" Text="Επώνυμο μαθητή" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+							<DockPanel Grid.Row="3" Grid.Column="2" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Κινητό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectFatherPhonePreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsFatherPhonePreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<TextBox Grid.Row="4" Grid.Column="0" Text="{Binding EditableStudentSurname, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="4" Grid.Column="2" Text="{Binding EditableFatherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Ημερομηνία γέννησης" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-								<DatePicker SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
+							<TextBlock Grid.Row="5" Grid.Column="0" Text="Ημερομηνία γέννησης" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+							<DockPanel Grid.Row="5" Grid.Column="2" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Σταθερό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectFatherLandlinePreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsFatherLandlinePreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<DatePicker Grid.Row="6" Grid.Column="0" SelectedDate="{Binding EditableDateOfBirth}" Style="{StaticResource EditableDatePickerStyle}"/>
+							<TextBox Grid.Row="6" Grid.Column="2" Text="{Binding EditableFatherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Σχολείο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
-								<TextBox Text="{Binding EditableSchoolName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBlock Grid.Row="7" Grid.Column="0" Text="Σχολείο" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+							<DockPanel Grid.Row="7" Grid.Column="2" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectFatherEmailPreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsFatherEmailPreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<TextBox Grid.Row="8" Grid.Column="0" Text="{Binding EditableSchoolName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="8" Grid.Column="2" Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Κινητό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectStudentPhonePreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsStudentPhonePreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBlock Grid.Row="9" Grid.Column="0" Text="Διεύθυνση" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+							<TextBlock Grid.Row="9" Grid.Column="2" Text="Ονοματεπώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,8,0,0"/>
+							<TextBox Grid.Row="10" Grid.Column="0" Text="{Binding EditableAddress, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="10" Grid.Column="2" Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Σταθερό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectStudentLandlinePreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsStudentLandlinePreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<DockPanel Grid.Row="11" Grid.Column="0" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Κινητό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectStudentPhonePreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsStudentPhonePreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<DockPanel Grid.Row="11" Grid.Column="2" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Κινητό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectMotherPhonePreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsMotherPhonePreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<TextBox Grid.Row="12" Grid.Column="0" Text="{Binding EditableMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="12" Grid.Column="2" Text="{Binding EditableMotherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Ηλ. ταχυδρομείο" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectStudentEmailPreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsStudentEmailPreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<DockPanel Grid.Row="13" Grid.Column="0" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Σταθερό" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectStudentLandlinePreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsStudentLandlinePreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<DockPanel Grid.Row="13" Grid.Column="2" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Σταθερό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectMotherLandlinePreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsMotherLandlinePreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<TextBox Grid.Row="14" Grid.Column="0" Text="{Binding EditableLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="14" Grid.Column="2" Text="{Binding EditableMotherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-								<TextBlock Text="Σημειώσεις" FontWeight="SemiBold" Margin="0,16,0,6"/>
-								<TextBox Text="{Binding EditableNotes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Style="{StaticResource EditableTextBoxStyle}"/>
-							</StackPanel>
+							<DockPanel Grid.Row="15" Grid.Column="0" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Ηλ. ταχυδρομείο" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectStudentEmailPreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsStudentEmailPreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<DockPanel Grid.Row="15" Grid.Column="2" Margin="0,8,0,0" LastChildFill="False">
+								<TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
+								<Button Command="{Binding SelectMotherEmailPreferredCommand}">
+									<Button.Style>
+										<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
+											<Setter Property="Content" Value="☆"/>
+											<Setter Property="Foreground" Value="#9AA7B4"/>
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding IsMotherEmailPreferred}" Value="True">
+													<Setter Property="Content" Value="★"/>
+													<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
+												</DataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Style>
+								</Button>
+							</DockPanel>
+							<TextBox Grid.Row="16" Grid.Column="0" Text="{Binding EditableEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
+							<TextBox Grid.Row="16" Grid.Column="2" Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
 
-							<StackPanel Grid.Column="2">
-								<TextBlock Text="Γονείς" FontWeight="SemiBold" Margin="0,0,0,10"/>
-
-								<TextBlock Text="Ονοματεπώνυμο πατέρα" Foreground="#666666" FontSize="12"/>
-								<TextBox Text="{Binding EditableFatherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Κινητό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectFatherPhonePreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsFatherPhonePreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableFatherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Σταθερό πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectFatherLandlinePreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsFatherLandlinePreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableFatherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Ηλ. ταχυδρομείο πατέρα" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectFatherEmailPreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsFatherEmailPreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableFatherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<TextBlock Text="Ονοματεπώνυμο μητέρας" Foreground="#666666" FontSize="12" Margin="0,12,0,0"/>
-								<TextBox Text="{Binding EditableMotherName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Κινητό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectMotherPhonePreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsMotherPhonePreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableMotherMobile, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Σταθερό μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectMotherLandlinePreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsMotherLandlinePreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableMotherLandline, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-
-								<DockPanel Margin="0,8,0,0" LastChildFill="False">
-									<TextBlock Text="Ηλ. ταχυδρομείο μητέρας" Foreground="#666666" FontSize="12" VerticalAlignment="Center"/>
-									<Button Command="{Binding SelectMotherEmailPreferredCommand}">
-										<Button.Style>
-											<Style TargetType="Button" BasedOn="{StaticResource PreferredContactButtonStyle}">
-												<Setter Property="Content" Value="☆"/>
-												<Setter Property="Foreground" Value="#9AA7B4"/>
-												<Style.Triggers>
-													<DataTrigger Binding="{Binding IsMotherEmailPreferred}" Value="True">
-														<Setter Property="Content" Value="★"/>
-														<Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
-													</DataTrigger>
-												</Style.Triggers>
-											</Style>
-										</Button.Style>
-									</Button>
-								</DockPanel>
-								<TextBox Text="{Binding EditableMotherEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource EditableTextBoxStyle}"/>
-							</StackPanel>
+							<TextBlock Grid.Row="17" Grid.Column="0" Text="Σημειώσεις" FontWeight="SemiBold" Margin="0,16,0,6"/>
+							<TextBox Grid.Row="18" Grid.Column="0" Text="{Binding EditableNotes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Style="{StaticResource EditableTextBoxStyle}"/>
 						</Grid>
 					</Grid>
 				</ScrollViewer>

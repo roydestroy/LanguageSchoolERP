@@ -113,6 +113,7 @@
                             <CheckBox Content="Σταθερό" IsChecked="{Binding IncludeStudentLandline, Mode=TwoWay}"/>
                             <CheckBox Content="Email" IsChecked="{Binding IncludeStudentEmail, Mode=TwoWay}"/>
                             <CheckBox Content="Σχολείο" IsChecked="{Binding IncludeSchoolName, Mode=TwoWay}"/>
+                            <CheckBox Content="Διεύθυνση" IsChecked="{Binding IncludeStudentAddress, Mode=TwoWay}"/>
 
                             <Separator Margin="0,8,0,8"/>
                             <TextBlock Text="Στοιχεία Πατέρα" FontWeight="SemiBold" Margin="0,0,0,4"/>

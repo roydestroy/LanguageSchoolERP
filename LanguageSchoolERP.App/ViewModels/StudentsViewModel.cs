@@ -438,6 +438,7 @@ public partial class StudentsViewModel : ObservableObject
                     StudentId = s.StudentId,
                     FullName = ToSurnameFirst($"{s.FirstName} {s.LastName}"),
                     ContactLine = BuildPreferredContactLine(s),
+                    Address = s.Address ?? string.Empty,
                     YearLabel = $"Έτος: {year}",
                     EnrollmentSummaryText = enrollmentSummaryText,
                     Balance = activeBalance,

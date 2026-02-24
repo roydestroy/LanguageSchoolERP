@@ -347,6 +347,12 @@
                                                        FontSize="12"
                                                        TextTrimming="CharacterEllipsis"
                                                        ToolTip="{Binding EnrollmentSummaryText}"/>
+                                            <TextBlock Margin="0,4,0,0"
+                                                       Text="{Binding Address, StringFormat=Διεύθυνση: {0}}"
+                                                       Foreground="{StaticResource Brush.TextSecondary}"
+                                                       FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding Address, StringFormat=Διεύθυνση: {0}}"/>
                                         </StackPanel>
 
                                         <!-- Total payment progress -->
