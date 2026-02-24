@@ -8,6 +8,32 @@ namespace LanguageSchoolERP.Data.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterColumn<string>(
+                name: "Name",
+                table: "AcademicPeriods",
+                type: "nvarchar(50)",
+                maxLength: 50,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(max)");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "LastName",
+                table: "Students",
+                type: "nvarchar(200)",
+                maxLength: 200,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(max)");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "FirstName",
+                table: "Students",
+                type: "nvarchar(200)",
+                maxLength: 200,
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(max)");
             migrationBuilder.CreateIndex(
                 name: "IX_AcademicPeriods_Name",
                 table: "AcademicPeriods",
@@ -66,6 +92,33 @@ namespace LanguageSchoolERP.Data.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_Students_LastName_FirstName",
                 table: "Students");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Name",
+                table: "AcademicPeriods",
+                type: "nvarchar(max)",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(50)",
+                oldMaxLength: 50);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "LastName",
+                table: "Students",
+                type: "nvarchar(max)",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(200)",
+                oldMaxLength: 200);
+
+            migrationBuilder.AlterColumn<string>(
+                name: "FirstName",
+                table: "Students",
+                type: "nvarchar(max)",
+                nullable: false,
+                oldClrType: typeof(string),
+                oldType: "nvarchar(200)",
+                oldMaxLength: 200);
         }
     }
 }

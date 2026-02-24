@@ -58,8 +58,23 @@ public class SchoolDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<AcademicPeriod>()
+            .Property(p => p.Name)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<AcademicPeriod>()
             .HasIndex(p => p.Name)
             .IsUnique();
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.FirstName)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.LastName)
+            .IsRequired()
+            .HasMaxLength(200);
 
         modelBuilder.Entity<Student>()
             .HasIndex(s => new { s.LastName, s.FirstName });
