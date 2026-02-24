@@ -334,6 +334,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
             student.FirstName = (EditableStudentName ?? string.Empty).Trim();
             student.LastName = (EditableStudentSurname ?? string.Empty).Trim();
+            student.NormalizedFirstName = student.FirstName.ToUpperInvariant();
+            student.NormalizedLastName = student.LastName.ToUpperInvariant();
             student.DateOfBirth = EditableDateOfBirth;
             student.SchoolName = EditableSchoolName.Trim();
             student.Address = EditableAddress.Trim();

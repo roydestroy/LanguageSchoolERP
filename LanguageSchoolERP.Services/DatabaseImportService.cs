@@ -541,6 +541,9 @@ END
 
         if (student is not null)
         {
+            student.NormalizedFirstName = student.FirstName.ToUpperInvariant();
+            student.NormalizedLastName = student.LastName.ToUpperInvariant();
+
             if (!string.IsNullOrWhiteSpace(normalizedStudentMobile))
                 student.Mobile = normalizedStudentMobile;
 
@@ -566,6 +569,8 @@ END
         {
             FirstName = normalizedFirstName,
             LastName = normalizedLastName,
+            NormalizedFirstName = normalizedFirstName.ToUpperInvariant(),
+            NormalizedLastName = normalizedLastName.ToUpperInvariant(),
             Mobile = normalizedStudentMobile ?? string.Empty,
             Landline = normalizedStudentLandline ?? string.Empty,
             FatherMobile = normalizedFatherMobile ?? string.Empty,

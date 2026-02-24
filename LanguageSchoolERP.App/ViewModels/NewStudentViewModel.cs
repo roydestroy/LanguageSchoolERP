@@ -246,6 +246,9 @@ public partial class NewStudentViewModel : ObservableObject
                 MotherLandline = MotherLandline.Trim(),
             };
 
+            student.NormalizedFirstName = student.FirstName.ToUpperInvariant();
+            student.NormalizedLastName = student.LastName.ToUpperInvariant();
+
             var enrollment = new Enrollment
             {
                 AcademicPeriodId = period.AcademicPeriodId,

@@ -77,7 +77,22 @@ public class SchoolDbContext : DbContext
             .HasMaxLength(200);
 
         modelBuilder.Entity<Student>()
+            .Property(s => s.NormalizedFirstName)
+            .IsRequired()
+            .HasMaxLength(200)
+            .HasDefaultValue("");
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.NormalizedLastName)
+            .IsRequired()
+            .HasMaxLength(200)
+            .HasDefaultValue("");
+
+        modelBuilder.Entity<Student>()
             .HasIndex(s => new { s.LastName, s.FirstName });
+
+        modelBuilder.Entity<Student>()
+            .HasIndex(s => new { s.NormalizedLastName, s.NormalizedFirstName });
 
         modelBuilder.Entity<Enrollment>()
             .HasIndex(e => new { e.StudentId, e.AcademicPeriodId });

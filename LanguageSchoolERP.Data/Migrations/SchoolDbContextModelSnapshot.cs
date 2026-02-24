@@ -349,6 +349,18 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NormalizedFirstName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("NormalizedLastName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("MotherEmail")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -388,6 +400,8 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasKey("StudentId");
 
                     b.HasIndex("LastName", "FirstName");
+
+                    b.HasIndex("NormalizedLastName", "NormalizedFirstName");
 
                     b.ToTable("Students");
                 });

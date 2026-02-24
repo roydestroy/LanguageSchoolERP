@@ -34,6 +34,9 @@ public partial class StudentsViewModel : ObservableObject
     private const string SortByBalance = "Υπόλοιπο (φθίνουσα)";
     private const string SortByOverdueAmount = "Ληξιπρόθεσμο ποσό (φθίνουσα)";
 
+    private const int SearchBroadeningThreshold = 3;
+    private const int SearchSuggestionsLimit = 8;
+
     private static readonly Brush ProgressBlueBrush = new SolidColorBrush(Color.FromRgb(78, 153, 228));
     private static readonly Brush ProgressOrangeBrush = new SolidColorBrush(Color.FromRgb(230, 145, 56));
     private static readonly Brush ProgressGreenBrush = new SolidColorBrush(Color.FromRgb(67, 160, 71));
@@ -349,16 +352,33 @@ public partial class StudentsViewModel : ObservableObject
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var st = SearchText.Trim();
-                baseQuery = baseQuery.Where(s =>
-                    (s.FirstName + " " + s.LastName).Contains(st) ||
-                    s.Mobile.Contains(st) ||
-                    s.Landline.Contains(st) ||
-                    s.Email.Contains(st) ||
-                    db.Enrollments.Any(e =>
-                        e.StudentId == s.StudentId &&
-                        (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
-                        e.LevelOrClass != null &&
-                        e.LevelOrClass.Contains(st)));
+                var normalizedTerm = st.ToUpperInvariant();
+
+                var prefixQuery = baseQuery.Where(s =>
+                    s.NormalizedLastName.StartsWith(normalizedTerm) ||
+                    s.NormalizedFirstName.StartsWith(normalizedTerm));
+
+                if (normalizedTerm.Length < SearchBroadeningThreshold)
+                {
+                    baseQuery = prefixQuery;
+                }
+                else if (await prefixQuery.AnyAsync())
+                {
+                    baseQuery = prefixQuery;
+                }
+                else
+                {
+                    baseQuery = baseQuery.Where(s =>
+                        (s.NormalizedFirstName + " " + s.NormalizedLastName).Contains(normalizedTerm) ||
+                        s.Mobile.Contains(st) ||
+                        s.Landline.Contains(st) ||
+                        s.Email.Contains(st) ||
+                        db.Enrollments.Any(e =>
+                            e.StudentId == s.StudentId &&
+                            (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
+                            e.LevelOrClass != null &&
+                            e.LevelOrClass.Contains(st)));
+                }
             }
 
             var today = DateTime.Today;
@@ -740,14 +760,32 @@ public partial class StudentsViewModel : ObservableObject
 
         var filteredStudents = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
+        var normalizedTerm = term.ToUpperInvariant();
+
         var suggestions = await filteredStudents
-            .Where(s => (s.FirstName + " " + s.LastName).Contains(term))
+            .Where(s => s.NormalizedLastName.StartsWith(normalizedTerm) || s.NormalizedFirstName.StartsWith(normalizedTerm))
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
             .Select(s => (s.FirstName + " " + s.LastName).Trim())
             .Distinct()
-            .Take(8)
+            .Take(SearchSuggestionsLimit)
             .ToListAsync();
+
+        if (suggestions.Count == 0 && normalizedTerm.Length >= SearchBroadeningThreshold)
+        {
+            suggestions = await filteredStudents
+                .Where(s =>
+                    (s.NormalizedFirstName + " " + s.NormalizedLastName).Contains(normalizedTerm) ||
+                    s.Mobile.Contains(term) ||
+                    s.Landline.Contains(term) ||
+                    s.Email.Contains(term))
+                .OrderBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)
+                .Select(s => (s.FirstName + " " + s.LastName).Trim())
+                .Distinct()
+                .Take(SearchSuggestionsLimit)
+                .ToListAsync();
+        }
 
         if (generation != Volatile.Read(ref _searchSuggestionsGeneration))
             return;
