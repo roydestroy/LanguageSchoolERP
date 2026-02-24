@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -46,6 +48,7 @@ public partial class StudentsViewModel : ObservableObject
     private int _isLoadLoopRunning;
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
+    private readonly ConcurrentDictionary<Guid, byte> _detailsLoadInFlight = new();
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
@@ -93,6 +96,8 @@ public partial class StudentsViewModel : ObservableObject
         QuickAddPaymentCommand = new RelayCommand<Guid>(OpenQuickPaymentDialog, CanOpenQuickPayment);
         SelectProgramFilterCommand = new RelayCommand<ProgramFilterItemVm>(SelectProgramFilter);
         ApplySearchSuggestionCommand = new RelayCommand<string>(ApplySearchSuggestion);
+
+        Students.CollectionChanged += OnStudentsCollectionChanged;
 
         var allProgramsFilter = new ProgramFilterItemVm(null, "ΟΛΑ") { IsSelected = true };
         ProgramFilters.Add(allProgramsFilter);
@@ -351,62 +356,79 @@ public partial class StudentsViewModel : ObservableObject
                         e.LevelOrClass.Contains(st)));
             }
 
-            var students = await baseQuery
-                .AsSplitQuery()
-                .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
-                    .ThenInclude(en => en.Program)
-                .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
-                    .ThenInclude(en => en.Payments)
-                .Include(s => s.Contracts.Where(c => selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
-                .OrderBy(s => s.LastName).ThenBy(s => s.FirstName)
+            var today = DateTime.Today;
+            var currentMonthStart = new DateTime(today.Year, today.Month, 1);
+
+            var summaryRows = await baseQuery
+                .OrderBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)
+                .Select(s => new StudentSummaryProjection
+                {
+                    StudentId = s.StudentId,
+                    FirstName = s.FirstName,
+                    LastName = s.LastName,
+                    Address = s.Address,
+                    Mobile = s.Mobile,
+                    Landline = s.Landline,
+                    Email = s.Email,
+                    FatherMobile = s.FatherMobile,
+                    FatherLandline = s.FatherLandline,
+                    FatherEmail = s.FatherEmail,
+                    MotherMobile = s.MotherMobile,
+                    MotherLandline = s.MotherLandline,
+                    MotherEmail = s.MotherEmail,
+                    PreferredPhoneSource = s.PreferredPhoneSource,
+                    PreferredLandlineSource = s.PreferredLandlineSource,
+                    PreferredEmailSource = s.PreferredEmailSource,
+                    HasPendingContract = db.Contracts.Any(c => c.StudentId == s.StudentId && (selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId) && string.IsNullOrWhiteSpace(c.PdfPath)),
+                    Enrollments = db.Enrollments
+                        .Where(e => e.StudentId == s.StudentId && (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId))
+                        .Select(e => new EnrollmentSummaryProjection
+                        {
+                            IsStopped = e.IsStopped,
+                            ProgramName = e.Program.Name,
+                            LevelOrClass = e.LevelOrClass,
+                            AgreementTotal = e.AgreementTotal,
+                            DownPayment = e.DownPayment,
+                            IncludesStudyLab = e.IncludesStudyLab,
+                            StudyLabMonthlyPrice = e.StudyLabMonthlyPrice,
+                            InstallmentCount = e.InstallmentCount,
+                            InstallmentStartMonth = e.InstallmentStartMonth,
+                            PaidAmount = e.Payments
+                                .Where(p => (p.Notes == null || (!EF.Functions.Like(p.Notes, "%[ΑΚΥΡΩΜΕΝΗ_ΠΛΗΡΩΜΗ]%") && !EF.Functions.Like(p.Notes, "%[ΕΚΤΟΣ_ΣΥΜΦΩΝΗΘΕΝΤΟΣ]%") && !EF.Functions.Like(p.Notes, "%[EXCLUDE_FROM_AGREEMENT]%"))))
+                                .Sum(p => (decimal?)p.Amount) ?? 0m
+                        })
+                        .ToList()
+                })
                 .ToListAsync();
 
             var rows = new List<StudentRowVm>();
 
-            foreach (var s in students)
+            foreach (var s in summaryRows)
             {
-                // Aggregate across enrollments in selected year
-                var yearEnrollments = s.Enrollments.ToList();
-
+                var yearEnrollments = s.Enrollments;
                 var activeEnrollments = yearEnrollments.Where(en => !en.IsStopped).ToList();
 
-                decimal activeAgreementSum = activeEnrollments.Sum(e => e.AgreementTotal);
+                decimal activeAgreementSum = activeEnrollments.Sum(GetEffectiveAgreementTotal);
                 decimal activeDownSum = activeEnrollments.Sum(en => en.DownPayment);
-                decimal activePaidSum = activeEnrollments.Sum(en => PaymentAgreementHelper.SumAgreementPayments(en.Payments));
+                decimal activePaidSum = activeEnrollments.Sum(en => en.PaidAmount);
 
                 var totalProgress = activeAgreementSum <= 0 ? 0d : (double)((activeDownSum + activePaidSum) / activeAgreementSum * 100m);
-                if (totalProgress > 100) totalProgress = 100;
-                if (totalProgress < 0) totalProgress = 0;
+                totalProgress = Math.Clamp(totalProgress, 0d, 100d);
 
-                var today = DateTime.Today;
-
-                // Overdue if ANY enrollment is overdue based on installment plan
-                bool overdue = yearEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
-                bool hasPendingContract = s.Contracts.Any(c => string.IsNullOrWhiteSpace(c.PdfPath));
+                bool overdue = yearEnrollments.Any(en => IsEnrollmentOverdue(en, today, currentMonthStart));
 
                 var overdueAmount = yearEnrollments
-                    .Where(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today))
-                    .Sum(en =>
-                    {
-                        return InstallmentPlanHelper.GetOutstandingAmount(en);
-                    });
-
-                if (SelectedStudentStatusFilter == OverdueFilter && !overdue)
-                    continue;
-
-                if (SelectedStudentStatusFilter == ContractPendingFilter && !hasPendingContract)
-                    continue;
+                    .Where(en => IsEnrollmentOverdue(en, today, currentMonthStart))
+                    .Sum(GetOutstandingAmount);
 
                 var hasStoppedProgram = yearEnrollments.Any(en => en.IsStopped);
                 var hasOnlyStoppedPrograms = yearEnrollments.Count > 0 && yearEnrollments.All(en => en.IsStopped);
 
-                if (SelectedStudentStatusFilter == DiscontinuedFilter && !hasStoppedProgram)
-                    continue;
-
-                var activeBalance = activeEnrollments.Sum(e => InstallmentPlanHelper.GetEffectiveAgreementTotal(e) - (e.DownPayment + PaymentAgreementHelper.SumAgreementPayments(e.Payments)));
-                var anyActiveOverdue = activeEnrollments.Any(en => InstallmentPlanHelper.IsEnrollmentOverdue(en, today));
-                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) > InstallmentPlanHelper.GetEffectiveAgreementTotal(en) + 0.009m);
-                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + PaymentAgreementHelper.SumAgreementPayments(en.Payments)) + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(en));
+                var activeBalance = activeEnrollments.Sum(e => GetEffectiveAgreementTotal(e) - (e.DownPayment + e.PaidAmount));
+                var anyActiveOverdue = activeEnrollments.Any(en => IsEnrollmentOverdue(en, today, currentMonthStart));
+                var anyActiveOverpaid = activeEnrollments.Any(en => (en.DownPayment + en.PaidAmount) > GetEffectiveAgreementTotal(en) + 0.009m);
+                var allActiveFullyPaid = activeEnrollments.Count > 0 && activeEnrollments.All(en => (en.DownPayment + en.PaidAmount) + 0.009m >= GetEffectiveAgreementTotal(en));
 
                 var studentProgressBrush = hasOnlyStoppedPrograms
                     ? ProgressStoppedRedBrush
@@ -420,21 +442,15 @@ public partial class StudentsViewModel : ObservableObject
 
                 var activeEnrollmentSummaryItems = yearEnrollments
                     .Where(en => !en.IsStopped)
-                    .OrderBy(en => en.Program?.Name)
-                    .Select(en =>
-                    {
-                        var programName = en.Program?.Name ?? "—";
-                        return string.IsNullOrWhiteSpace(en.LevelOrClass)
-                            ? programName
-                            : $"{programName} ({en.LevelOrClass})";
-                    })
+                    .OrderBy(en => en.ProgramName)
+                    .Select(en => string.IsNullOrWhiteSpace(en.LevelOrClass) ? (en.ProgramName ?? "—") : $"{en.ProgramName ?? "—"} ({en.LevelOrClass})")
                     .ToList();
 
                 var enrollmentSummaryText = activeEnrollmentSummaryItems.Count == 0
                     ? "Προγράμματα: —"
                     : $"Προγράμματα: {string.Join(" · ", activeEnrollmentSummaryItems)}";
 
-                var row = new StudentRowVm
+                rows.Add(new StudentRowVm
                 {
                     StudentId = s.StudentId,
                     FullName = ToSurnameFirst($"{s.FirstName} {s.LastName}"),
@@ -450,51 +466,12 @@ public partial class StudentsViewModel : ObservableObject
                     IsOverdue = overdue,
                     HasStoppedProgram = hasStoppedProgram,
                     HasOnlyStoppedPrograms = hasOnlyStoppedPrograms,
-                    HasPendingContract = hasPendingContract,
+                    HasPendingContract = s.HasPendingContract,
                     IsActive = activeEnrollments.Count > 0,
-                    IsExpanded = false
-                };
-
-                foreach (var en in yearEnrollments.OrderBy(x => x.Program?.Name))
-                {
-                    var enPaid = PaymentAgreementHelper.SumAgreementPayments(en.Payments) + en.DownPayment;
-                    var enBalance = InstallmentPlanHelper.GetEffectiveAgreementTotal(en) - enPaid;
-                    var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
-                    var enOverpaid = enPaid > InstallmentPlanHelper.GetEffectiveAgreementTotal(en) + 0.009m;
-                    var enFullyPaid = enPaid + 0.009m >= InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
-
-                    var enrollmentEffectiveTotal = InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
-                    var enrollmentProgress = enrollmentEffectiveTotal <= 0 ? 0d : (double)(enPaid / enrollmentEffectiveTotal * 100m);
-                    if (enrollmentProgress > 100) enrollmentProgress = 100;
-                    if (enrollmentProgress < 0) enrollmentProgress = 0;
-
-                    var enrollmentProgressBrush = en.IsStopped
-                        ? ProgressStoppedRedBrush
-                        : enOverpaid
-                            ? ProgressPurpleBrush
-                            : enOverdue
-                                ? ProgressOrangeBrush
-                                : enFullyPaid
-                                    ? ProgressGreenBrush
-                                    : ProgressBlueBrush;
-
-                    row.Enrollments.Add(new EnrollmentRowVm
-                    {
-                        EnrollmentId = en.EnrollmentId,
-                        Title = en.Program?.Name ?? "—",
-                        Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
-                        AgreementText = $"Συμφωνία: {FormatCurrency(en.AgreementTotal)}",
-                        PaidText = $"Πληρωμένα: {FormatCurrency(enPaid)}",
-                        BalanceText = $"Υπόλοιπο: {FormatCurrency(enBalance)}",
-                        ProgressPercent = enrollmentProgress,
-                        ProgressText = $"{enrollmentProgress:0}%",
-                        ProgressBrush = enrollmentProgressBrush,
-                        IsStopped = en.IsStopped,
-                        CanIssuePayment = !en.IsStopped
-                    });
-                }
-
-                rows.Add(row);
+                    IsExpanded = false,
+                    AreDetailsLoaded = false,
+                    IsDetailsLoading = false
+                });
             }
 
             var sortedRows = SelectedStudentSortOption switch
@@ -533,6 +510,126 @@ public partial class StudentsViewModel : ObservableObject
 
             System.Diagnostics.Debug.WriteLine(ex.ToString());
             System.Windows.MessageBox.Show(msg, "Αποτυχία φόρτωσης μαθητών");
+        }
+    }
+
+
+    private void OnStudentsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (var item in e.OldItems.OfType<StudentRowVm>())
+                item.PropertyChanged -= OnStudentRowPropertyChanged;
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (var item in e.NewItems.OfType<StudentRowVm>())
+                item.PropertyChanged += OnStudentRowPropertyChanged;
+        }
+
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            foreach (var student in Students)
+                student.PropertyChanged += OnStudentRowPropertyChanged;
+        }
+    }
+
+    private void OnStudentRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(StudentRowVm.IsExpanded) || sender is not StudentRowVm row || !row.IsExpanded)
+            return;
+
+        _ = LoadStudentDetailsAsync(row);
+    }
+
+    private async Task LoadStudentDetailsAsync(StudentRowVm row)
+    {
+        if (row.AreDetailsLoaded)
+            return;
+
+        if (!_detailsLoadInFlight.TryAdd(row.StudentId, 0))
+            return;
+
+        row.IsDetailsLoading = true;
+
+        try
+        {
+            using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
+
+            var selectedPeriodId = await db.AcademicPeriods
+                .AsNoTracking()
+                .Where(p => p.Name == _state.SelectedAcademicYear)
+                .Select(p => (Guid?)p.AcademicPeriodId)
+                .FirstOrDefaultAsync();
+
+            var enrollments = await db.Enrollments
+                .AsNoTracking()
+                .Where(e => e.StudentId == row.StudentId && (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId))
+                .Include(e => e.Program)
+                .Include(e => e.Payments)
+                .OrderBy(e => e.Program!.Name)
+                .ToListAsync();
+
+            var contracts = await db.Contracts
+                .AsNoTracking()
+                .Where(c => c.StudentId == row.StudentId && (selectedPeriodId == null || c.Enrollment.AcademicPeriodId == selectedPeriodId))
+                .Select(c => c.PdfPath)
+                .ToListAsync();
+
+            row.HasPendingContract = contracts.Any(string.IsNullOrWhiteSpace);
+
+            var today = DateTime.Today;
+            var details = new List<EnrollmentRowVm>();
+            foreach (var en in enrollments)
+            {
+                var enPaid = PaymentAgreementHelper.SumAgreementPayments(en.Payments) + en.DownPayment;
+                var enrollmentEffectiveTotal = InstallmentPlanHelper.GetEffectiveAgreementTotal(en);
+                var enBalance = enrollmentEffectiveTotal - enPaid;
+                var enOverdue = InstallmentPlanHelper.IsEnrollmentOverdue(en, today);
+                var enOverpaid = enPaid > enrollmentEffectiveTotal + 0.009m;
+                var enFullyPaid = enPaid + 0.009m >= enrollmentEffectiveTotal;
+
+                var enrollmentProgress = enrollmentEffectiveTotal <= 0 ? 0d : (double)(enPaid / enrollmentEffectiveTotal * 100m);
+                enrollmentProgress = Math.Clamp(enrollmentProgress, 0d, 100d);
+
+                var enrollmentProgressBrush = en.IsStopped
+                    ? ProgressStoppedRedBrush
+                    : enOverpaid
+                        ? ProgressPurpleBrush
+                        : enOverdue
+                            ? ProgressOrangeBrush
+                            : enFullyPaid
+                                ? ProgressGreenBrush
+                                : ProgressBlueBrush;
+
+                details.Add(new EnrollmentRowVm
+                {
+                    EnrollmentId = en.EnrollmentId,
+                    Title = en.Program?.Name ?? "—",
+                    Details = string.IsNullOrWhiteSpace(en.LevelOrClass) ? "" : $"Επίπεδο/Τάξη: {en.LevelOrClass}",
+                    AgreementText = $"Συμφωνία: {FormatCurrency(en.AgreementTotal)}",
+                    PaidText = $"Πληρωμένα: {FormatCurrency(enPaid)}",
+                    BalanceText = $"Υπόλοιπο: {FormatCurrency(enBalance)}",
+                    ProgressPercent = enrollmentProgress,
+                    ProgressText = $"{enrollmentProgress:0}%",
+                    ProgressBrush = enrollmentProgressBrush,
+                    IsStopped = en.IsStopped,
+                    CanIssuePayment = !en.IsStopped
+                });
+            }
+
+            row.Enrollments.Clear();
+            foreach (var detail in details)
+                row.Enrollments.Add(detail);
+
+            row.AreDetailsLoaded = true;
+        }
+        finally
+        {
+            row.IsDetailsLoading = false;
+            _detailsLoadInFlight.TryRemove(row.StudentId, out _);
         }
     }
 
@@ -633,6 +730,56 @@ public partial class StudentsViewModel : ObservableObject
         IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
     }
 
+
+    private static decimal GetEffectiveAgreementTotal(EnrollmentSummaryProjection enrollment)
+        => enrollment.AgreementTotal + (enrollment.IncludesStudyLab ? enrollment.StudyLabMonthlyPrice.GetValueOrDefault() : 0m);
+
+    private static decimal GetOutstandingAmount(EnrollmentSummaryProjection enrollment)
+    {
+        var remaining = GetEffectiveAgreementTotal(enrollment) - (enrollment.DownPayment + enrollment.PaidAmount);
+        return remaining > 0 ? remaining : 0m;
+    }
+
+    private static bool IsEnrollmentOverdue(EnrollmentSummaryProjection enrollment, DateTime today, DateTime currentMonthStart)
+    {
+        if (enrollment.IsStopped)
+            return false;
+
+        if (enrollment.InstallmentCount <= 0 || enrollment.InstallmentStartMonth is null)
+            return false;
+
+        var start = new DateTime(enrollment.InstallmentStartMonth.Value.Year, enrollment.InstallmentStartMonth.Value.Month, 1);
+        if (today < start)
+            return false;
+
+        var paid = enrollment.DownPayment + enrollment.PaidAmount;
+        var remaining = GetEffectiveAgreementTotal(enrollment) - paid;
+        if (remaining <= 0)
+            return false;
+
+        var monthsElapsed = (currentMonthStart.Year - start.Year) * 12 + (currentMonthStart.Month - start.Month) + 1;
+        var installmentsDue = Math.Min(enrollment.InstallmentCount, Math.Max(0, monthsElapsed));
+        if (installmentsDue <= 0)
+            return false;
+
+        var financedAmount = GetEffectiveAgreementTotal(enrollment) - enrollment.DownPayment;
+        if (financedAmount <= 0)
+            return false;
+
+        var roundedFinancedAmount = Math.Round(financedAmount, 0, MidpointRounding.AwayFromZero);
+        var baseAmount = Math.Floor(roundedFinancedAmount / enrollment.InstallmentCount);
+        var expectedPaid = enrollment.DownPayment;
+
+        for (var i = 0; i < installmentsDue; i++)
+        {
+            expectedPaid += i == enrollment.InstallmentCount - 1
+                ? roundedFinancedAmount - (baseAmount * (enrollment.InstallmentCount - 1))
+                : baseAmount;
+        }
+
+        return paid + 0.009m < expectedPaid;
+    }
+
     private static string FormatCurrency(decimal amount)
         => amount.ToString("#,##0.#", new CultureInfo("el-GR")) + " €";
 
@@ -649,7 +796,7 @@ public partial class StudentsViewModel : ObservableObject
         return string.IsNullOrWhiteSpace(firstNames) ? surname : $"{surname} {firstNames}";
     }
 
-    private static string BuildPreferredContactLine(Student student)
+    private static string BuildPreferredContactLine(StudentContactProjection student)
     {
         var fatherEmail = student.FatherEmail;
         var motherEmail = student.MotherEmail;
@@ -707,6 +854,59 @@ public partial class StudentsViewModel : ObservableObject
         return parts.Count == 0 ? "—" : string.Join("  |  ", parts);
     }
 
+}
+
+
+public interface StudentContactProjection
+{
+    string? Mobile { get; }
+    string? Landline { get; }
+    string? Email { get; }
+    string? FatherMobile { get; }
+    string? FatherLandline { get; }
+    string? FatherEmail { get; }
+    string? MotherMobile { get; }
+    string? MotherLandline { get; }
+    string? MotherEmail { get; }
+    PreferredPhoneSource PreferredPhoneSource { get; }
+    PreferredLandlineSource PreferredLandlineSource { get; }
+    PreferredEmailSource PreferredEmailSource { get; }
+}
+
+internal sealed class StudentSummaryProjection : StudentContactProjection
+{
+    public Guid StudentId { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public string? Mobile { get; set; }
+    public string? Landline { get; set; }
+    public string? Email { get; set; }
+    public string? FatherMobile { get; set; }
+    public string? FatherLandline { get; set; }
+    public string? FatherEmail { get; set; }
+    public string? MotherMobile { get; set; }
+    public string? MotherLandline { get; set; }
+    public string? MotherEmail { get; set; }
+    public PreferredPhoneSource PreferredPhoneSource { get; set; }
+    public PreferredLandlineSource PreferredLandlineSource { get; set; }
+    public PreferredEmailSource PreferredEmailSource { get; set; }
+    public bool HasPendingContract { get; set; }
+    public List<EnrollmentSummaryProjection> Enrollments { get; set; } = [];
+}
+
+internal sealed class EnrollmentSummaryProjection
+{
+    public bool IsStopped { get; set; }
+    public string? ProgramName { get; set; }
+    public string? LevelOrClass { get; set; }
+    public decimal AgreementTotal { get; set; }
+    public decimal DownPayment { get; set; }
+    public bool IncludesStudyLab { get; set; }
+    public decimal? StudyLabMonthlyPrice { get; set; }
+    public int InstallmentCount { get; set; }
+    public DateTime? InstallmentStartMonth { get; set; }
+    public decimal PaidAmount { get; set; }
 }
 
 public partial class ProgramFilterItemVm(int? programId, string name) : ObservableObject
