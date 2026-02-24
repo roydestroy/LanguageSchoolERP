@@ -50,6 +50,7 @@ public partial class StudentsViewModel : ObservableObject
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
     private readonly ConcurrentDictionary<Guid, byte> _detailsLoadInFlight = new();
+    private readonly Dispatcher _uiDispatcher;
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
@@ -90,6 +91,7 @@ public partial class StudentsViewModel : ObservableObject
     {
         _state = state;
         _dbFactory = dbFactory;
+        _uiDispatcher = System.Windows.Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
 
         RefreshCommand = new AsyncRelayCommand(() => StartLatestLoadAsync());
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
@@ -130,8 +132,11 @@ public partial class StudentsViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            SearchSuggestions.Clear();
-            IsSearchSuggestionsOpen = false;
+            _ = RunOnUiThreadAsync(() =>
+            {
+                SearchSuggestions.Clear();
+                IsSearchSuggestionsOpen = false;
+            });
         }
 
         _ = ScheduleSearchLoad();
@@ -277,7 +282,7 @@ public partial class StudentsViewModel : ObservableObject
         if (Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) != 0)
             return Task.CompletedTask;
 
-        IsLoading = true;
+        _ = RunOnUiThreadAsync(() => IsLoading = true);
 
         return ProcessLatestLoadsAsync();
     }
@@ -312,7 +317,7 @@ public partial class StudentsViewModel : ObservableObject
             }
             else
             {
-                IsLoading = false;
+                await RunOnUiThreadAsync(() => IsLoading = false);
             }
         }
     }
@@ -791,16 +796,29 @@ public partial class StudentsViewModel : ObservableObject
         return paid + 0.009m < expectedPaid;
     }
 
-    private static Task RunOnUiThreadAsync(Action action)
+    private async Task RunOnUiThreadAsync(Action action)
     {
-        var dispatcher = System.Windows.Application.Current?.Dispatcher;
-        if (dispatcher is null || dispatcher.CheckAccess())
+        if (_uiDispatcher.HasShutdownStarted || _uiDispatcher.HasShutdownFinished)
+            return;
+
+        if (_uiDispatcher.CheckAccess())
         {
             action();
-            return Task.CompletedTask;
+            return;
         }
 
-        return dispatcher.InvokeAsync(action, DispatcherPriority.DataBind).Task;
+        try
+        {
+            await _uiDispatcher.InvokeAsync(action, DispatcherPriority.DataBind);
+        }
+        catch (TaskCanceledException)
+        {
+            // Dispatcher is shutting down; ignore stale background completion.
+        }
+        catch (InvalidOperationException) when (_uiDispatcher.HasShutdownStarted || _uiDispatcher.HasShutdownFinished)
+        {
+            // Dispatcher is no longer available.
+        }
     }
 
     private static string FormatCurrency(decimal amount)
