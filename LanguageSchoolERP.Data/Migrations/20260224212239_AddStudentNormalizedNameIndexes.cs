@@ -4,8 +4,10 @@
 
 namespace LanguageSchoolERP.Data.Migrations
 {
+    /// <inheritdoc />
     public partial class AddStudentNormalizedNameIndexes : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
