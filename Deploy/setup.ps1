@@ -3,16 +3,7 @@
 param(
   [Parameter(Mandatory=$true)]
   [ValidateSet("Filothei","NeaIonia")]
-  [string]$School,
-
-  [Parameter(Mandatory=$true)]
-  [string]$ServerRoomTailscaleIP,   # e.g. 100.64.xx.yy (Linux server)
-
-  [Parameter(Mandatory=$true)]
-  [string]$ServerRoomShareUser,
-
-  [Parameter(Mandatory=$true)]
-  [string]$ServerRoomSharePass
+  [string]$School
 )
 
 $ErrorActionPreference = "Stop"
@@ -100,36 +91,6 @@ WITH MOVE N'${DbName}' TO N'$mdf',
 } else {
   Write-Host "Database $DbName already exists. Skipping restore."
 }
-
-Write-Host "=== 6) Install backup uploader + scheduled task ==="
-# Create SMB credential and map share for copy
-$share = "\\$ServerRoomTailscaleIP\erp-backups\$School"
-$credTarget = "TERMSRV/$ServerRoomTailscaleIP"
-cmd.exe /c "cmdkey /add:$credTarget /user:$ServerRoomShareUser /pass:$ServerRoomSharePass" | Out-Null
-
-# Write backup-upload.ps1 config values into a dedicated folder
-$ScriptsDir = "C:\ProgramData\LanguageSchoolERP\Scripts"
-New-Item -ItemType Directory -Force -Path $ScriptsDir | Out-Null
-
-$BackupScript = Join-Path $ScriptsDir "backup-upload.ps1"
-Copy-Item -Force (Join-Path $DeployDir "backup-upload.ps1") $BackupScript
-
-# Create a small config file for the script
-$config = @{
-  School = $School
-  DbName = $DbName
-  Instance = ".\SQLEXPRESS"
-  LocalBackupDir = $LocalBackupDir
-  RemoteShare = $share
-} | ConvertTo-Json -Depth 3
-$configPath = Join-Path $ScriptsDir "backup-upload.config.json"
-$config | Out-File -Encoding UTF8 $configPath
-
-# Scheduled task: every 30 minutes between 08:00-22:00 (adjust if needed)
-$taskName = "LanguageSchoolERP Backup Upload ($School)"
-$action = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$BackupScript`" -Config `"$configPath`""
-# Create task (runs as SYSTEM so it can read files and access SQL locally)
-schtasks /Create /F /RU "SYSTEM" /SC MINUTE /MO 30 /TN $taskName /TR $action | Out-Null
 
 Write-Host "=== Setup complete. ==="
 Write-Host "Local DB: .\SQLEXPRESS / $DbName"
