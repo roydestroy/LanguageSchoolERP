@@ -766,7 +766,7 @@ public partial class StudentsViewModel : ObservableObject
             .Where(s => s.NormalizedLastName.StartsWith(normalizedTerm) || s.NormalizedFirstName.StartsWith(normalizedTerm))
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
-            .Select(s => (s.FirstName + " " + s.LastName).Trim())
+            .Select(s => (s.LastName + " " + s.FirstName).Trim())
             .Distinct()
             .Take(SearchSuggestionsLimit)
             .ToListAsync();
@@ -781,7 +781,7 @@ public partial class StudentsViewModel : ObservableObject
                     s.Email.Contains(term))
                 .OrderBy(s => s.LastName)
                 .ThenBy(s => s.FirstName)
-                .Select(s => (s.FirstName + " " + s.LastName).Trim())
+                .Select(s => (s.LastName + " " + s.FirstName).Trim())
                 .Distinct()
                 .Take(SearchSuggestionsLimit)
                 .ToListAsync();
