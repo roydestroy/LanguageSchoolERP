@@ -266,7 +266,13 @@ public partial class StudentsViewModel : ObservableObject
         if (debounceVersion != Volatile.Read(ref _searchDebounceVersion))
             return;
 
-        await LoadSearchSuggestionsAsync();
+        var isSearchTextProvided = !string.IsNullOrWhiteSpace(SearchText);
+        var studentsLoadTask = StartLatestLoadAsync();
+
+        if (isSearchTextProvided)
+            await LoadSearchSuggestionsAsync();
+
+        await studentsLoadTask;
     }
 
     private Task StartLatestLoadAsync()
