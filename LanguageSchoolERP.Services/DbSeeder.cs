@@ -2,16 +2,25 @@
 using LanguageSchoolERP.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 
 namespace LanguageSchoolERP.Services;
 
 public static class DbSeeder
 {
+    private static readonly ConcurrentDictionary<string, byte> SeededDatabases = new(StringComparer.OrdinalIgnoreCase);
+
     public static void EnsureSeeded(SchoolDbContext db)
     {
         var databaseName = db.Database.GetDbConnection().Database;
         if (!string.IsNullOrWhiteSpace(databaseName) && databaseName.EndsWith("_View", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var seedKey = string.IsNullOrWhiteSpace(databaseName) ? "__unknown__" : databaseName;
+        if (SeededDatabases.ContainsKey(seedKey))
         {
             return;
         }
@@ -76,5 +85,6 @@ public static class DbSeeder
         }
 
         db.SaveChanges();
+        SeededDatabases[seedKey] = 1;
     }
 }

@@ -53,6 +53,41 @@ public class SchoolDbContext : DbContext
             .IsRequired()
             .HasMaxLength(200);
 
+        modelBuilder.Entity<StudyProgram>()
+            .HasIndex(p => p.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<AcademicPeriod>()
+            .Property(p => p.Name)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<AcademicPeriod>()
+            .HasIndex(p => p.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.FirstName)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<Student>()
+            .Property(s => s.LastName)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        modelBuilder.Entity<Student>()
+            .HasIndex(s => new { s.LastName, s.FirstName });
+
+        modelBuilder.Entity<Enrollment>()
+            .HasIndex(e => new { e.StudentId, e.AcademicPeriodId });
+
+        modelBuilder.Entity<Enrollment>()
+            .HasIndex(e => new { e.AcademicPeriodId, e.IsStopped });
+
+        modelBuilder.Entity<Payment>()
+            .HasIndex(p => p.PaymentDate);
+
         // -------------------------------------------------------
         // FIX: Explicit relationships to avoid multiple cascade paths
         // -------------------------------------------------------

@@ -352,7 +352,8 @@ public partial class StudentsViewModel : ObservableObject
             }
 
             var students = await baseQuery
-                 .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
+                .AsSplitQuery()
+                .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
                     .ThenInclude(en => en.Program)
                 .Include(s => s.Enrollments.Where(en => selectedPeriodId == null || en.AcademicPeriodId == selectedPeriodId))
                     .ThenInclude(en => en.Payments)
