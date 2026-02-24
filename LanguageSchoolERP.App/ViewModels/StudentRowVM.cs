@@ -54,6 +54,8 @@ public partial class StudentRowVm : ObservableObject
     public Visibility PendingContractVisibility => HasPendingContract ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty] private bool isExpanded;
+    [ObservableProperty] private bool areDetailsLoaded;
+    [ObservableProperty] private bool isDetailsLoading;
     public Visibility ExpandedVisibility => IsExpanded ? Visibility.Visible : Visibility.Collapsed;
 
     public ObservableCollection<EnrollmentRowVm> Enrollments { get; } = new();
