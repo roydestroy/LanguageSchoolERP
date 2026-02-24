@@ -21,13 +21,22 @@ public partial class StudentsView : UserControl
         if (e.OriginalSource is not DependencyObject source)
             return;
 
-        if (IsDescendantOf(source, StudentSearchContainer))
+        if (IsInsideSearchSurface(source))
             return;
 
         if (DataContext is StudentsViewModel vm)
             vm.IsSearchSuggestionsOpen = false;
 
         Keyboard.ClearFocus();
+    }
+
+    private bool IsInsideSearchSurface(DependencyObject source)
+    {
+        if (IsDescendantOf(source, StudentSearchContainer))
+            return true;
+
+        return StudentSearchSuggestionsPopup.Child is DependencyObject popupChild &&
+               IsDescendantOf(source, popupChild);
     }
 
     private static bool IsDescendantOf(DependencyObject current, DependencyObject parent)
