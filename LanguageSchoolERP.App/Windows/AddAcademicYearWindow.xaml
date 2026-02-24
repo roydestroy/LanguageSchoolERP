@@ -28,7 +28,9 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="−" Width="34" Height="30" FontSize="16" Click="DecreaseIncrementButton_Click"/>
+            <Button Grid.Column="0" Content="−" Width="34" Height="30" FontSize="16"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"
+                    Click="DecreaseIncrementButton_Click"/>
 
             <TextBox Grid.Column="1"
                      Margin="8,0"
@@ -37,7 +39,9 @@
                      FontWeight="SemiBold"
                      Text="{Binding AcademicYearName, Mode=OneWay}"/>
 
-            <Button Grid.Column="2" Content="+" Width="34" Height="30" FontSize="16" Click="IncreaseIncrementButton_Click"/>
+            <Button Grid.Column="2" Content="+" Width="34" Height="30" FontSize="16"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Padding="0"
+                    Click="IncreaseIncrementButton_Click"/>
         </Grid>
 
         <TextBlock Grid.Row="3"
