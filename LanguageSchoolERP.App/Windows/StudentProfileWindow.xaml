@@ -346,7 +346,7 @@
 								<TextBox Text="{Binding EditableNotes, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" AcceptsReturn="True" MinHeight="80" Style="{StaticResource EditableTextBoxStyle}"/>
 							</StackPanel>
 
-							<StackPanel Grid.Column="2">
+							<StackPanel Grid.Column="2" Margin="0,-2,0,0">
 								<TextBlock Text="Γονείς" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
 								<TextBlock Text="Ονοματεπώνυμο πατέρα" Foreground="#666666" FontSize="12"/>
