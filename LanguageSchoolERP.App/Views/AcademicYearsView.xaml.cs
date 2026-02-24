@@ -20,7 +20,14 @@ public partial class AcademicYearsView : UserControl
             return;
         }
 
-        var dialog = new AddAcademicYearWindow
+        var latestAcademicYearName = vm.GetLatestAcademicYearName();
+        if (string.IsNullOrWhiteSpace(latestAcademicYearName))
+        {
+            MessageBox.Show("Δεν υπάρχει διαθέσιμο ακαδημαϊκό έτος για να υπολογιστεί το επόμενο.");
+            return;
+        }
+
+        var dialog = new AddAcademicYearWindow(latestAcademicYearName)
         {
             Owner = Window.GetWindow(this)
         };

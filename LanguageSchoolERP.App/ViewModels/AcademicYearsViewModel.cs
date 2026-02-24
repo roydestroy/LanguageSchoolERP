@@ -73,6 +73,22 @@ public partial class AcademicYearsViewModel : ObservableObject
     }
 
 
+
+    public string? GetLatestAcademicYearName()
+    {
+        static int ExtractStartYear(string? value)
+        {
+            var firstPart = (value ?? string.Empty).Split('-', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            return int.TryParse(firstPart, out var year) ? year : int.MinValue;
+        }
+
+        return AcademicYears
+            .OrderByDescending(x => ExtractStartYear(x.Name))
+            .ThenByDescending(x => x.Name)
+            .Select(x => x.Name)
+            .FirstOrDefault();
+    }
+
     // Optional: keep this for external callers
     public Task AddAcademicYearAsync(string? yearName = null) => AddAsync(yearName);
 
