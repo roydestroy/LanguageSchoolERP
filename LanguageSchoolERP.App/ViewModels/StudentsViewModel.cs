@@ -395,7 +395,10 @@ public partial class StudentsViewModel : ObservableObject
                             InstallmentCount = e.InstallmentCount,
                             InstallmentStartMonth = e.InstallmentStartMonth,
                             PaidAmount = e.Payments
-                                .Where(p => (p.Notes == null || (!EF.Functions.Like(p.Notes, "%[ΑΚΥΡΩΜΕΝΗ_ΠΛΗΡΩΜΗ]%") && !EF.Functions.Like(p.Notes, "%[ΕΚΤΟΣ_ΣΥΜΦΩΝΗΘΕΝΤΟΣ]%") && !EF.Functions.Like(p.Notes, "%[EXCLUDE_FROM_AGREEMENT]%"))))
+                                .Where(p => p.Notes == null ||
+                                    (!p.Notes.Contains(PaymentAgreementHelper.VoidedPaymentMarker) &&
+                                     !p.Notes.Contains(PaymentAgreementHelper.ExcludeFromAgreementMarker) &&
+                                     !p.Notes.Contains("[EXCLUDE_FROM_AGREEMENT]")))
                                 .Sum(p => (decimal?)p.Amount) ?? 0m
                         })
                         .ToList()
@@ -656,33 +659,59 @@ public partial class StudentsViewModel : ObservableObject
 
     private IQueryable<Student> ApplyActiveFilters(IQueryable<Student> query, SchoolDbContext db, Guid? selectedPeriodId)
     {
-        if (SelectedProgramFilter?.ProgramId is int selectedProgramId)
-        {
-            query = query.Where(s => db.Enrollments.Any(e =>
-                e.StudentId == s.StudentId &&
-                e.ProgramId == selectedProgramId &&
-                (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId)));
-        }
+        var selectedProgramId = SelectedProgramFilter?.ProgramId;
 
-        query = SelectedStudentStatusFilter switch
+        IQueryable<Enrollment> scopedEnrollments = db.Enrollments;
+        if (selectedPeriodId is Guid periodId)
+            scopedEnrollments = scopedEnrollments.Where(e => e.AcademicPeriodId == periodId);
+
+        if (selectedProgramId is int programId)
+            scopedEnrollments = scopedEnrollments.Where(e => e.ProgramId == programId);
+
+        var scopedEnrollmentStudentIds = scopedEnrollments
+            .Select(e => e.StudentId)
+            .Distinct();
+
+        if (selectedProgramId is not null)
+            query = query.Where(s => scopedEnrollmentStudentIds.Contains(s.StudentId));
+
+        IQueryable<Guid> eligibleStudentIds = SelectedStudentStatusFilter switch
         {
-            ActiveStudentsFilter => selectedPeriodId == null
-                ? query.Where(_ => false)
-                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
-            InactiveStudentsFilter => selectedPeriodId == null
-                ? query
-                : query.Where(s => !db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped)),
-            ContractPendingFilter => selectedPeriodId == null
-                ? query.Where(_ => false)
-                : query.Where(s => db.Contracts.Any(c => c.StudentId == s.StudentId && c.Enrollment.AcademicPeriodId == selectedPeriodId && string.IsNullOrWhiteSpace(c.PdfPath))),
-            OverdueFilter => selectedPeriodId == null
-                ? query.Where(_ => false)
-                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && !e.IsStopped && (e.InstallmentCount > 0 && e.InstallmentStartMonth != null))),
-            DiscontinuedFilter => selectedPeriodId == null
-                ? query.Where(_ => false)
-                : query.Where(s => db.Enrollments.Any(e => e.StudentId == s.StudentId && e.AcademicPeriodId == selectedPeriodId && e.IsStopped)),
-            _ => query
+            ActiveStudentsFilter => selectedPeriodId is null
+                ? query.Where(_ => false).Select(s => s.StudentId)
+                : scopedEnrollments
+                    .Where(e => !e.IsStopped)
+                    .Select(e => e.StudentId)
+                    .Distinct(),
+            InactiveStudentsFilter => selectedPeriodId is null
+                ? query.Select(s => s.StudentId)
+                : db.Students
+                    .Where(s => !scopedEnrollments.Where(e => !e.IsStopped).Select(e => e.StudentId).Distinct().Contains(s.StudentId))
+                    .Select(s => s.StudentId),
+            ContractPendingFilter => selectedPeriodId is null
+                ? query.Where(_ => false).Select(s => s.StudentId)
+                : db.Contracts
+                    .Where(c => string.IsNullOrWhiteSpace(c.PdfPath) &&
+                                c.Enrollment.AcademicPeriodId == selectedPeriodId &&
+                                (selectedProgramId == null || c.Enrollment.ProgramId == selectedProgramId))
+                    .Select(c => c.StudentId)
+                    .Distinct(),
+            OverdueFilter => selectedPeriodId is null
+                ? query.Where(_ => false).Select(s => s.StudentId)
+                : scopedEnrollments
+                    .Where(e => !e.IsStopped && e.InstallmentCount > 0 && e.InstallmentStartMonth != null)
+                    .Select(e => e.StudentId)
+                    .Distinct(),
+            DiscontinuedFilter => selectedPeriodId is null
+                ? query.Where(_ => false).Select(s => s.StudentId)
+                : scopedEnrollments
+                    .Where(e => e.IsStopped)
+                    .Select(e => e.StudentId)
+                    .Distinct(),
+            _ => query.Select(s => s.StudentId)
         };
+
+        query = query.Where(s => eligibleStudentIds.Contains(s.StudentId));
 
         return query;
     }
