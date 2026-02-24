@@ -395,7 +395,10 @@ public partial class StudentsViewModel : ObservableObject
                             InstallmentCount = e.InstallmentCount,
                             InstallmentStartMonth = e.InstallmentStartMonth,
                             PaidAmount = e.Payments
-                                .Where(p => (p.Notes == null || (!EF.Functions.Like(p.Notes, "%[ΑΚΥΡΩΜΕΝΗ_ΠΛΗΡΩΜΗ]%") && !EF.Functions.Like(p.Notes, "%[ΕΚΤΟΣ_ΣΥΜΦΩΝΗΘΕΝΤΟΣ]%") && !EF.Functions.Like(p.Notes, "%[EXCLUDE_FROM_AGREEMENT]%"))))
+                                .Where(p => p.Notes == null ||
+                                    (!p.Notes.Contains(PaymentAgreementHelper.VoidedPaymentMarker) &&
+                                     !p.Notes.Contains(PaymentAgreementHelper.ExcludeFromAgreementMarker) &&
+                                     !p.Notes.Contains("[EXCLUDE_FROM_AGREEMENT]")))
                                 .Sum(p => (decimal?)p.Amount) ?? 0m
                         })
                         .ToList()
