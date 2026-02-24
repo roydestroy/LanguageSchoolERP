@@ -44,6 +44,7 @@ public partial class StudentsViewModel : ObservableObject
     private readonly DbContextFactory _dbFactory;
     private int _loadGeneration;
     private int _searchDebounceVersion;
+    private int _searchSuggestionsGeneration;
     private int _latestRequestedGeneration;
     private int _isLoadLoopRunning;
     private bool _suppressProgramFilterReload;
@@ -265,7 +266,7 @@ public partial class StudentsViewModel : ObservableObject
         if (debounceVersion != Volatile.Read(ref _searchDebounceVersion))
             return;
 
-        await StartLatestLoadAsync();
+        await LoadSearchSuggestionsAsync();
     }
 
     private Task StartLatestLoadAsync()
@@ -337,8 +338,6 @@ public partial class StudentsViewModel : ObservableObject
                 .ToListAsync();
 
             SyncProgramFilters(availablePrograms);
-            await LoadSearchSuggestionsAsync(db, selectedPeriodId, generation);
-
             var baseQuery = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
             if (!string.IsNullOrWhiteSpace(SearchText))
@@ -716,25 +715,27 @@ public partial class StudentsViewModel : ObservableObject
         return query;
     }
 
-    private async Task LoadSearchSuggestionsAsync(SchoolDbContext db, Guid? selectedPeriodId, int generation)
+    private async Task LoadSearchSuggestionsAsync()
     {
         if (string.IsNullOrWhiteSpace(SearchText))
             return;
 
+        var generation = Interlocked.Increment(ref _searchSuggestionsGeneration);
         var term = SearchText.Trim();
+
+        using var db = _dbFactory.Create();
+        DbSeeder.EnsureSeeded(db);
+
+        var selectedPeriodId = await db.AcademicPeriods
+            .AsNoTracking()
+            .Where(p => p.Name == _state.SelectedAcademicYear)
+            .Select(p => (Guid?)p.AcademicPeriodId)
+            .FirstOrDefaultAsync();
 
         var filteredStudents = ApplyActiveFilters(db.Students.AsNoTracking(), db, selectedPeriodId);
 
         var suggestions = await filteredStudents
-            .Where(s =>
-                (s.FirstName + " " + s.LastName).Contains(term) ||
-                s.Mobile.Contains(term) ||
-                s.Landline.Contains(term) ||
-                s.Email.Contains(term) ||
-                db.Enrollments.Any(e =>
-                    e.StudentId == s.StudentId &&
-                    (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
-                    ((e.LevelOrClass != null && e.LevelOrClass.Contains(term)) || e.Program.Name.Contains(term))))
+            .Where(s => (s.FirstName + " " + s.LastName).Contains(term))
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
             .Select(s => (s.FirstName + " " + s.LastName).Trim())
@@ -742,7 +743,7 @@ public partial class StudentsViewModel : ObservableObject
             .Take(8)
             .ToListAsync();
 
-        if (generation != Volatile.Read(ref _loadGeneration))
+        if (generation != Volatile.Read(ref _searchSuggestionsGeneration))
             return;
 
         SearchSuggestions.Clear();
