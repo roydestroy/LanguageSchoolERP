@@ -78,13 +78,13 @@
 			<Setter Property="FontWeight" Value="SemiBold"/>
 			<Setter Property="Cursor" Value="Hand"/>
 			<Setter Property="Height" Value="16"/>
-			<Setter Property="VerticalAlignment" Value="Bottom"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
 			<Setter Property="HorizontalAlignment" Value="Left"/>
 			<Setter Property="Focusable" Value="False"/>
 			<Setter Property="Template">
 				<Setter.Value>
 					<ControlTemplate TargetType="Button">
-						<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
+						<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
 					</ControlTemplate>
 				</Setter.Value>
 			</Setter>
