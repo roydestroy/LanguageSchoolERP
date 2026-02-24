@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -485,9 +486,12 @@ public partial class StudentsViewModel : ObservableObject
             if (generation != Volatile.Read(ref _loadGeneration))
                 return;
 
-            Students.Clear();
-            foreach (var row in sortedRows)
-                Students.Add(row);
+            await RunOnUiThreadAsync(() =>
+            {
+                Students.Clear();
+                foreach (var row in sortedRows)
+                    Students.Add(row);
+            });
 
         }
         catch (Exception ex)
@@ -551,7 +555,7 @@ public partial class StudentsViewModel : ObservableObject
         if (!_detailsLoadInFlight.TryAdd(row.StudentId, 0))
             return;
 
-        row.IsDetailsLoading = true;
+        await RunOnUiThreadAsync(() => row.IsDetailsLoading = true);
 
         try
         {
@@ -578,7 +582,7 @@ public partial class StudentsViewModel : ObservableObject
                 .Select(c => c.PdfPath)
                 .ToListAsync();
 
-            row.HasPendingContract = contracts.Any(string.IsNullOrWhiteSpace);
+            var hasPendingContract = contracts.Any(string.IsNullOrWhiteSpace);
 
             var today = DateTime.Today;
             var details = new List<EnrollmentRowVm>();
@@ -620,15 +624,19 @@ public partial class StudentsViewModel : ObservableObject
                 });
             }
 
-            row.Enrollments.Clear();
-            foreach (var detail in details)
-                row.Enrollments.Add(detail);
+            await RunOnUiThreadAsync(() =>
+            {
+                row.HasPendingContract = hasPendingContract;
+                row.Enrollments.Clear();
+                foreach (var detail in details)
+                    row.Enrollments.Add(detail);
 
-            row.AreDetailsLoaded = true;
+                row.AreDetailsLoaded = true;
+            });
         }
         finally
         {
-            row.IsDetailsLoading = false;
+            await RunOnUiThreadAsync(() => row.IsDetailsLoading = false);
             _detailsLoadInFlight.TryRemove(row.StudentId, out _);
         }
     }
@@ -716,18 +724,21 @@ public partial class StudentsViewModel : ObservableObject
         if (generation != Volatile.Read(ref _loadGeneration))
             return;
 
-        SearchSuggestions.Clear();
-        foreach (var suggestion in suggestions)
-            SearchSuggestions.Add(suggestion);
-
-        if (_suppressSuggestionsOpenOnce)
+        await RunOnUiThreadAsync(() =>
         {
-            _suppressSuggestionsOpenOnce = false;
-            IsSearchSuggestionsOpen = false;
-            return;
-        }
+            SearchSuggestions.Clear();
+            foreach (var suggestion in suggestions)
+                SearchSuggestions.Add(suggestion);
 
-        IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
+            if (_suppressSuggestionsOpenOnce)
+            {
+                _suppressSuggestionsOpenOnce = false;
+                IsSearchSuggestionsOpen = false;
+                return;
+            }
+
+            IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
+        });
     }
 
 
@@ -778,6 +789,18 @@ public partial class StudentsViewModel : ObservableObject
         }
 
         return paid + 0.009m < expectedPaid;
+    }
+
+    private static Task RunOnUiThreadAsync(Action action)
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null || dispatcher.CheckAccess())
+        {
+            action();
+            return Task.CompletedTask;
+        }
+
+        return dispatcher.InvokeAsync(action, DispatcherPriority.DataBind).Task;
     }
 
     private static string FormatCurrency(decimal amount)
