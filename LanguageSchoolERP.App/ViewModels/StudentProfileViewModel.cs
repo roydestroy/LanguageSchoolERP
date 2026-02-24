@@ -40,6 +40,7 @@ public partial class StudentProfileViewModel : ObservableObject
     private string _originalStudentSurname = "";
     private DateTime? _originalDateOfBirth;
     private string _originalSchoolName = "";
+    private string _originalAddress = "";
     private string _originalMobile = "";
     private string _originalLandline = "";
     private string _originalEmail = "";
@@ -76,6 +77,7 @@ public partial class StudentProfileViewModel : ObservableObject
     [ObservableProperty] private string editableStudentSurname = "";
     [ObservableProperty] private DateTime? editableDateOfBirth;
     [ObservableProperty] private string editableSchoolName = "";
+    [ObservableProperty] private string editableAddress = "";
     [ObservableProperty] private string editableMobile = "";
     [ObservableProperty] private string editableLandline = "";
     [ObservableProperty] private string editableEmail = "";
@@ -289,6 +291,7 @@ public partial class StudentProfileViewModel : ObservableObject
         EditableStudentSurname = _originalStudentSurname;
         EditableDateOfBirth = _originalDateOfBirth;
         EditableSchoolName = _originalSchoolName;
+        EditableAddress = _originalAddress;
         EditableMobile = _originalMobile;
         EditableLandline = _originalLandline;
         EditableEmail = _originalEmail;
@@ -333,6 +336,7 @@ public partial class StudentProfileViewModel : ObservableObject
             student.LastName = (EditableStudentSurname ?? string.Empty).Trim();
             student.DateOfBirth = EditableDateOfBirth;
             student.SchoolName = EditableSchoolName.Trim();
+            student.Address = EditableAddress.Trim();
             student.Mobile = EditableMobile.Trim();
             student.Landline = EditableLandline.Trim();
             student.Email = EditableEmail.Trim();
@@ -1005,6 +1009,7 @@ public partial class StudentProfileViewModel : ObservableObject
             _originalStudentSurname = student.LastName ?? "";
             _originalDateOfBirth = student.DateOfBirth;
             _originalSchoolName = student.SchoolName ?? "";
+            _originalAddress = student.Address ?? "";
             _originalMobile = student.Mobile ?? "";
             _originalLandline = student.Landline ?? "";
             _originalEmail = student.Email ?? "";
@@ -1025,6 +1030,7 @@ public partial class StudentProfileViewModel : ObservableObject
             EditableStudentSurname = _originalStudentSurname;
             EditableDateOfBirth = _originalDateOfBirth;
             EditableSchoolName = _originalSchoolName;
+            EditableAddress = _originalAddress;
             EditableMobile = _originalMobile;
             EditableLandline = _originalLandline;
             EditableEmail = _originalEmail;

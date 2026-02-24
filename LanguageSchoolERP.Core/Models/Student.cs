@@ -10,6 +10,7 @@ public class Student
     public string LastName { get; set; } = "";
     public DateTime? DateOfBirth { get; set; }
     public string SchoolName { get; set; } = "";
+    public string Address { get; set; } = "";
 
     public string Mobile { get; set; } = "";
     public string Landline { get; set; } = "";

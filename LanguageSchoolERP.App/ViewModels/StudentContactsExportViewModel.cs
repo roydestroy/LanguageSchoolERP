@@ -42,6 +42,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
     [ObservableProperty] private bool includeMotherLandline;
     [ObservableProperty] private bool includeStudentDateOfBirth;
     [ObservableProperty] private bool includeSchoolName;
+    [ObservableProperty] private bool includeStudentAddress;
 
     public IAsyncRelayCommand RefreshCommand { get; }
     public IRelayCommand SelectAllCommand { get; }
@@ -149,6 +150,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
                 AcademicYear = SelectedAcademicYear,
                 StudentDateOfBirth = student.DateOfBirth?.ToString("dd/MM/yyyy") ?? string.Empty,
                 SchoolName = student.SchoolName,
+                StudentAddress = student.Address,
                 StudentEmail = student.Email,
                 StudentMobile = student.Mobile,
                 StudentLandline = student.Landline,
@@ -513,6 +515,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
         if (IncludeStudentMobile) headers.Add("Κινητό Μαθητή");
         if (IncludeStudentLandline) headers.Add("Σταθερό Μαθητή");
         if (IncludeSchoolName) headers.Add("Σχολείο");
+        if (IncludeStudentAddress) headers.Add("Διεύθυνση");
 
         if (IncludeFatherName) headers.Add("Ονοματεπώνυμο Πατέρα");
         if (IncludeMotherName) headers.Add("Ονοματεπώνυμο Μητέρας");
@@ -537,6 +540,7 @@ public partial class StudentContactsExportViewModel : ObservableObject
         if (IncludeStudentMobile) values.Add(s.StudentMobile);
         if (IncludeStudentLandline) values.Add(s.StudentLandline);
         if (IncludeSchoolName) values.Add(s.SchoolName);
+        if (IncludeStudentAddress) values.Add(s.StudentAddress);
 
         if (IncludeFatherName) values.Add(s.FatherName);
         if (IncludeMotherName) values.Add(s.MotherName);
@@ -579,6 +583,7 @@ public partial class StudentContactsGridRowVm : ObservableObject
 
     [ObservableProperty] private string studentDateOfBirth = string.Empty;
     [ObservableProperty] private string schoolName = string.Empty;
+    [ObservableProperty] private string studentAddress = string.Empty;
 
     public Action<StudentContactsGridRowVm, bool>? SelectionChanged { get; init; }
 
@@ -598,6 +603,7 @@ public partial class StudentContactsGridRowVm : ObservableObject
             AcademicYear = AcademicYear,
             StudentDateOfBirth = StudentDateOfBirth,
             SchoolName = SchoolName,
+            StudentAddress = StudentAddress,
             StudentEmail = StudentEmail,
             StudentMobile = StudentMobile,
             StudentLandline = StudentLandline,
