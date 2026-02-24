@@ -35,7 +35,7 @@
                      IsReadOnly="True"
                      HorizontalContentAlignment="Center"
                      FontWeight="SemiBold"
-                     Text="{Binding AcademicYearName}"/>
+                     Text="{Binding AcademicYearName, Mode=OneWay}"/>
 
             <Button Grid.Column="2" Content="+" Width="34" Height="30" FontSize="16" Click="IncreaseIncrementButton_Click"/>
         </Grid>
