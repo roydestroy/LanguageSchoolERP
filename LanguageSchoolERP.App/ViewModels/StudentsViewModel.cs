@@ -17,7 +17,6 @@ using Microsoft.EntityFrameworkCore;
 using LanguageSchoolERP.App.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -50,7 +49,6 @@ public partial class StudentsViewModel : ObservableObject
     private bool _suppressProgramFilterReload;
     private bool _suppressSuggestionsOpenOnce;
     private readonly ConcurrentDictionary<Guid, byte> _detailsLoadInFlight = new();
-    private readonly Dispatcher _uiDispatcher;
 
     public ObservableCollection<StudentRowVm> Students { get; } = new();
     public ObservableCollection<string> StudentStatusFilters { get; } =
@@ -91,7 +89,6 @@ public partial class StudentsViewModel : ObservableObject
     {
         _state = state;
         _dbFactory = dbFactory;
-        _uiDispatcher = System.Windows.Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
 
         RefreshCommand = new AsyncRelayCommand(() => StartLatestLoadAsync());
         NewStudentCommand = new RelayCommand(OpenNewStudentDialog, CanCreateStudent);
@@ -132,11 +129,8 @@ public partial class StudentsViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            _ = RunOnUiThreadAsync(() =>
-            {
-                SearchSuggestions.Clear();
-                IsSearchSuggestionsOpen = false;
-            });
+            SearchSuggestions.Clear();
+            IsSearchSuggestionsOpen = false;
         }
 
         _ = ScheduleSearchLoad();
@@ -282,7 +276,7 @@ public partial class StudentsViewModel : ObservableObject
         if (Interlocked.CompareExchange(ref _isLoadLoopRunning, 1, 0) != 0)
             return Task.CompletedTask;
 
-        _ = RunOnUiThreadAsync(() => IsLoading = true);
+        IsLoading = true;
 
         return ProcessLatestLoadsAsync();
     }
@@ -317,7 +311,7 @@ public partial class StudentsViewModel : ObservableObject
             }
             else
             {
-                await RunOnUiThreadAsync(() => IsLoading = false);
+                IsLoading = false;
             }
         }
     }
@@ -491,12 +485,9 @@ public partial class StudentsViewModel : ObservableObject
             if (generation != Volatile.Read(ref _loadGeneration))
                 return;
 
-            await RunOnUiThreadAsync(() =>
-            {
-                Students.Clear();
-                foreach (var row in sortedRows)
-                    Students.Add(row);
-            });
+            Students.Clear();
+            foreach (var row in sortedRows)
+                Students.Add(row);
 
         }
         catch (Exception ex)
@@ -560,7 +551,7 @@ public partial class StudentsViewModel : ObservableObject
         if (!_detailsLoadInFlight.TryAdd(row.StudentId, 0))
             return;
 
-        await RunOnUiThreadAsync(() => row.IsDetailsLoading = true);
+        row.IsDetailsLoading = true;
 
         try
         {
@@ -587,7 +578,7 @@ public partial class StudentsViewModel : ObservableObject
                 .Select(c => c.PdfPath)
                 .ToListAsync();
 
-            var hasPendingContract = contracts.Any(string.IsNullOrWhiteSpace);
+            row.HasPendingContract = contracts.Any(string.IsNullOrWhiteSpace);
 
             var today = DateTime.Today;
             var details = new List<EnrollmentRowVm>();
@@ -629,19 +620,15 @@ public partial class StudentsViewModel : ObservableObject
                 });
             }
 
-            await RunOnUiThreadAsync(() =>
-            {
-                row.HasPendingContract = hasPendingContract;
-                row.Enrollments.Clear();
-                foreach (var detail in details)
-                    row.Enrollments.Add(detail);
+            row.Enrollments.Clear();
+            foreach (var detail in details)
+                row.Enrollments.Add(detail);
 
-                row.AreDetailsLoaded = true;
-            });
+            row.AreDetailsLoaded = true;
         }
         finally
         {
-            await RunOnUiThreadAsync(() => row.IsDetailsLoading = false);
+            row.IsDetailsLoading = false;
             _detailsLoadInFlight.TryRemove(row.StudentId, out _);
         }
     }
@@ -729,21 +716,18 @@ public partial class StudentsViewModel : ObservableObject
         if (generation != Volatile.Read(ref _loadGeneration))
             return;
 
-        await RunOnUiThreadAsync(() =>
+        SearchSuggestions.Clear();
+        foreach (var suggestion in suggestions)
+            SearchSuggestions.Add(suggestion);
+
+        if (_suppressSuggestionsOpenOnce)
         {
-            SearchSuggestions.Clear();
-            foreach (var suggestion in suggestions)
-                SearchSuggestions.Add(suggestion);
+            _suppressSuggestionsOpenOnce = false;
+            IsSearchSuggestionsOpen = false;
+            return;
+        }
 
-            if (_suppressSuggestionsOpenOnce)
-            {
-                _suppressSuggestionsOpenOnce = false;
-                IsSearchSuggestionsOpen = false;
-                return;
-            }
-
-            IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
-        });
+        IsSearchSuggestionsOpen = SearchSuggestions.Count > 0;
     }
 
 
@@ -794,31 +778,6 @@ public partial class StudentsViewModel : ObservableObject
         }
 
         return paid + 0.009m < expectedPaid;
-    }
-
-    private async Task RunOnUiThreadAsync(Action action)
-    {
-        if (_uiDispatcher.HasShutdownStarted || _uiDispatcher.HasShutdownFinished)
-            return;
-
-        if (_uiDispatcher.CheckAccess())
-        {
-            action();
-            return;
-        }
-
-        try
-        {
-            await _uiDispatcher.InvokeAsync(action, DispatcherPriority.DataBind);
-        }
-        catch (TaskCanceledException)
-        {
-            // Dispatcher is shutting down; ignore stale background completion.
-        }
-        catch (InvalidOperationException) when (_uiDispatcher.HasShutdownStarted || _uiDispatcher.HasShutdownFinished)
-        {
-            // Dispatcher is no longer available.
-        }
     }
 
     private static string FormatCurrency(decimal amount)
