@@ -370,6 +370,7 @@ public partial class StudentsViewModel : ObservableObject
                 {
                     baseQuery = baseQuery.Where(s =>
                         (s.NormalizedFirstName + " " + s.NormalizedLastName).Contains(normalizedTerm) ||
+                        (s.NormalizedLastName + " " + s.NormalizedFirstName).Contains(normalizedTerm) ||
                         s.Mobile.Contains(st) ||
                         s.Landline.Contains(st) ||
                         s.Email.Contains(st) ||
@@ -776,6 +777,7 @@ public partial class StudentsViewModel : ObservableObject
             suggestions = await filteredStudents
                 .Where(s =>
                     (s.NormalizedFirstName + " " + s.NormalizedLastName).Contains(normalizedTerm) ||
+                    (s.NormalizedLastName + " " + s.NormalizedFirstName).Contains(normalizedTerm) ||
                     s.Mobile.Contains(term) ||
                     s.Landline.Contains(term) ||
                     s.Email.Contains(term))
