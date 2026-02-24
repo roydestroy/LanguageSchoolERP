@@ -873,7 +873,7 @@ public interface StudentContactProjection
     PreferredEmailSource PreferredEmailSource { get; }
 }
 
-file sealed class StudentSummaryProjection : StudentContactProjection
+internal sealed class StudentSummaryProjection : StudentContactProjection
 {
     public Guid StudentId { get; set; }
     public string FirstName { get; set; } = string.Empty;
@@ -895,7 +895,7 @@ file sealed class StudentSummaryProjection : StudentContactProjection
     public List<EnrollmentSummaryProjection> Enrollments { get; set; } = [];
 }
 
-file sealed class EnrollmentSummaryProjection
+internal sealed class EnrollmentSummaryProjection
 {
     public bool IsStopped { get; set; }
     public string? ProgramName { get; set; }
