@@ -395,14 +395,6 @@ public sealed class DatabaseImportService : IDatabaseImportService
         var databaseNameLiteral = databaseName.Replace("]", "]]", StringComparison.Ordinal);
         var databaseNameSqlLiteral = databaseName.Replace("'", "''", StringComparison.Ordinal);
 
-        var (dataLogicalName, logLogicalName) = await ReadLogicalFileNamesAsync(localConnectionString, backupFilePath, cancellationToken);
-        var (defaultDataPath, defaultLogPath) = await ReadDefaultPathsAsync(localConnectionString, cancellationToken);
-
-        var dataFilePath = Path.Combine(defaultDataPath, $"{databaseName}.mdf").Replace("'", "''", StringComparison.Ordinal);
-        var logFilePath = Path.Combine(defaultLogPath, $"{databaseName}_log.ldf").Replace("'", "''", StringComparison.Ordinal);
-        var dataLogicalSqlLiteral = dataLogicalName.Replace("'", "''", StringComparison.Ordinal);
-        var logLogicalSqlLiteral = logLogicalName.Replace("'", "''", StringComparison.Ordinal);
-
         var dropSql = $"""
 USE [master];
 IF DB_ID(N'{databaseNameSqlLiteral}') IS NOT NULL
@@ -416,9 +408,7 @@ END
 USE [master];
 RESTORE DATABASE [{databaseNameLiteral}]
 FROM DISK = N'{backupPathLiteral}'
-WITH MOVE N'{dataLogicalSqlLiteral}' TO N'{dataFilePath}',
-     MOVE N'{logLogicalSqlLiteral}' TO N'{logFilePath}',
-     RECOVERY;
+WITH REPLACE, RECOVERY;
 """;
 
         await ExecuteOnMasterAsync(localConnectionString, dropSql, progress, 2, 3, "Dropping target database before restore...", cancellationToken);
@@ -427,79 +417,6 @@ WITH MOVE N'{dataLogicalSqlLiteral}' TO N'{dataFilePath}',
         progress?.Report(new ImportProgress("Backup restore completed successfully.", 3, 3));
     }
 
-    private static async Task<(string DataLogicalName, string LogLogicalName)> ReadLogicalFileNamesAsync(
-        string connectionString,
-        string backupFilePath,
-        CancellationToken cancellationToken)
-    {
-        var backupLiteral = backupFilePath.Replace("'", "''", StringComparison.Ordinal);
-        const string dataType = "D";
-        const string logType = "L";
-
-        var sql = $"RESTORE FILELISTONLY FROM DISK = N'{backupLiteral}';";
-
-        var builder = new SqlConnectionStringBuilder(connectionString)
-        {
-            InitialCatalog = "master"
-        };
-
-        await using var conn = new SqlConnection(builder.ConnectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        await using var cmd = new SqlCommand(sql, conn) { CommandTimeout = 0 };
-        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-
-        string? dataLogical = null;
-        string? logLogical = null;
-
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            var logicalName = reader["LogicalName"]?.ToString();
-            var type = reader["Type"]?.ToString();
-
-            if (string.IsNullOrWhiteSpace(logicalName) || string.IsNullOrWhiteSpace(type))
-                continue;
-
-            if (dataLogical is null && string.Equals(type, dataType, StringComparison.OrdinalIgnoreCase))
-                dataLogical = logicalName;
-            else if (logLogical is null && string.Equals(type, logType, StringComparison.OrdinalIgnoreCase))
-                logLogical = logicalName;
-        }
-
-        if (string.IsNullOrWhiteSpace(dataLogical) || string.IsNullOrWhiteSpace(logLogical))
-            throw new InvalidOperationException("Could not determine logical file names from backup.");
-
-        return (dataLogical, logLogical);
-    }
-
-    private static async Task<(string DefaultDataPath, string DefaultLogPath)> ReadDefaultPathsAsync(
-        string connectionString,
-        CancellationToken cancellationToken)
-    {
-        const string sql = "SELECT CAST(SERVERPROPERTY('InstanceDefaultDataPath') AS nvarchar(4000)), CAST(SERVERPROPERTY('InstanceDefaultLogPath') AS nvarchar(4000));";
-
-        var builder = new SqlConnectionStringBuilder(connectionString)
-        {
-            InitialCatalog = "master"
-        };
-
-        await using var conn = new SqlConnection(builder.ConnectionString);
-        await conn.OpenAsync(cancellationToken);
-
-        await using var cmd = new SqlCommand(sql, conn) { CommandTimeout = 0 };
-        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
-
-        if (!await reader.ReadAsync(cancellationToken))
-            throw new InvalidOperationException("Could not read SQL Server default data/log paths.");
-
-        var dataPath = reader.IsDBNull(0) ? null : reader.GetString(0);
-        var logPath = reader.IsDBNull(1) ? null : reader.GetString(1);
-
-        if (string.IsNullOrWhiteSpace(dataPath) || string.IsNullOrWhiteSpace(logPath))
-            throw new InvalidOperationException("SQL Server default data/log paths are not available.");
-
-        return (dataPath, logPath);
-    }
     private static SchoolDbContext CreateDbContext(string connectionString)
     {
         var options = new DbContextOptionsBuilder<SchoolDbContext>()
