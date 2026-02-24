@@ -37,6 +37,9 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.HasKey("AcademicPeriodId");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("AcademicPeriods");
                 });
 
@@ -194,9 +197,13 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.HasIndex("AcademicPeriodId");
 
+                    b.HasIndex("AcademicPeriodId", "IsStopped");
+
                     b.HasIndex("ProgramId");
 
                     b.HasIndex("StudentId");
+
+                    b.HasIndex("StudentId", "AcademicPeriodId");
 
                     b.ToTable("Enrollments");
                 });
@@ -226,6 +233,8 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasKey("PaymentId");
 
                     b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("PaymentDate");
 
                     b.ToTable("Payments");
                 });
@@ -375,6 +384,8 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.HasKey("StudentId");
 
+                    b.HasIndex("LastName", "FirstName");
+
                     b.ToTable("Students");
                 });
 
@@ -401,6 +412,9 @@ namespace LanguageSchoolERP.Data.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Programs", (string)null);
                 });
