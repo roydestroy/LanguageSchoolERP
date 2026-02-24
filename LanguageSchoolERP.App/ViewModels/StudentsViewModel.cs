@@ -353,12 +353,22 @@ public partial class StudentsViewModel : ObservableObject
             {
                 var st = SearchText.Trim();
                 var normalizedTerm = st.ToUpperInvariant();
-                var useBroadSearch = normalizedTerm.Length >= SearchBroadeningThreshold;
 
-                baseQuery = baseQuery.Where(s =>
+                var prefixQuery = baseQuery.Where(s =>
                     s.NormalizedLastName.StartsWith(normalizedTerm) ||
-                    s.NormalizedFirstName.StartsWith(normalizedTerm) ||
-                    (useBroadSearch && (
+                    s.NormalizedFirstName.StartsWith(normalizedTerm));
+
+                if (normalizedTerm.Length < SearchBroadeningThreshold)
+                {
+                    baseQuery = prefixQuery;
+                }
+                else if (await prefixQuery.AnyAsync())
+                {
+                    baseQuery = prefixQuery;
+                }
+                else
+                {
+                    baseQuery = baseQuery.Where(s =>
                         (s.NormalizedFirstName + " " + s.NormalizedLastName).Contains(normalizedTerm) ||
                         s.Mobile.Contains(st) ||
                         s.Landline.Contains(st) ||
@@ -367,7 +377,8 @@ public partial class StudentsViewModel : ObservableObject
                             e.StudentId == s.StudentId &&
                             (selectedPeriodId == null || e.AcademicPeriodId == selectedPeriodId) &&
                             e.LevelOrClass != null &&
-                            e.LevelOrClass.Contains(st)))));
+                            e.LevelOrClass.Contains(st)));
+                }
             }
 
             var today = DateTime.Today;
