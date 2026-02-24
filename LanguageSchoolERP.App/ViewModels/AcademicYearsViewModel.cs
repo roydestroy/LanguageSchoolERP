@@ -43,12 +43,24 @@ public partial class AcademicYearsViewModel : ObservableObject
                 DeleteAcademicYearCommand.NotifyCanExecuteChanged();
                 OnPropertyChanged(nameof(CanManageAcademicYears));
             }
+
+            if (ShouldReloadForContextChange(e.PropertyName))
+                _ = LoadAsync();
         };
 
         _ = LoadAsync();
     }
 
     private bool CanWrite() => !_state.IsReadOnlyMode;
+
+
+    private bool ShouldReloadForContextChange(string? propertyName)
+    {
+        return propertyName == nameof(AppState.SelectedDatabaseMode) ||
+               propertyName == nameof(AppState.SelectedDatabaseName) ||
+               propertyName == nameof(AppState.SelectedAcademicYear) ||
+               propertyName == nameof(AppState.DataVersion);
+    }
 
     private async Task LoadAsync()
     {

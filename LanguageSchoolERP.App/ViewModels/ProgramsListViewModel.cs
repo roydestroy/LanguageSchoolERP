@@ -28,12 +28,36 @@ public partial class ProgramsListViewModel : ObservableObject
         {
             if (e.PropertyName == nameof(AppState.SelectedDatabaseMode))
                 OnPropertyChanged(nameof(CanManagePrograms));
+
+            if (ShouldReloadForContextChange(e.PropertyName))
+                _ = ReloadForContextChangeAsync();
         };
     }
 
     partial void OnSearchTextChanged(string value)
     {
         ApplyFilter();
+    }
+
+
+    private bool ShouldReloadForContextChange(string? propertyName)
+    {
+        return propertyName == nameof(AppState.SelectedDatabaseMode) ||
+               propertyName == nameof(AppState.SelectedDatabaseName) ||
+               propertyName == nameof(AppState.SelectedAcademicYear) ||
+               propertyName == nameof(AppState.DataVersion);
+    }
+
+    private async Task ReloadForContextChangeAsync()
+    {
+        try
+        {
+            await LoadAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
     }
 
     public async Task LoadAsync(CancellationToken ct)
