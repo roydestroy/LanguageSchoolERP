@@ -393,12 +393,14 @@ public sealed class DatabaseImportService : IDatabaseImportService
 
         var backupPathLiteral = backupFilePath.Replace("'", "''", StringComparison.Ordinal);
         var databaseNameLiteral = databaseName.Replace("]", "]]", StringComparison.Ordinal);
+        var databaseNameSqlLiteral = databaseName.Replace("'", "''", StringComparison.Ordinal);
 
-        var setSingleUserSql = $"""
+        var dropSql = $"""
 USE [master];
-IF DB_ID(N'{databaseNameLiteral}') IS NOT NULL
+IF DB_ID(N'{databaseNameSqlLiteral}') IS NOT NULL
 BEGIN
     ALTER DATABASE [{databaseNameLiteral}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [{databaseNameLiteral}];
 END
 """;
 
@@ -409,27 +411,12 @@ FROM DISK = N'{backupPathLiteral}'
 WITH REPLACE, RECOVERY;
 """;
 
-        var setMultiUserSql = $"""
-USE [master];
-IF DB_ID(N'{databaseNameLiteral}') IS NOT NULL
-BEGIN
-    ALTER DATABASE [{databaseNameLiteral}] SET MULTI_USER;
-END
-""";
-
-        await ExecuteOnMasterAsync(localConnectionString, setSingleUserSql, progress, 2, 3, "Preparing target database for restore...", cancellationToken);
-
-        try
-        {
-            await ExecuteOnMasterAsync(localConnectionString, restoreSql, progress, 3, 3, "Restoring database from backup...", cancellationToken);
-        }
-        finally
-        {
-            await ExecuteOnMasterAsync(localConnectionString, setMultiUserSql, progress, 3, 3, "Finalizing database restore...", CancellationToken.None);
-        }
+        await ExecuteOnMasterAsync(localConnectionString, dropSql, progress, 2, 3, "Dropping target database before restore...", cancellationToken);
+        await ExecuteOnMasterAsync(localConnectionString, restoreSql, progress, 3, 3, "Restoring database from backup...", cancellationToken);
 
         progress?.Report(new ImportProgress("Backup restore completed successfully.", 3, 3));
     }
+
     private static SchoolDbContext CreateDbContext(string connectionString)
     {
         var options = new DbContextOptionsBuilder<SchoolDbContext>()
