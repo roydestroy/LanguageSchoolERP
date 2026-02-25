@@ -388,6 +388,8 @@ public partial class App : Application
         var previousMode = appState.SelectedDatabaseMode;
         var previousLocalDb = appState.SelectedLocalDatabaseName;
         var updatedDatabases = 0;
+        Windows.MigrationProgressWindow? progressWindow = null;
+
         try
         {
             appState.SelectedDatabaseMode = DatabaseMode.Local;
@@ -404,32 +406,48 @@ public partial class App : Application
             }
 
             if (databasesToMigrate.Count == 0)
+            {
+                UpdaterLog.Write("Migration", "No pending migrations found in local databases.");
                 return (true, 0);
+            }
 
-            MessageBox.Show(
-                "Γίνεται προετοιμασία της βάσης για τη νέα έκδοση.\n" +
-                "Παρακαλώ περιμένετε λίγα δευτερόλεπτα μέχρι να ολοκληρωθεί η αυτόματη ενημέρωση.",
-                "Ενημέρωση βάσης",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            progressWindow = new Windows.MigrationProgressWindow();
+            progressWindow.SetStatus("Παρακαλώ περιμένετε όσο ολοκληρώνεται η ενημέρωση. Η εφαρμογή θα ανοίξει αυτόματα.");
+            progressWindow.Show();
 
             foreach (var localDbName in databasesToMigrate)
             {
                 appState.SelectedLocalDatabaseName = localDbName;
+                progressWindow.SetStatus($"Ενημέρωση βάσης '{localDbName}'...");
 
-                await using var db = Services.GetRequiredService<DbContextFactory>().Create();
-                await db.Database.MigrateAsync();
-                updatedDatabases++;
+                var sw = Stopwatch.StartNew();
+                try
+                {
+                    await using var db = Services.GetRequiredService<DbContextFactory>().Create();
+                    await db.Database.MigrateAsync();
+                    sw.Stop();
+
+                    updatedDatabases++;
+                    UpdaterLog.Write("Migration", $"Database '{localDbName}' migrated successfully in {sw.ElapsedMilliseconds} ms.");
+                }
+                catch (Exception ex)
+                {
+                    sw.Stop();
+                    UpdaterLog.Write("Migration", $"Database '{localDbName}' migration failed after {sw.ElapsedMilliseconds} ms.", ex);
+                    throw;
+                }
             }
 
             return (true, updatedDatabases);
         }
-        catch
+        catch (Exception ex)
         {
+            UpdaterLog.Write("Migration", "Automatic local migration flow failed.", ex);
             return (false, updatedDatabases);
         }
         finally
         {
+            progressWindow?.Close();
             appState.SelectedLocalDatabaseName = previousLocalDb;
             appState.SelectedDatabaseMode = previousMode;
         }
