@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LanguageSchoolERP.Data.Migrations
 {
     [DbContext(typeof(SchoolDbContext))]
-    [Migration("20260217113534_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260225005641_InitialBaseline")]
+    partial class InitialBaseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,9 +36,13 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("AcademicPeriodId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("AcademicPeriods");
                 });
@@ -154,6 +158,9 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<DateTime?>("InstallmentStartMonth")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsStopped")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LevelOrClass")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -164,6 +171,16 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StopReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("StoppedAmountWaived")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("StoppedOn")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uniqueidentifier");
@@ -182,11 +199,11 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.HasKey("EnrollmentId");
 
-                    b.HasIndex("AcademicPeriodId");
-
                     b.HasIndex("ProgramId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("AcademicPeriodId", "IsStopped");
+
+                    b.HasIndex("StudentId", "AcademicPeriodId");
 
                     b.ToTable("Enrollments");
                 });
@@ -216,6 +233,8 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.HasKey("PaymentId");
 
                     b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("PaymentDate");
 
                     b.ToTable("Payments");
                 });
@@ -281,6 +300,10 @@ namespace LanguageSchoolERP.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
@@ -291,7 +314,15 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FatherContact")
+                    b.Property<string>("FatherEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FatherLandline")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FatherMobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -299,11 +330,33 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FullName")
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Landline")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MotherContact")
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Mobile")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotherEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotherLandline")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotherMobile")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -314,15 +367,42 @@ namespace LanguageSchoolERP.Data.Migrations
                     b.Property<bool>("NonCollectable")
                         .HasColumnType("bit");
 
+                    b.Property<string>("NormalizedFirstName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("NormalizedLastName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Notes")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
+                    b.Property<int>("PreferredEmailSource")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredLandlineSource")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PreferredPhoneSource")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SchoolName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("StudentId");
+
+                    b.HasIndex("LastName", "FirstName");
+
+                    b.HasIndex("NormalizedLastName", "NormalizedFirstName");
 
                     b.ToTable("Students");
                 });
@@ -350,6 +430,9 @@ namespace LanguageSchoolERP.Data.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Programs", (string)null);
                 });

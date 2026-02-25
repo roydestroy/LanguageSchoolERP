@@ -196,13 +196,9 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.HasKey("EnrollmentId");
 
-                    b.HasIndex("AcademicPeriodId");
-
-                    b.HasIndex("AcademicPeriodId", "IsStopped");
-
                     b.HasIndex("ProgramId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("AcademicPeriodId", "IsStopped");
 
                     b.HasIndex("StudentId", "AcademicPeriodId");
 
@@ -349,18 +345,6 @@ namespace LanguageSchoolERP.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NormalizedFirstName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasDefaultValue("");
-
-                    b.Property<string>("NormalizedLastName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasDefaultValue("");
-
                     b.Property<string>("MotherEmail")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -379,6 +363,20 @@ namespace LanguageSchoolERP.Data.Migrations
 
                     b.Property<bool>("NonCollectable")
                         .HasColumnType("bit");
+
+                    b.Property<string>("NormalizedFirstName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("NormalizedLastName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Notes")
                         .IsRequired()
