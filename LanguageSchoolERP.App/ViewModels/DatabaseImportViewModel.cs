@@ -6,9 +6,11 @@ using System.Text;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using CommunityToolkit.Mvvm.Input;
 using LanguageSchoolERP.App.Views;
+using LanguageSchoolERP.App.Windows;
 using LanguageSchoolERP.Services;
 
 namespace LanguageSchoolERP.App.ViewModels;
@@ -92,6 +94,8 @@ public partial class DatabaseImportViewModel : ObservableObject
     public IAsyncRelayCommand CancelCommand { get; }
     public IRelayCommand SaveStartupDatabaseCommand { get; }
     public IAsyncRelayCommand BackupNowCommand { get; }
+    public IAsyncRelayCommand GenerateEmptyDatabaseCommand { get; }
+    public IAsyncRelayCommand WipeDatabaseCommand { get; }
 
     public DatabaseImportViewModel(
         DatabaseAppSettingsProvider settingsProvider,
@@ -108,6 +112,8 @@ public partial class DatabaseImportViewModel : ObservableObject
         CancelCommand = new AsyncRelayCommand(CancelAsync, () => IsBusy);
         SaveStartupDatabaseCommand = new RelayCommand(SaveStartupDatabase);
         BackupNowCommand = new AsyncRelayCommand(BackupNowAsync, () => !IsBackupRunning);
+        GenerateEmptyDatabaseCommand = new AsyncRelayCommand(GenerateEmptyDatabaseAsync, CanGenerateEmptyDatabase);
+        WipeDatabaseCommand = new AsyncRelayCommand(WipeDatabaseAsync, CanWipeDatabase);
 
         StartupLocalDatabaseName = string.IsNullOrWhiteSpace(_appState.StartupLocalDatabaseName)
             ? "FilotheiSchoolERP"
@@ -126,18 +132,35 @@ public partial class DatabaseImportViewModel : ObservableObject
             ? "NeaIoniaSchoolERP"
             : "FilotheiSchoolERP";
 
+        _appState.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(AppState.HasAnyLocalDatabase) ||
+                e.PropertyName == nameof(AppState.AvailableLocalDatabases))
+            {
+                OnPropertyChanged(nameof(CanShowEmptyDatabaseActions));
+                GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
+                WipeDatabaseCommand.NotifyCanExecuteChanged();
+            }
+        };
+
         RefreshBackupStatus();
     }
+
+    public bool CanShowEmptyDatabaseActions => !_appState.HasAnyLocalDatabase;
 
     partial void OnIsBusyChanged(bool value)
     {
         ImportCommand.NotifyCanExecuteChanged();
         CancelCommand.NotifyCanExecuteChanged();
+        GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
+        WipeDatabaseCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnIsBackupRunningChanged(bool value)
     {
         BackupNowCommand.NotifyCanExecuteChanged();
+        WipeDatabaseCommand.NotifyCanExecuteChanged();
+        GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedRemoteDatabaseOptionChanged(RemoteDatabaseOption? value)
@@ -218,6 +241,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         BackupFilotheiSelected = string.Equals(value, "FilotheiSchoolERP", StringComparison.OrdinalIgnoreCase);
         BackupNeaIoniaSelected = string.Equals(value, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase);
         RefreshBackupStatus();
+        WipeDatabaseCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnBackupFilotheiSelectedChanged(bool value)
@@ -528,6 +552,152 @@ public partial class DatabaseImportViewModel : ObservableObject
             IsBackupRunning = false;
             RefreshBackupStatus();
         }
+    }
+
+    private bool CanGenerateEmptyDatabase()
+    {
+        return !IsBusy && !IsBackupRunning && !_appState.HasAnyLocalDatabase;
+    }
+
+    private bool CanWipeDatabase()
+    {
+        return !IsBusy
+            && !IsBackupRunning
+            && _appState.AvailableLocalDatabases.Contains(SelectedBackupDatabaseName);
+    }
+
+    private async Task GenerateEmptyDatabaseAsync()
+    {
+        var result = MessageBox.Show(
+            $"Θα δημιουργηθεί κενή βάση για το branch '{SelectedBackupDatabaseName}'.\n\nΣυνέχεια;",
+            "Δημιουργία κενής βάσης",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        IsBusy = true;
+
+        try
+        {
+            var settings = _settingsProvider.Settings;
+            var targetConnectionString = ConnectionStringHelpers.ReplaceDatabase(settings.Local.ConnectionString, SelectedBackupDatabaseName);
+            var options = new DbContextOptionsBuilder<LanguageSchoolERP.Data.SchoolDbContext>()
+                .UseSqlServer(targetConnectionString)
+                .Options;
+
+            await using var db = new LanguageSchoolERP.Data.SchoolDbContext(options);
+            await db.Database.MigrateAsync();
+
+            await RefreshLocalDatabaseAvailabilityAsync(settings.Local.Server, CancellationToken.None);
+            _appState.SelectedLocalDatabaseName = SelectedBackupDatabaseName;
+            _appState.SelectedDatabaseMode = DatabaseMode.Local;
+            _appState.NotifyDataChanged();
+
+            GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
+            WipeDatabaseCommand.NotifyCanExecuteChanged();
+
+            MessageBox.Show(
+                "Η κενή βάση δημιουργήθηκε επιτυχώς.",
+                "Δημιουργία κενής βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Η δημιουργία της βάσης απέτυχε. {ex.Message}",
+                "Δημιουργία κενής βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task WipeDatabaseAsync()
+    {
+        var owner = Application.Current?.MainWindow;
+        var confirmationPhrase = $"WIPE {SelectedBackupDatabaseName}";
+        var confirmationWindow = new DestructiveActionConfirmationWindow(
+            "Ολική εκκαθάριση βάσης",
+            $"Η ενέργεια θα διαγράψει όλα τα δεδομένα από τη βάση '{SelectedBackupDatabaseName}' και δεν αναιρείται.\n" +
+            "Ο πίνακας migrations (__EFMigrationsHistory) θα παραμείνει ανέπαφος.",
+            confirmationPhrase)
+        {
+            Owner = owner
+        };
+
+        if (confirmationWindow.ShowDialog() != true)
+            return;
+
+        IsBusy = true;
+
+        try
+        {
+            await WipeAllDataExceptMigrationsAsync(SelectedBackupDatabaseName);
+            _appState.NotifyDataChanged();
+
+            MessageBox.Show(
+                "Η βάση εκκαθαρίστηκε επιτυχώς.",
+                "Ολική εκκαθάριση βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Η εκκαθάριση απέτυχε. {ex.Message}",
+                "Ολική εκκαθάριση βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task WipeAllDataExceptMigrationsAsync(string databaseName)
+    {
+        var localConnection = ConnectionStringHelpers.ReplaceDatabase(_settingsProvider.Settings.Local.ConnectionString, databaseName);
+
+        await using var connection = new SqlConnection(localConnection);
+        await connection.OpenAsync();
+
+        const string sql = """
+DECLARE @sql NVARCHAR(MAX) = N'';
+
+SELECT @sql += N'ALTER TABLE [' + s.name + N'].[' + t.name + N'] NOCHECK CONSTRAINT ALL;' + CHAR(10)
+FROM sys.tables t
+INNER JOIN sys.schemas s ON s.schema_id = t.schema_id
+WHERE t.is_ms_shipped = 0
+  AND t.name <> N'__EFMigrationsHistory';
+
+SELECT @sql += N'DELETE FROM [' + s.name + N'].[' + t.name + N'];' + CHAR(10)
+FROM sys.tables t
+INNER JOIN sys.schemas s ON s.schema_id = t.schema_id
+WHERE t.is_ms_shipped = 0
+  AND t.name <> N'__EFMigrationsHistory';
+
+SELECT @sql += N'ALTER TABLE [' + s.name + N'].[' + t.name + N'] WITH CHECK CHECK CONSTRAINT ALL;' + CHAR(10)
+FROM sys.tables t
+INNER JOIN sys.schemas s ON s.schema_id = t.schema_id
+WHERE t.is_ms_shipped = 0
+  AND t.name <> N'__EFMigrationsHistory';
+
+EXEC sp_executesql @sql;
+""";
+
+        await using var command = new SqlCommand(sql, connection)
+        {
+            CommandTimeout = 0
+        };
+
+        await command.ExecuteNonQueryAsync();
     }
 
     private void RefreshBackupStatus()
