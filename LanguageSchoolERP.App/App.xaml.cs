@@ -385,13 +385,6 @@ public partial class App : Application
         if (localDatabases.Count == 0)
             return (true, 0);
 
-        MessageBox.Show(
-            "Γίνεται προετοιμασία της βάσης για τη νέα έκδοση.\n" +
-            "Παρακαλώ περιμένετε λίγα δευτερόλεπτα μέχρι να ολοκληρωθεί η αυτόματη ενημέρωση.",
-            "Ενημέρωση βάσης",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
-
         var previousMode = appState.SelectedDatabaseMode;
         var previousLocalDb = appState.SelectedLocalDatabaseName;
         var updatedDatabases = 0;
@@ -399,15 +392,32 @@ public partial class App : Application
         {
             appState.SelectedDatabaseMode = DatabaseMode.Local;
 
+            var databasesToMigrate = new List<string>();
             foreach (var localDbName in localDatabases)
             {
                 appState.SelectedLocalDatabaseName = localDbName;
 
                 await using var db = Services.GetRequiredService<DbContextFactory>().Create();
                 var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
-                if (!pendingMigrations.Any())
-                    continue;
+                if (pendingMigrations.Any())
+                    databasesToMigrate.Add(localDbName);
+            }
 
+            if (databasesToMigrate.Count == 0)
+                return (true, 0);
+
+            MessageBox.Show(
+                "Γίνεται προετοιμασία της βάσης για τη νέα έκδοση.\n" +
+                "Παρακαλώ περιμένετε λίγα δευτερόλεπτα μέχρι να ολοκληρωθεί η αυτόματη ενημέρωση.",
+                "Ενημέρωση βάσης",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            foreach (var localDbName in databasesToMigrate)
+            {
+                appState.SelectedLocalDatabaseName = localDbName;
+
+                await using var db = Services.GetRequiredService<DbContextFactory>().Create();
                 await db.Database.MigrateAsync();
                 updatedDatabases++;
             }
