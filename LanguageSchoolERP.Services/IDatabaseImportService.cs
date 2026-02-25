@@ -9,13 +9,6 @@ public sealed record ImportProgress(string Message, int CurrentStep, int TotalSt
 
 public interface IDatabaseImportService
 {
-    Task ImportFromRemoteAsync(
-        string remoteConnectionString,
-        string localConnectionString,
-        bool wipeLocalFirst,
-        IProgress<ImportProgress>? progress,
-        CancellationToken cancellationToken);
-
     Task ImportFromBackupAsync(
         string backupFilePath,
         string localConnectionString,

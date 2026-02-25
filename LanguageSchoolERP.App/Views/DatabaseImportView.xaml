@@ -182,40 +182,6 @@
                     </CheckBox.Style>
                 </CheckBox>
 
-                <TextBlock Grid.Row="5" Text="Διαγραφή τοπικής βάσης" VerticalAlignment="Center" Margin="0,14,10,0">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsExcelImportSelected}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-                <CheckBox Grid.Row="5" Grid.Column="1"
-                          Margin="0,14,0,0"
-                          IsChecked="{Binding WipeLocalFirst, Mode=TwoWay}"
-                          VerticalAlignment="Center">
-                    <CheckBox.Style>
-                        <Style TargetType="CheckBox">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsBackupImportSelected}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsExcelImportSelected}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </CheckBox.Style>
-                </CheckBox>
-
                 <TextBlock Grid.Row="6" Text="Πρόοδος" VerticalAlignment="Center" Margin="0,14,10,0"/>
                 <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,14,0,0">
                     <ProgressBar Height="20" Minimum="0" Maximum="100" Value="{Binding ProgressValue}"/>
