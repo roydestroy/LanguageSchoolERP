@@ -183,7 +183,30 @@ public partial class App : Application
                     "Δεν βρέθηκε τοπική βάση και η remote σύνδεση δεν είναι διαθέσιμη.\nΕγκαταστήστε/συνδεθείτε στο Tailscale και μετά κάντε εισαγωγή βάσης.",
                     "Βάση μη διαθέσιμη",
                     MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            }
+        }
+
+        if (localAvailability.HasAny)
+        {
+            var migrationOutcome = await TryAutoMigrateLocalDatabasesAsync(appState);
+            if (!migrationOutcome.Success)
+            {
+                MessageBox.Show(
+                    "Η εφαρμογή προσπάθησε να ενημερώσει αυτόματα τη δομή της τοπικής βάσης, αλλά κάτι πήγε στραβά.\n" +
+                    "Για να συνεχίσετε με ασφάλεια, μεταβείτε στις Ρυθμίσεις και κάντε ξανά εισαγωγή της βάσης από το remote περιβάλλον.",
+                    "Αποτυχία αυτόματης ενημέρωσης βάσης",
+                    MessageBoxButton.OK,
                     MessageBoxImage.Warning);
+                navigateToImportOnStartup = true;
+            }
+            else if (migrationOutcome.UpdatedDatabases > 0)
+            {
+                MessageBox.Show(
+                    $"Η ενημέρωση της βάσης ολοκληρώθηκε επιτυχώς ({migrationOutcome.UpdatedDatabases} βάση/βάσεις).\nΗ εφαρμογή είναι έτοιμη για χρήση.",
+                    "Η ενημέρωση ολοκληρώθηκε",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
         }
 
@@ -195,16 +218,6 @@ public partial class App : Application
 
         if (navigateToImportOnStartup)
             mainWindow.NavigateToDatabaseImportFromStartup();
-
-        if (await CheckSchemaCompatibilityAsync(appState))
-        {
-            MessageBox.Show(mainWindow,
-                "Η δομή της τοπικής βάσης είναι παλιά σε σχέση με την έκδοση της εφαρμογής.\nΠαρακαλώ εισάγετε ξανά τη βάση από το remote περιβάλλον.",
-                "Απαιτείται ενημέρωση βάσης",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            mainWindow.NavigateToDatabaseImportFromStartup();
-        }
 
         // Fire-and-forget startup check (silent if not user-initiated)
         _ = CheckForUpdatesInteractiveAsync(mainWindow, userInitiated: false);
@@ -359,31 +372,51 @@ public partial class App : Application
         }
     }
 
-    private static async Task<bool> CheckSchemaCompatibilityAsync(AppState appState)
+    private static async Task<(bool Success, int UpdatedDatabases)> TryAutoMigrateLocalDatabasesAsync(AppState appState)
     {
         if (!appState.HasAnyLocalDatabase)
-            return false;
+            return (true, 0);
+
+        var localDatabases = appState.AvailableLocalDatabases
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (localDatabases.Count == 0)
+            return (true, 0);
+
+        MessageBox.Show(
+            "Γίνεται προετοιμασία της βάσης για τη νέα έκδοση.\n" +
+            "Παρακαλώ περιμένετε λίγα δευτερόλεπτα μέχρι να ολοκληρωθεί η αυτόματη ενημέρωση.",
+            "Ενημέρωση βάσης",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
 
         var previousMode = appState.SelectedDatabaseMode;
         var previousLocalDb = appState.SelectedLocalDatabaseName;
+        var updatedDatabases = 0;
         try
         {
             appState.SelectedDatabaseMode = DatabaseMode.Local;
-            if (!appState.AvailableLocalDatabases.Contains(appState.SelectedLocalDatabaseName))
+
+            foreach (var localDbName in localDatabases)
             {
-                var firstLocalDb = appState.AvailableLocalDatabases.FirstOrDefault();
-                if (string.IsNullOrWhiteSpace(firstLocalDb))
-                    return false;
-                appState.SelectedLocalDatabaseName = firstLocalDb;
+                appState.SelectedLocalDatabaseName = localDbName;
+
+                await using var db = Services.GetRequiredService<DbContextFactory>().Create();
+                var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
+                if (!pendingMigrations.Any())
+                    continue;
+
+                await db.Database.MigrateAsync();
+                updatedDatabases++;
             }
 
-            await using var db = Services.GetRequiredService<DbContextFactory>().Create();
-            var pendingMigrations = await db.Database.GetPendingMigrationsAsync();
-            return pendingMigrations.Any();
+            return (true, updatedDatabases);
         }
         catch
         {
-            return false;
+            return (false, updatedDatabases);
         }
         finally
         {
