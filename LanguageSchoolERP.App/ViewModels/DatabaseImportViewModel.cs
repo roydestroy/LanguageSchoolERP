@@ -41,7 +41,6 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private bool excelTargetFilotheiSelected = true;
     [ObservableProperty] private bool excelTargetNeaIoniaSelected;
     [ObservableProperty] private bool excelDryRunMode;
-    [ObservableProperty] private bool wipeLocalFirst = true;
     [ObservableProperty] private string log = string.Empty;
     [ObservableProperty] private double progressValue;
     [ObservableProperty] private int progressPercent;
@@ -605,7 +604,7 @@ WHERE [name] IN (N'FilotheiSchoolERP', N'NeaIoniaSchoolERP');
 
     private bool ConfirmImport()
     {
-        if (SelectedImportSource == DatabaseImportSource.RemoteDatabase)
+        if (SelectedImportSource != DatabaseImportSource.ExcelFiles)
         {
             var dialog = new ConfirmImportDialog
             {
