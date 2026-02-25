@@ -387,14 +387,22 @@ public sealed class ExcelInteropWorkbookParser : IExcelWorkbookParser
 
         // Example comments: 65+140*8, (65+140)*8, 65+8*74.
         // Installments are valid only in range 1..12 and may appear either before or after the multiply symbol.
-        var matches = Regex.Matches(commentText, @"(\d+)\s*[\*xX×]\s*(\d+)");
-        foreach (Match match in matches)
+        // Support parenthesized expressions like 65+(85+15)*8 where left side is not a plain number.
+        var rightSideMatches = Regex.Matches(commentText, @"[\*xX×]\s*(\d+)");
+        foreach (Match match in rightSideMatches)
         {
             if (!match.Success)
                 continue;
 
-            if (int.TryParse(match.Groups[2].Value, out var right) && IsValidInstallmentCount(right))
+            if (int.TryParse(match.Groups[1].Value, out var right) && IsValidInstallmentCount(right))
                 return right;
+        }
+
+        var leftSideMatches = Regex.Matches(commentText, @"(\d+)\s*[\*xX×]");
+        foreach (Match match in leftSideMatches)
+        {
+            if (!match.Success)
+                continue;
 
             if (int.TryParse(match.Groups[1].Value, out var left) && IsValidInstallmentCount(left))
                 return left;
