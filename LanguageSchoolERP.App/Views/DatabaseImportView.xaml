@@ -112,7 +112,7 @@
                 </TextBlock>
                 <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,14,0,0">
                     <TextBox Width="320" Height="30" Text="{Binding BackupFilePath, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
-                    <Button Content="Αναζήτηση" Width="90" Height="30" Margin="8,0,0,0" Command="{Binding BrowseBackupFileCommand}"/>
+                    <Button Content="Αναζήτηση" Width="100" Height="30" Margin="8,0,0,0" Command="{Binding BrowseBackupFileCommand}"/>
                     <ComboBox Width="170" Height="30" Margin="12,0,0,0"
                               ItemsSource="{Binding LocalRestoreDatabases}"
                               SelectedItem="{Binding SelectedLocalRestoreDatabaseOption, Mode=TwoWay}"
