@@ -138,6 +138,7 @@ public partial class DatabaseImportViewModel : ObservableObject
                 e.PropertyName == nameof(AppState.AvailableLocalDatabases))
             {
                 OnPropertyChanged(nameof(CanShowEmptyDatabaseActions));
+                OnPropertyChanged(nameof(CanShowWipeDatabaseActions));
                 GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
                 WipeDatabaseCommand.NotifyCanExecuteChanged();
             }
@@ -147,6 +148,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     }
 
     public bool CanShowEmptyDatabaseActions => !_appState.HasAnyLocalDatabase;
+    public bool CanShowWipeDatabaseActions => _appState.HasAnyLocalDatabase;
 
     partial void OnIsBusyChanged(bool value)
     {
@@ -577,6 +579,9 @@ public partial class DatabaseImportViewModel : ObservableObject
         if (result != MessageBoxResult.Yes)
             return;
 
+        if (!await EnsureLocalSqlServerReachableAsync())
+            return;
+
         IsBusy = true;
 
         try
@@ -620,6 +625,9 @@ public partial class DatabaseImportViewModel : ObservableObject
 
     private async Task WipeDatabaseAsync()
     {
+        if (!await EnsureLocalSqlServerReachableAsync())
+            return;
+
         var owner = Application.Current?.MainWindow;
         var confirmationPhrase = $"WIPE {SelectedBackupDatabaseName}";
         var confirmationWindow = new DestructiveActionConfirmationWindow(
@@ -698,6 +706,30 @@ EXEC sp_executesql @sql;
         };
 
         await command.ExecuteNonQueryAsync();
+    }
+
+    private async Task<bool> EnsureLocalSqlServerReachableAsync()
+    {
+        var server = _settingsProvider.Settings.Local.Server;
+        var connectionString = DatabaseAppSettingsProvider.BuildTrustedConnectionString(server, "master");
+
+        try
+        {
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "Δεν ήταν δυνατή η σύνδεση στον τοπικό SQL Server.\n" +
+                $"Server: {server}\n\n" +
+                $"{ex.Message}",
+                "SQL Server μη διαθέσιμος",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
     }
 
     private void RefreshBackupStatus()

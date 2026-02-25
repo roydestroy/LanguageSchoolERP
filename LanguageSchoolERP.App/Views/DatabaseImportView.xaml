@@ -317,7 +317,18 @@
                         <Button Content="Ολική εκκαθάριση βάσης"
                                 Width="180"
                                 Height="30"
-                                Command="{Binding WipeDatabaseCommand}"/>
+                                Command="{Binding WipeDatabaseCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CanShowWipeDatabaseActions}" Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
