@@ -17,4 +17,20 @@ public partial class DatabaseImportView : UserControl
         var owner = Window.GetWindow(this);
         await App.CheckForUpdatesInteractiveAsync(owner, userInitiated: true);
     }
+
+    private void ProgramsBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow mainWindow)
+        {
+            mainWindow.NavigateToProgramsFromSettings();
+        }
+    }
+
+    private void AcademicYearsBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow mainWindow)
+        {
+            mainWindow.NavigateToAcademicYearsFromSettings();
+        }
+    }
 }

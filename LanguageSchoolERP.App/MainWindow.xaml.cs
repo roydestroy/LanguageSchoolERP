@@ -127,8 +127,6 @@ public partial class MainWindow : Window
         StudentsBtn.Click += (_, __) => NavigateToStudents();
         DailyPaymentsBtn.Click += (_, __) => NavigateToDailyPayments();
         ContactsExportBtn.Click += (_, __) => NavigateToStudentContactsExport();
-        ProgramsBtn.Click += (_, __) => NavigateToPrograms();
-        AcademicYearsBtn.Click += (_, __) => NavigateToAcademicYears();
         StatisticsBtn.Click += (_, __) => NavigateToStatistics();
         SettingsBtn.Click += (_, __) => NavigateToDatabaseImport();
 
@@ -322,8 +320,6 @@ public partial class MainWindow : Window
         StudentsBtn,
         DailyPaymentsBtn,
         ContactsExportBtn,
-        ProgramsBtn,
-        AcademicYearsBtn,
         StatisticsBtn,
         SettingsBtn
     };
@@ -383,7 +379,7 @@ public partial class MainWindow : Window
         ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<ProgramsView>();
         MainContent.Content = view;
-        SetActiveNavigationButton(ProgramsBtn);
+        SetActiveNavigationButton(SettingsBtn);
     }
 
     private void NavigateToAcademicYears()
@@ -391,7 +387,7 @@ public partial class MainWindow : Window
         ClearStudentsSearchIfNeeded();
         var view = App.Services.GetRequiredService<AcademicYearsView>();
         MainContent.Content = view;
-        SetActiveNavigationButton(AcademicYearsBtn);
+        SetActiveNavigationButton(SettingsBtn);
     }
 
     private void NavigateToStatistics()
@@ -445,6 +441,16 @@ public partial class MainWindow : Window
         NavigateToDatabaseImport();
     }
 
+    public void NavigateToProgramsFromSettings()
+    {
+        NavigateToPrograms();
+    }
+
+    public void NavigateToAcademicYearsFromSettings()
+    {
+        NavigateToAcademicYears();
+    }
+
     private void ClearStudentsSearchIfNeeded()
     {
         if (MainContent.Content is StudentsView studentsView &&
@@ -454,13 +460,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SettingsBtn_Click(object sender, RoutedEventArgs e)
-    {
-        // open settings window here
-    }
+    private void SettingsBtn_Click(object sender, RoutedEventArgs e) { }
 
-    private void ProgramsBtn_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
+    private void ProgramsBtn_Click(object sender, RoutedEventArgs e) { }
 }
