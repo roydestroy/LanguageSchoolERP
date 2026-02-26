@@ -762,7 +762,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = generatedPdfPath,
+                FileName = "explorer.exe",
+                Arguments = $"\"{generatedPdfPath}\"",
                 UseShellExecute = true
             });
 
@@ -918,7 +919,8 @@ public partial class StudentProfileViewModel : ObservableObject
 
         var psi = new System.Diagnostics.ProcessStartInfo
         {
-            FileName = SelectedReceipt.PdfPath,
+            FileName = "explorer.exe",
+            Arguments = $"\"{SelectedReceipt.PdfPath}\"",
             UseShellExecute = true
         };
         System.Diagnostics.Process.Start(psi);
