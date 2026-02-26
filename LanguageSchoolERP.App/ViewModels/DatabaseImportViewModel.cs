@@ -24,6 +24,7 @@ public enum DatabaseImportSource
 
 public partial class DatabaseImportViewModel : ObservableObject
 {
+    private const string TailscaleDownloadUrl = "https://tailscale.com/download";
     private readonly DatabaseAppSettingsProvider _settingsProvider;
     private readonly IDatabaseImportService _databaseImportService;
     private readonly IDatabaseCloneService _databaseCloneService;
@@ -63,8 +64,23 @@ public partial class DatabaseImportViewModel : ObservableObject
         get => SelectedImportSource == DatabaseImportSource.RemoteDatabase;
         set
         {
-            if (value)
-                SelectedImportSource = DatabaseImportSource.RemoteDatabase;
+            if (!value)
+                return;
+
+            if (!IsRemoteImportEnabled)
+            {
+                ShowWarningWithDownload(
+                    _appState.IsTailscaleInstalled
+                        ? "Δεν υπάρχει σύνδεση με τη remote βάση.\nΕλέγξτε ότι το Tailscale είναι συνδεδεμένο και ότι έχετε κάνει login στον σωστό λογαριασμό."
+                        : "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΕγκαταστήστε το Tailscale και συνδεθείτε στον λογαριασμό σας για να χρησιμοποιήσετε απομακρυσμένη βάση.",
+                    _appState.IsTailscaleInstalled ? "Remote βάση μη διαθέσιμη" : "Tailscale",
+                    TailscaleDownloadUrl,
+                    "Λήψη Tailscale");
+                SelectedImportSource = DatabaseImportSource.BackupFile;
+                return;
+            }
+
+            SelectedImportSource = DatabaseImportSource.RemoteDatabase;
         }
     }
 
@@ -79,6 +95,10 @@ public partial class DatabaseImportViewModel : ObservableObject
     }
 
     public ObservableCollection<string> ExcelFilePaths { get; } = [];
+
+    public bool IsTailscaleInstalled => _appState.IsTailscaleInstalled;
+    public bool IsRemoteImportEnabled => _appState.IsRemoteModeEnabled;
+    public string RemoteImportLabel => IsRemoteImportEnabled ? "Απομακρυσμένη DB" : "Απομακρυσμένη DB (Unavailable)";
 
     public bool IsExcelImportSelected
     {
@@ -128,6 +148,9 @@ public partial class DatabaseImportViewModel : ObservableObject
         SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
         SelectedLocalRestoreDatabaseOption = LocalRestoreDatabases.FirstOrDefault(x => string.Equals(x.Database, StartupLocalDatabaseName, StringComparison.OrdinalIgnoreCase));
 
+        if (!IsRemoteImportEnabled)
+            SelectedImportSource = DatabaseImportSource.BackupFile;
+
         SelectedBackupDatabaseName = string.Equals(_appState.SelectedLocalDatabaseName, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase)
             ? "NeaIoniaSchoolERP"
             : "FilotheiSchoolERP";
@@ -141,6 +164,21 @@ public partial class DatabaseImportViewModel : ObservableObject
                 OnPropertyChanged(nameof(CanShowWipeDatabaseActions));
                 GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
                 WipeDatabaseCommand.NotifyCanExecuteChanged();
+            }
+
+            if (e.PropertyName == nameof(AppState.IsTailscaleInstalled))
+            {
+                OnPropertyChanged(nameof(IsTailscaleInstalled));
+            }
+
+            if (e.PropertyName == nameof(AppState.IsRemoteModeEnabled) ||
+                e.PropertyName == nameof(AppState.IsTailscaleInstalled))
+            {
+                OnPropertyChanged(nameof(IsRemoteImportEnabled));
+                OnPropertyChanged(nameof(RemoteImportLabel));
+
+                if (!IsRemoteImportEnabled && SelectedImportSource == DatabaseImportSource.RemoteDatabase)
+                    SelectedImportSource = DatabaseImportSource.BackupFile;
             }
         };
 
@@ -266,6 +304,35 @@ public partial class DatabaseImportViewModel : ObservableObject
             "Ρυθμίσεις",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
+    {
+        var result = MessageBox.Show(
+            $"{message}\n\nΘέλετε να ανοίξει η σελίδα λήψης;",
+            caption,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = downloadUrl,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            MessageBox.Show(
+                "Δεν ήταν δυνατό να ανοίξει ο browser για λήψη.",
+                caption,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private bool CanImport()
@@ -523,12 +590,12 @@ public partial class DatabaseImportViewModel : ObservableObject
             }
 
             var status = BackupStatusStore.TryRead();
-            var error = string.IsNullOrWhiteSpace(status?.LastError)
+            var friendlyError = string.IsNullOrWhiteSpace(status?.LastError)
                 ? "Το backup απέτυχε. Ελέγξτε δικαιώματα πρόσβασης και ρυθμίσεις backup."
-                : $"Το backup απέτυχε. {status.LastError}";
+                : $"Το backup απέτυχε. {FormatBackupErrorMessage(status.LastError)}";
 
             MessageBox.Show(
-                error,
+                friendlyError,
                 "Backups",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -746,8 +813,31 @@ EXEC sp_executesql @sql;
             && string.Equals(status.LastResult, "Failed", StringComparison.OrdinalIgnoreCase)
             && string.Equals(status.LastDatabaseName, selectedDbName, StringComparison.OrdinalIgnoreCase)
             && !string.IsNullOrWhiteSpace(status.LastError)
-                ? status.LastError
+                ? FormatBackupErrorMessage(status.LastError)
                 : string.Empty;
+    }
+
+    private static string FormatBackupErrorMessage(string error)
+    {
+        if (string.IsNullOrWhiteSpace(error))
+            return string.Empty;
+
+        if (error.Contains("remote share unavailable", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("Failed to connect to network share", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("network share", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("The network path was not found", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Δεν ήταν δυνατή η σύνδεση στον απομακρυσμένο φάκελο backup. " +
+                   "Ελέγξτε αν το Tailscale είναι συνδεδεμένο και αν έχετε πρόσβαση στο εταιρικό δίκτυο.";
+        }
+
+        if (error.Contains("credential conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Υπάρχει σύγκρουση διαπιστευτηρίων για τον απομακρυσμένο φάκελο backup. " +
+                   "Κλείστε τυχόν ενεργές συνδέσεις δικτύου και δοκιμάστε ξανά.";
+        }
+
+        return error;
     }
 
     private DateTime? GetLatestBackupTimestamp(string databaseName)

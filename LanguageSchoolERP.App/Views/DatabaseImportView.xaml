@@ -31,9 +31,10 @@
 
                 <TextBlock Grid.Row="1" Text="Πηγή" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton Content="Απομακρυσμένη DB"
+                    <RadioButton Content="{Binding RemoteImportLabel}"
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"
+                                 IsEnabled="{Binding IsRemoteImportEnabled}"
                                  IsChecked="{Binding IsRemoteImportSelected, Mode=TwoWay}"/>
                     <RadioButton Content="Αρχείο .bak"
                                  GroupName="ImportSource"
