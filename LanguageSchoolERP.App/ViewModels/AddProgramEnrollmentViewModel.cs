@@ -35,7 +35,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
     [ObservableProperty] private string booksAmountText = "0";
     [ObservableProperty] private string downPaymentText = "0";
     [ObservableProperty] private string enrollmentComments = "";
-    [ObservableProperty] private string installmentCountText = "0";
+    [ObservableProperty] private string installmentCountText = "8";
     [ObservableProperty] private DateTime? installmentStartMonth;
 
     [ObservableProperty] private bool isStopped;
@@ -130,7 +130,7 @@ public partial class AddProgramEnrollmentViewModel : ObservableObject
         BooksAmountText = "0";
         DownPaymentText = "0";
         EnrollmentComments = "";
-        InstallmentCountText = "0";
+        InstallmentCountText = "8";
         InstallmentStartMonth = null;
         IsStopped = false;
         StoppedOn = null;

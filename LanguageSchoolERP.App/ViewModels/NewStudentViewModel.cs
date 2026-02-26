@@ -57,7 +57,7 @@ public partial class NewStudentViewModel : ObservableObject
     [ObservableProperty] private string errorMessage = "";
 
     // Installment plan
-    [ObservableProperty] private string installmentCountText = "0";
+    [ObservableProperty] private string installmentCountText = "8";
     [ObservableProperty] private DateTime? installmentStartMonth;
 
     [ObservableProperty] private bool includesStudyLab;
