@@ -27,7 +27,10 @@ public partial class StudentsView : UserControl
         if (DataContext is StudentsViewModel vm)
             vm.IsSearchSuggestionsOpen = false;
 
-        Keyboard.ClearFocus();
+        // Keep other controls (e.g. ComboBox selection) interactive and only
+        // clear focus when the search box itself currently owns keyboard focus.
+        if (StudentSearchTextBox.IsKeyboardFocusWithin)
+            Keyboard.ClearFocus();
     }
 
     private bool IsInsideSearchSurface(DependencyObject source)
