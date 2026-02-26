@@ -20,6 +20,7 @@ public class AppState : INotifyPropertyChanged
     private bool _isLocalModeEnabled = true;
     private bool _isRemoteModeEnabled = true;
     private bool _isDatabaseImportEnabled = true;
+    private bool _isTailscaleInstalled = true;
 
     public AppState(DatabaseAppSettingsProvider settingsProvider)
     {
@@ -151,6 +152,19 @@ public class AppState : INotifyPropertyChanged
         }
     }
 
+    public bool IsTailscaleInstalled
+    {
+        get => _isTailscaleInstalled;
+        private set
+        {
+            if (_isTailscaleInstalled == value)
+                return;
+
+            _isTailscaleInstalled = value;
+            OnPropertyChanged();
+        }
+    }
+
     public string SelectedRemoteDatabaseName
     {
         get => _selectedRemoteDatabaseName;
@@ -235,6 +249,11 @@ public class AppState : INotifyPropertyChanged
     public void SetDatabaseImportEnabled(bool enabled)
     {
         IsDatabaseImportEnabled = enabled;
+    }
+
+    public void SetTailscaleInstalled(bool installed)
+    {
+        IsTailscaleInstalled = installed;
     }
 
     public void SetRemoteModeEnabled(bool enabled)

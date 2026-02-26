@@ -24,6 +24,7 @@ public enum DatabaseImportSource
 
 public partial class DatabaseImportViewModel : ObservableObject
 {
+    private const string TailscaleDownloadUrl = "https://tailscale.com/download";
     private readonly DatabaseAppSettingsProvider _settingsProvider;
     private readonly IDatabaseImportService _databaseImportService;
     private readonly IDatabaseCloneService _databaseCloneService;
@@ -63,8 +64,21 @@ public partial class DatabaseImportViewModel : ObservableObject
         get => SelectedImportSource == DatabaseImportSource.RemoteDatabase;
         set
         {
-            if (value)
-                SelectedImportSource = DatabaseImportSource.RemoteDatabase;
+            if (!value)
+                return;
+
+            if (!_appState.IsTailscaleInstalled)
+            {
+                ShowWarningWithDownload(
+                    "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΕγκαταστήστε το Tailscale και συνδεθείτε στον λογαριασμό σας για να χρησιμοποιήσετε απομακρυσμένη βάση.",
+                    "Tailscale",
+                    TailscaleDownloadUrl,
+                    "Λήψη Tailscale");
+                SelectedImportSource = DatabaseImportSource.BackupFile;
+                return;
+            }
+
+            SelectedImportSource = DatabaseImportSource.RemoteDatabase;
         }
     }
 
@@ -79,6 +93,9 @@ public partial class DatabaseImportViewModel : ObservableObject
     }
 
     public ObservableCollection<string> ExcelFilePaths { get; } = [];
+
+    public bool IsTailscaleInstalled => _appState.IsTailscaleInstalled;
+    public string RemoteImportLabel => IsTailscaleInstalled ? "Απομακρυσμένη DB" : "Απομακρυσμένη DB (Unavailable)";
 
     public bool IsExcelImportSelected
     {
@@ -128,6 +145,9 @@ public partial class DatabaseImportViewModel : ObservableObject
         SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
         SelectedLocalRestoreDatabaseOption = LocalRestoreDatabases.FirstOrDefault(x => string.Equals(x.Database, StartupLocalDatabaseName, StringComparison.OrdinalIgnoreCase));
 
+        if (!_appState.IsTailscaleInstalled)
+            SelectedImportSource = DatabaseImportSource.BackupFile;
+
         SelectedBackupDatabaseName = string.Equals(_appState.SelectedLocalDatabaseName, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase)
             ? "NeaIoniaSchoolERP"
             : "FilotheiSchoolERP";
@@ -141,6 +161,15 @@ public partial class DatabaseImportViewModel : ObservableObject
                 OnPropertyChanged(nameof(CanShowWipeDatabaseActions));
                 GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
                 WipeDatabaseCommand.NotifyCanExecuteChanged();
+            }
+
+            if (e.PropertyName == nameof(AppState.IsTailscaleInstalled))
+            {
+                OnPropertyChanged(nameof(IsTailscaleInstalled));
+                OnPropertyChanged(nameof(RemoteImportLabel));
+
+                if (!_appState.IsTailscaleInstalled && SelectedImportSource == DatabaseImportSource.RemoteDatabase)
+                    SelectedImportSource = DatabaseImportSource.BackupFile;
             }
         };
 
@@ -266,6 +295,35 @@ public partial class DatabaseImportViewModel : ObservableObject
             "Ρυθμίσεις",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
+    {
+        var dialog = new DownloadPromptWindow(message, caption, buttonText)
+        {
+            Owner = Application.Current?.MainWindow
+        };
+
+        var result = dialog.ShowDialog();
+        if (result != true)
+            return;
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = downloadUrl,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            MessageBox.Show(
+                "Δεν ήταν δυνατό να ανοίξει ο browser για λήψη.",
+                caption,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private bool CanImport()

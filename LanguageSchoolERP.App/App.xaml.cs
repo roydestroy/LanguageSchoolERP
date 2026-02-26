@@ -130,37 +130,14 @@ public partial class App : Application
             settingsProvider.UpdateLocalServer(resolvedLocalServer);
 
         var tailscaleInstalled = IsTailscaleInstalled();
-        if (!tailscaleInstalled)
-        {
-            appState.SetDatabaseImportEnabled(false);
-            appState.SetRemoteModeEnabled(false);
-            ShowWarningWithDownload(
-                "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι απομακρυσμένες λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.\nΕγκαταστήστε το Tailscale, συνδεθείτε στον λογαριασμό σας και επανεκκινήστε την εφαρμογή.",
-                "Tailscale",
-                TailscaleDownloadUrl,
-                "Λήψη Tailscale");
-
-            Shutdown();
-            return;
-        }
+        appState.SetTailscaleInstalled(tailscaleInstalled);
+        appState.SetDatabaseImportEnabled(true);
 
         var remoteConnectivity = tailscaleInstalled
             ? await CheckRemoteConnectivityAsync(settingsProvider.Settings, appState.SelectedRemoteDatabaseName)
             : ConnectivityCheckResult.Fail("Tailscale disconnected", "Tailscale is not installed.");
 
         appState.SetRemoteModeEnabled(remoteConnectivity.IsSuccess);
-
-        if (tailscaleInstalled && !remoteConnectivity.IsSuccess)
-        {
-            ShowWarningWithDownload(
-                "Δεν υπάρχει σύνδεση με τη remote βάση.\nΕλέγξτε ότι το Tailscale είναι συνδεδεμένο και ότι έχετε κάνει login στον σωστό λογαριασμό.",
-                "Remote βάση μη διαθέσιμη",
-                TailscaleDownloadUrl,
-                "Λήψη Tailscale");
-
-            Shutdown();
-            return;
-        }
 
         var localAvailability = await CheckLocalDatabasesAvailabilityAsync(settingsProvider.Settings.Local.Server);
         appState.UpdateLocalDatabaseAvailability(localAvailability.HasFilothei, localAvailability.HasNeaIonia);
@@ -180,7 +157,7 @@ public partial class App : Application
             else
             {
                 MessageBox.Show(
-                    "Δεν βρέθηκε τοπική βάση και η remote σύνδεση δεν είναι διαθέσιμη.\nΕγκαταστήστε/συνδεθείτε στο Tailscale και μετά κάντε εισαγωγή βάσης.",
+                    "Δεν βρέθηκε τοπική βάση και η remote σύνδεση δεν είναι διαθέσιμη.\nΜεταβείτε στις Ρυθμίσεις για εισαγωγή βάσης.",
                     "Βάση μη διαθέσιμη",
                     MessageBoxButton.OK,
                 MessageBoxImage.Warning);

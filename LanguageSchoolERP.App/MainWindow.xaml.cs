@@ -15,6 +15,7 @@ namespace LanguageSchoolERP.App;
 
 public partial class MainWindow : Window
 {
+    private const string TailscaleDownloadUrl = "https://tailscale.com/download";
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private readonly IReadOnlyList<LocalDatabaseOption> _allLocalDatabases;
@@ -68,11 +69,23 @@ public partial class MainWindow : Window
                 {
                     _state.SelectedDatabaseMode = _state.IsLocalModeEnabled ? DatabaseMode.Local : _state.SelectedDatabaseMode;
                     ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
-                    MessageBox.Show(
-                        "Η remote λειτουργία δεν είναι διαθέσιμη. Ελέγξτε το Tailscale και τη σύνδεσή σας.",
-                        "Remote βάση",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+
+                    if (!_state.IsTailscaleInstalled)
+                    {
+                        ShowWarningWithDownload(
+                            "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΕγκαταστήστε το Tailscale και συνδεθείτε στον λογαριασμό σας για να χρησιμοποιήσετε απομακρυσμένη βάση.",
+                            "Tailscale",
+                            TailscaleDownloadUrl,
+                            "Λήψη Tailscale");
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Η remote λειτουργία δεν είναι διαθέσιμη. Ελέγξτε το Tailscale και τη σύνδεσή σας.",
+                            "Remote βάση",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
                     return;
                 }
 
@@ -179,14 +192,9 @@ public partial class MainWindow : Window
 
     private void RefreshModeOptions()
     {
-        if (_state.IsLocalModeEnabled && _state.IsRemoteModeEnabled)
+        if (_state.IsLocalModeEnabled)
         {
             ModeCombo.ItemsSource = new[] { DatabaseMode.Local, DatabaseMode.Remote };
-        }
-        else if (_state.IsLocalModeEnabled)
-        {
-            ModeCombo.ItemsSource = new[] { DatabaseMode.Local };
-            _state.SelectedDatabaseMode = DatabaseMode.Local;
         }
         else if (_state.IsRemoteModeEnabled)
         {
@@ -398,19 +406,38 @@ public partial class MainWindow : Window
     {
         ClearStudentsSearchIfNeeded();
 
-        if (!_state.IsDatabaseImportEnabled)
-        {
-            MessageBox.Show(
-                "Η εισαγωγή βάσης είναι απενεργοποιημένη. Εγκαταστήστε πρώτα το Tailscale.",
-                "Ρυθμίσεις βάσης",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
-
         var view = App.Services.GetRequiredService<DatabaseImportView>();
         MainContent.Content = view;
         SetActiveNavigationButton(SettingsBtn);
+    }
+
+    private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
+    {
+        var dialog = new Windows.DownloadPromptWindow(message, caption, buttonText)
+        {
+            Owner = Application.Current?.MainWindow
+        };
+
+        var result = dialog.ShowDialog();
+        if (result != true)
+            return;
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = downloadUrl,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            MessageBox.Show(
+                "Δεν ήταν δυνατό να ανοίξει ο browser για λήψη.",
+                caption,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     public void NavigateToDatabaseImportFromStartup()
