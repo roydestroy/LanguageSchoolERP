@@ -67,11 +67,13 @@ public partial class DatabaseImportViewModel : ObservableObject
             if (!value)
                 return;
 
-            if (!_appState.IsTailscaleInstalled)
+            if (!IsRemoteImportEnabled)
             {
                 ShowWarningWithDownload(
-                    "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΕγκαταστήστε το Tailscale και συνδεθείτε στον λογαριασμό σας για να χρησιμοποιήσετε απομακρυσμένη βάση.",
-                    "Tailscale",
+                    _appState.IsTailscaleInstalled
+                        ? "Δεν υπάρχει σύνδεση με τη remote βάση.\nΕλέγξτε ότι το Tailscale είναι συνδεδεμένο και ότι έχετε κάνει login στον σωστό λογαριασμό."
+                        : "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΕγκαταστήστε το Tailscale και συνδεθείτε στον λογαριασμό σας για να χρησιμοποιήσετε απομακρυσμένη βάση.",
+                    _appState.IsTailscaleInstalled ? "Remote βάση μη διαθέσιμη" : "Tailscale",
                     TailscaleDownloadUrl,
                     "Λήψη Tailscale");
                 SelectedImportSource = DatabaseImportSource.BackupFile;
@@ -95,8 +97,8 @@ public partial class DatabaseImportViewModel : ObservableObject
     public ObservableCollection<string> ExcelFilePaths { get; } = [];
 
     public bool IsTailscaleInstalled => _appState.IsTailscaleInstalled;
-    public bool IsRemoteImportEnabled => _appState.IsTailscaleInstalled;
-    public string RemoteImportLabel => IsTailscaleInstalled ? "Απομακρυσμένη DB" : "Απομακρυσμένη DB (Unavailable)";
+    public bool IsRemoteImportEnabled => _appState.IsRemoteModeEnabled;
+    public string RemoteImportLabel => IsRemoteImportEnabled ? "Απομακρυσμένη DB" : "Απομακρυσμένη DB (Unavailable)";
 
     public bool IsExcelImportSelected
     {
@@ -146,7 +148,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         SelectedRemoteDatabaseOption = RemoteDatabases.FirstOrDefault(); // now safe
         SelectedLocalRestoreDatabaseOption = LocalRestoreDatabases.FirstOrDefault(x => string.Equals(x.Database, StartupLocalDatabaseName, StringComparison.OrdinalIgnoreCase));
 
-        if (!_appState.IsTailscaleInstalled)
+        if (!IsRemoteImportEnabled)
             SelectedImportSource = DatabaseImportSource.BackupFile;
 
         SelectedBackupDatabaseName = string.Equals(_appState.SelectedLocalDatabaseName, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase)
@@ -167,10 +169,15 @@ public partial class DatabaseImportViewModel : ObservableObject
             if (e.PropertyName == nameof(AppState.IsTailscaleInstalled))
             {
                 OnPropertyChanged(nameof(IsTailscaleInstalled));
+            }
+
+            if (e.PropertyName == nameof(AppState.IsRemoteModeEnabled) ||
+                e.PropertyName == nameof(AppState.IsTailscaleInstalled))
+            {
                 OnPropertyChanged(nameof(IsRemoteImportEnabled));
                 OnPropertyChanged(nameof(RemoteImportLabel));
 
-                if (!_appState.IsTailscaleInstalled && SelectedImportSource == DatabaseImportSource.RemoteDatabase)
+                if (!IsRemoteImportEnabled && SelectedImportSource == DatabaseImportSource.RemoteDatabase)
                     SelectedImportSource = DatabaseImportSource.BackupFile;
             }
         };
