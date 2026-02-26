@@ -365,7 +365,24 @@
                                 <Border x:Name="PART_Indicator"
                                         HorizontalAlignment="Left"
                                         Background="{TemplateBinding Foreground}"
-                                        CornerRadius="6"/>
+                                        CornerRadius="6">
+                                    <TextBlock Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, StringFormat={}{0:0}%}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Margin="0,-1,0,0"
+                                               IsHitTestVisible="False"
+                                               Foreground="White"
+                                               FontSize="10"
+                                               FontWeight="Bold">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="Black"
+                                                              Direction="0"
+                                                              ShadowDepth="0"
+                                                              BlurRadius="1"
+                                                              Opacity="1"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </Border>
                                 <TextBlock Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, StringFormat={}{0:0}%}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
