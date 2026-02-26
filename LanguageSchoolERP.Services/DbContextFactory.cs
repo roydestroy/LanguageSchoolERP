@@ -24,7 +24,11 @@ public class DbContextFactory
         var connectionString = ConnectionStringHelpers.ReplaceDatabase(baseConnectionString, _state.SelectedDatabaseName);
 
         var options = new DbContextOptionsBuilder<SchoolDbContext>()
-            .UseSqlServer(connectionString)
+            .UseSqlServer(connectionString, sql =>
+                sql.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null))
             .Options;
 
         return new SchoolDbContext(options);
