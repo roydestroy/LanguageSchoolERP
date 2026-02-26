@@ -590,12 +590,12 @@ public partial class DatabaseImportViewModel : ObservableObject
             }
 
             var status = BackupStatusStore.TryRead();
-            var error = string.IsNullOrWhiteSpace(status?.LastError)
+            var friendlyError = string.IsNullOrWhiteSpace(status?.LastError)
                 ? "Το backup απέτυχε. Ελέγξτε δικαιώματα πρόσβασης και ρυθμίσεις backup."
-                : $"Το backup απέτυχε. {status.LastError}";
+                : $"Το backup απέτυχε. {FormatBackupErrorMessage(status.LastError)}";
 
             MessageBox.Show(
-                error,
+                friendlyError,
                 "Backups",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -813,8 +813,31 @@ EXEC sp_executesql @sql;
             && string.Equals(status.LastResult, "Failed", StringComparison.OrdinalIgnoreCase)
             && string.Equals(status.LastDatabaseName, selectedDbName, StringComparison.OrdinalIgnoreCase)
             && !string.IsNullOrWhiteSpace(status.LastError)
-                ? status.LastError
+                ? FormatBackupErrorMessage(status.LastError)
                 : string.Empty;
+    }
+
+    private static string FormatBackupErrorMessage(string error)
+    {
+        if (string.IsNullOrWhiteSpace(error))
+            return string.Empty;
+
+        if (error.Contains("remote share unavailable", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("Failed to connect to network share", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("network share", StringComparison.OrdinalIgnoreCase) ||
+            error.Contains("The network path was not found", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Δεν ήταν δυνατή η σύνδεση στον απομακρυσμένο φάκελο backup. " +
+                   "Ελέγξτε αν το Tailscale είναι συνδεδεμένο και αν έχετε πρόσβαση στο εταιρικό δίκτυο.";
+        }
+
+        if (error.Contains("credential conflict", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Υπάρχει σύγκρουση διαπιστευτηρίων για τον απομακρυσμένο φάκελο backup. " +
+                   "Κλείστε τυχόν ενεργές συνδέσεις δικτύου και δοκιμάστε ξανά.";
+        }
+
+        return error;
     }
 
     private DateTime? GetLatestBackupTimestamp(string databaseName)
