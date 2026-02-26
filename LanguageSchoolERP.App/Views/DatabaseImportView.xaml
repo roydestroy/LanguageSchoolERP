@@ -3,6 +3,45 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True">
+    <UserControl.Resources>
+        <Style x:Key="GeneralSettingsButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinHeight" Value="32"/>
+            <Setter Property="Padding" Value="12,4"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="Background" Value="#2F6EA8"/>
+            <Setter Property="BorderBrush" Value="#2A6194"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="SettingsButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SettingsButtonBorder" Property="Background" Value="#3D7DB8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="SettingsButtonBorder" Property="Background" Value="#245886"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="SettingsButtonBorder" Property="Background" Value="#D8E3F1"/>
+                                <Setter TargetName="SettingsButtonBorder" Property="BorderBrush" Value="#C2D2E4"/>
+                                <Setter Property="Foreground" Value="#6E88A5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid Margin="2">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -216,7 +255,7 @@
 
                     <TextBlock Text="Γενικές ρυθμίσεις" FontWeight="SemiBold" Margin="0,0,0,8"/>
 
-                    <WrapPanel Grid.Row="1" VerticalAlignment="Center" ItemHeight="30">
+                    <WrapPanel Grid.Row="1" VerticalAlignment="Center" ItemHeight="34" Margin="0,0,0,2">
                         <TextBlock Text="Προεπιλογή βάσης:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <RadioButton Content="Φιλοθέη"
                                      GroupName="StartupDb"
@@ -229,27 +268,25 @@
                                      VerticalAlignment="Center"
                                      IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
                         <Button Content="Αποθήκευση"
-                                Width="100"
-                                Height="30"
-                                Margin="0,0,10,0"
+                                Width="108"
+                                Style="{StaticResource GeneralSettingsButtonStyle}"
                                 Command="{Binding SaveStartupDatabaseCommand}"/>
 
                         <Button x:Name="CheckUpdatesBtn"
                                 Content="Έλεγχος ενημερώσεων"
-                                Width="160"
-                                Height="30"
-                                Margin="0,0,10,0"
+                                Width="176"
+                                Style="{StaticResource GeneralSettingsButtonStyle}"
                                 Click="CheckUpdatesBtn_Click"/>
 
                         <Button Content="Προγράμματα"
-                                Width="120"
-                                Height="30"
-                                Margin="0,0,10,0"
+                                Width="126"
+                                Style="{StaticResource GeneralSettingsButtonStyle}"
                                 Click="ProgramsBtn_Click"/>
 
                         <Button Content="Ακαδημαϊκά Έτη"
-                                Width="130"
-                                Height="30"
+                                Width="138"
+                                Margin="0"
+                                Style="{StaticResource GeneralSettingsButtonStyle}"
                                 Click="AcademicYearsBtn_Click"/>
                     </WrapPanel>
                 </Grid>
