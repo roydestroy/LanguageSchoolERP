@@ -1,6 +1,7 @@
-﻿using LanguageSchoolERP.Data;
+using LanguageSchoolERP.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,30 +18,36 @@ public class ReceiptNumberService
 
     public async Task<int> GetNextReceiptNumberAsync(Guid enrollmentId)
     {
-        using var db = _dbFactory.Create();
-        DbSeeder.EnsureSeeded(db);
+        using var strategyDb = _dbFactory.Create();
+        var strategy = strategyDb.Database.CreateExecutionStrategy();
 
-        using var tx = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        return await strategy.ExecuteAsync(async () =>
+        {
+            await using var db = _dbFactory.Create();
+            DbSeeder.EnsureSeeded(db);
 
-        var enrollmentInfo = await db.Enrollments
-            .AsNoTracking()
-            .Where(e => e.EnrollmentId == enrollmentId)
-            .Select(e => new { e.StudentId, e.AcademicPeriodId })
-            .FirstOrDefaultAsync();
+            await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
-        if (enrollmentInfo is null)
-            throw new InvalidOperationException("Enrollment not found.");
+            var enrollmentInfo = await db.Enrollments
+                .AsNoTracking()
+                .Where(e => e.EnrollmentId == enrollmentId)
+                .Select(e => new { e.StudentId, e.AcademicPeriodId })
+                .FirstOrDefaultAsync();
 
-        // Numbering is per student per academic year.
-        var maxReceiptForStudentYear = await db.Receipts
-            .Where(r => r.Payment.Enrollment.StudentId == enrollmentInfo.StudentId
-                     && r.Payment.Enrollment.AcademicPeriodId == enrollmentInfo.AcademicPeriodId)
-            .Select(r => (int?)r.ReceiptNumber)
-            .MaxAsync() ?? 0;
+            if (enrollmentInfo is null)
+                throw new InvalidOperationException("Enrollment not found.");
 
-        var number = maxReceiptForStudentYear + 1;
+            // Numbering is per student per academic year.
+            var maxReceiptForStudentYear = await db.Receipts
+                .Where(r => r.Payment.Enrollment.StudentId == enrollmentInfo.StudentId
+                         && r.Payment.Enrollment.AcademicPeriodId == enrollmentInfo.AcademicPeriodId)
+                .Select(r => (int?)r.ReceiptNumber)
+                .MaxAsync() ?? 0;
 
-        await tx.CommitAsync();
-        return number;
+            var number = maxReceiptForStudentYear + 1;
+
+            await tx.CommitAsync();
+            return number;
+        });
     }
 }
