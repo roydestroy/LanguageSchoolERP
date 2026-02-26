@@ -206,6 +206,8 @@ public partial class AddContractViewModel : ObservableObject
             var templatePath = Path.Combine(AppContext.BaseDirectory, template.TemplateRelativePath);
             var financedPositive = (payload.AgreementTotal - payload.DownPayment) > 0;
 
+            _contractDocumentService.RunPreflightDiagnostics(templatePath, docxPath);
+
             var bookmarkValues = _bookmarkBuilder.BuildBookmarkValues(payload, enrollment);
             _contractDocumentService.GenerateDocxFromTemplate(
                 templatePath,
@@ -230,6 +232,10 @@ public partial class AddContractViewModel : ObservableObject
             await db.SaveChangesAsync();
 
             RequestClose?.Invoke(this, true);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ErrorMessage = ex.Message;
         }
         catch (DbUpdateException ex)
         {

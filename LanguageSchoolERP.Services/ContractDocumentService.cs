@@ -83,6 +83,62 @@ public sealed class ContractDocumentService
         }
     }
 
+    public void RunPreflightDiagnostics(string templatePath, string outputDocxPath)
+    {
+        if (!File.Exists(templatePath))
+            throw new InvalidOperationException($"Το πρότυπο συμφωνητικού δεν βρέθηκε: {templatePath}");
+
+        var outputFolder = Path.GetDirectoryName(outputDocxPath);
+        if (string.IsNullOrWhiteSpace(outputFolder))
+            throw new InvalidOperationException("Δεν είναι έγκυρη η διαδρομή αποθήκευσης του συμφωνητικού.");
+
+        Directory.CreateDirectory(outputFolder);
+
+        try
+        {
+            var testFile = Path.Combine(outputFolder, $".write_test_{Guid.NewGuid():N}.tmp");
+            File.WriteAllText(testFile, "ok");
+            File.Delete(testFile);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"Δεν υπάρχει πρόσβαση εγγραφής στον φάκελο αποθήκευσης: {outputFolder}", ex);
+        }
+
+        Application? app = null;
+        Word.Document? doc = null;
+        object missing = Type.Missing;
+
+        try
+        {
+            app = new Application { Visible = false, DisplayAlerts = Word.WdAlertLevel.wdAlertsNone };
+            object fileName = templatePath;
+            object readOnly = true;
+            object isVisible = false;
+            doc = app.Documents.Open(ref fileName, ref missing, ref readOnly, ref missing, ref missing, ref missing,
+                ref missing, ref missing, ref missing, ref missing, ref missing, ref isVisible, ref missing, ref missing,
+                ref missing, ref missing);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                "Αποτυχία προελέγχου Word. Ελέγξτε αν το Microsoft Word είναι εγκατεστημένο και λειτουργεί σωστά στον υπολογιστή.",
+                ex);
+        }
+        finally
+        {
+            if (doc is not null)
+            {
+                object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
+                doc.Close(ref saveChanges, ref missing, ref missing);
+            }
+
+            if (app is not null)
+                app.Quit(ref missing, ref missing, ref missing);
+        }
+    }
+
     public string ExportPdfWithPageDuplication(string docxPath, string pdfPath)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(pdfPath)!);
