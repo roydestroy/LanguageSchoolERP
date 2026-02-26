@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Word = Microsoft.Office.Interop.Word;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Pdf.IO;
@@ -64,10 +65,7 @@ public sealed class ContractDocumentService
             else
                 RemoveUnusedInstallmentRows(doc, installmentCount);
 
-            object outputPath = outputDocxPath;
-            doc.SaveAs2(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
-                ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
-                ref missing, ref missing);
+            SaveDocumentWithCompatibility(doc, outputDocxPath);
 
             ContractGenerationLog.Write($"GenerateDocxFromTemplate success. Output='{outputDocxPath}'.");
             return outputDocxPath;
@@ -141,6 +139,38 @@ public sealed class ContractDocumentService
         ContractGenerationLog.Write($"Preflight completed. Template='{templatePath}', Output='{outputDocxPath}'.");
     }
 
+
+    private static void SaveDocumentWithCompatibility(Word.Document doc, string outputDocxPath)
+    {
+        object outputPath = outputDocxPath;
+        object missing = Type.Missing;
+
+        try
+        {
+            doc.SaveAs2(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
+                ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
+                ref missing, ref missing);
+        }
+        catch (COMException ex)
+        {
+            ContractGenerationLog.Write("SaveAs2 failed, attempting SaveAs fallback (Office 2007 compatibility).", ex);
+
+            try
+            {
+                doc.SaveAs(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing,
+                    ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
+                    ref missing, ref missing, ref missing);
+            }
+            catch (COMException saveAsEx)
+            {
+                ContractGenerationLog.Write("SaveAs fallback failed.", saveAsEx);
+                throw new InvalidOperationException(
+                    "Η αποθήκευση του συμφωνητικού απέτυχε. Πιθανή ασυμβατότητα με παλαιότερη έκδοση Office.",
+                    saveAsEx);
+            }
+        }
+    }
+
     public string ExportPdfWithPageDuplication(string docxPath, string pdfPath)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(pdfPath)!);
@@ -193,8 +223,18 @@ public sealed class ContractDocumentService
                 ref missing, ref missing, ref missing, ref missing, ref missing, ref isVisible, ref missing, ref missing,
                 ref missing, ref missing);
 
-            doc.ExportAsFixedFormat(pdfPath, Word.WdExportFormat.wdExportFormatPDF);
-            ContractGenerationLog.Write($"ExportWordToPdf success. Output='{pdfPath}'.");
+            try
+            {
+                doc.ExportAsFixedFormat(pdfPath, Word.WdExportFormat.wdExportFormatPDF);
+                ContractGenerationLog.Write($"ExportWordToPdf success. Output='{pdfPath}'.");
+            }
+            catch (COMException ex)
+            {
+                ContractGenerationLog.Write("ExportWordToPdf failed due to Word PDF export capability.", ex);
+                throw new InvalidOperationException(
+                    "Η εξαγωγή σε PDF απέτυχε. Σε Office 2007 απαιτείται το πρόσθετο/ενημέρωση αποθήκευσης PDF ή νεότερη έκδοση Office.",
+                    ex);
+            }
         }
         catch (Exception ex)
         {
