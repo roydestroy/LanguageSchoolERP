@@ -28,6 +28,7 @@ public sealed class ContractDocumentService
 
         try
         {
+            ContractGenerationLog.Write($"GenerateDocxFromTemplate start. Template='{templatePath}', Output='{outputDocxPath}'.");
             app = new Application { Visible = false, DisplayAlerts = Word.WdAlertLevel.wdAlertsNone };
             object readOnly = false;
             object isVisible = false;
@@ -68,18 +69,40 @@ public sealed class ContractDocumentService
                 ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
                 ref missing, ref missing);
 
+            ContractGenerationLog.Write($"GenerateDocxFromTemplate success. Output='{outputDocxPath}'.");
             return outputDocxPath;
+        }
+        catch (Exception ex)
+        {
+            ContractGenerationLog.Write("GenerateDocxFromTemplate failed.", ex);
+            throw;
         }
         finally
         {
             if (doc is not null)
             {
-                object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
-                doc.Close(ref saveChanges, ref missing, ref missing);
+                try
+                {
+                    object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
+                    doc.Close(ref saveChanges, ref missing, ref missing);
+                }
+                catch (Exception ex)
+                {
+                    ContractGenerationLog.Write("Word document close failed.", ex);
+                }
             }
 
             if (app is not null)
-                app.Quit(ref missing, ref missing, ref missing);
+            {
+                try
+                {
+                    app.Quit(ref missing, ref missing, ref missing);
+                }
+                catch (Exception ex)
+                {
+                    ContractGenerationLog.Write("Word application quit failed.", ex);
+                }
+            }
         }
     }
 
@@ -102,41 +125,20 @@ public sealed class ContractDocumentService
         }
         catch (Exception ex)
         {
+            ContractGenerationLog.Write($"Write-access preflight failed for folder '{outputFolder}'.", ex);
             throw new InvalidOperationException(
                 $"Δεν υπάρχει πρόσβαση εγγραφής στον φάκελο αποθήκευσης: {outputFolder}", ex);
         }
 
-        Application? app = null;
-        Word.Document? doc = null;
-        object missing = Type.Missing;
+        var wordType = Type.GetTypeFromProgID("Word.Application");
+        if (wordType is null)
+        {
+            var message = "Δεν εντοπίστηκε εγκατάσταση Microsoft Word σε αυτόν τον υπολογιστή.";
+            ContractGenerationLog.Write(message);
+            throw new InvalidOperationException(message);
+        }
 
-        try
-        {
-            app = new Application { Visible = false, DisplayAlerts = Word.WdAlertLevel.wdAlertsNone };
-            object fileName = templatePath;
-            object readOnly = true;
-            object isVisible = false;
-            doc = app.Documents.Open(ref fileName, ref missing, ref readOnly, ref missing, ref missing, ref missing,
-                ref missing, ref missing, ref missing, ref missing, ref missing, ref isVisible, ref missing, ref missing,
-                ref missing, ref missing);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                "Αποτυχία προελέγχου Word. Ελέγξτε αν το Microsoft Word είναι εγκατεστημένο και λειτουργεί σωστά στον υπολογιστή.",
-                ex);
-        }
-        finally
-        {
-            if (doc is not null)
-            {
-                object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
-                doc.Close(ref saveChanges, ref missing, ref missing);
-            }
-
-            if (app is not null)
-                app.Quit(ref missing, ref missing, ref missing);
-        }
+        ContractGenerationLog.Write($"Preflight completed. Template='{templatePath}', Output='{outputDocxPath}'.");
     }
 
     public string ExportPdfWithPageDuplication(string docxPath, string pdfPath)
@@ -182,6 +184,7 @@ public sealed class ContractDocumentService
 
         try
         {
+            ContractGenerationLog.Write($"ExportWordToPdf start. Input='{docxPath}', Output='{pdfPath}'.");
             app = new Application { Visible = false, DisplayAlerts = Word.WdAlertLevel.wdAlertsNone };
             object fileName = docxPath;
             object readOnly = true;
@@ -191,17 +194,39 @@ public sealed class ContractDocumentService
                 ref missing, ref missing);
 
             doc.ExportAsFixedFormat(pdfPath, Word.WdExportFormat.wdExportFormatPDF);
+            ContractGenerationLog.Write($"ExportWordToPdf success. Output='{pdfPath}'.");
+        }
+        catch (Exception ex)
+        {
+            ContractGenerationLog.Write("ExportWordToPdf failed.", ex);
+            throw;
         }
         finally
         {
             if (doc is not null)
             {
-                object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
-                doc.Close(ref saveChanges, ref missing, ref missing);
+                try
+                {
+                    object saveChanges = Word.WdSaveOptions.wdDoNotSaveChanges;
+                    doc.Close(ref saveChanges, ref missing, ref missing);
+                }
+                catch (Exception ex)
+                {
+                    ContractGenerationLog.Write("Word document close failed during PDF export cleanup.", ex);
+                }
             }
 
             if (app is not null)
-                app.Quit(ref missing, ref missing, ref missing);
+            {
+                try
+                {
+                    app.Quit(ref missing, ref missing, ref missing);
+                }
+                catch (Exception ex)
+                {
+                    ContractGenerationLog.Write("Word application quit failed during PDF export cleanup.", ex);
+                }
+            }
         }
     }
 

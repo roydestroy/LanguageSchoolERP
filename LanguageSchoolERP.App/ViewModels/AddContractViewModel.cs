@@ -157,6 +157,7 @@ public partial class AddContractViewModel : ObservableObject
 
         try
         {
+            ContractGenerationLog.Write($"SaveAsync started for StudentId={_init.StudentId}, EnrollmentId={SelectedEnrollment.EnrollmentId}.");
             using var db = _dbFactory.Create();
             DbSeeder.EnsureSeeded(db);
 
@@ -231,20 +232,26 @@ public partial class AddContractViewModel : ObservableObject
             db.Contracts.Add(contract);
             await db.SaveChangesAsync();
 
+            ContractGenerationLog.Write($"Contract save succeeded for StudentId={_init.StudentId}, EnrollmentId={SelectedEnrollment.EnrollmentId}.");
             RequestClose?.Invoke(this, true);
         }
         catch (InvalidOperationException ex)
         {
+            ContractGenerationLog.Write("Contract save preflight/business validation failed.", ex);
             ErrorMessage = ex.Message;
         }
         catch (DbUpdateException ex)
         {
+            ContractGenerationLog.Write("Contract save failed with DbUpdateException.", ex);
             var inner = ex.InnerException?.Message ?? "(χωρίς εσωτερική εξαίρεση)";
             ErrorMessage = $"DbUpdateException: {ex.Message}\nInner: {inner}";
         }
         catch (Exception ex)
         {
-            ErrorMessage = ex.ToString();
+            ContractGenerationLog.Write("Contract save failed with unexpected exception.", ex);
+            ErrorMessage =
+                "Παρουσιάστηκε σφάλμα κατά τη δημιουργία συμφωνητικού. " +
+                $"Αρχείο καταγραφής: {ContractGenerationLog.LogFilePath}";
         }
 
     }
