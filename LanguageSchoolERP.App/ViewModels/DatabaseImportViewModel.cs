@@ -132,6 +132,11 @@ public partial class DatabaseImportViewModel : ObservableObject
             ? "NeaIoniaSchoolERP"
             : "FilotheiSchoolERP";
 
+        if (!_appState.IsDatabaseImportEnabled)
+        {
+            SelectedImportSource = DatabaseImportSource.BackupFile;
+        }
+
         _appState.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(AppState.HasAnyLocalDatabase) ||
@@ -146,6 +151,11 @@ public partial class DatabaseImportViewModel : ObservableObject
             if (e.PropertyName == nameof(AppState.IsDatabaseImportEnabled))
             {
                 OnPropertyChanged(nameof(IsRemoteImportEnabled));
+
+                if (!_appState.IsDatabaseImportEnabled && SelectedImportSource == DatabaseImportSource.RemoteDatabase)
+                {
+                    SelectedImportSource = DatabaseImportSource.BackupFile;
+                }
             }
         };
 
