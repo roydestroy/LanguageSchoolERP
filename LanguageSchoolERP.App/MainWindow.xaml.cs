@@ -220,6 +220,13 @@ public partial class MainWindow : Window
 
     private async Task LoadAcademicYearsAsync()
     {
+        if (!CanQueryCurrentMode())
+        {
+            YearCombo.ItemsSource = Array.Empty<string>();
+            YearCombo.SelectedItem = null;
+            return;
+        }
+
         var previousYears = (YearCombo.ItemsSource as IEnumerable<string>)?.ToList() ?? [];
         var previousSelected = YearCombo.SelectedItem as string;
 
@@ -275,6 +282,13 @@ public partial class MainWindow : Window
 
     private async Task RefreshAcademicYearProgressAsync()
     {
+        if (!CanQueryCurrentMode())
+        {
+            YearProgressBar.Value = 0;
+            YearRevenueSummaryText.Text = "Εισπράξεις έτους: μη διαθέσιμα δεδομένα";
+            return;
+        }
+
         try
         {
             using var db = _dbFactory.Create();
@@ -317,6 +331,16 @@ public partial class MainWindow : Window
             YearProgressBar.Value = 0;
             YearRevenueSummaryText.Text = "Εισπράξεις έτους: μη διαθέσιμα δεδομένα";
         }
+    }
+
+    private bool CanQueryCurrentMode()
+    {
+        return _state.SelectedDatabaseMode switch
+        {
+            DatabaseMode.Remote => _state.IsRemoteModeEnabled,
+            DatabaseMode.Local => _state.IsLocalModeEnabled,
+            _ => false
+        };
     }
 
 
