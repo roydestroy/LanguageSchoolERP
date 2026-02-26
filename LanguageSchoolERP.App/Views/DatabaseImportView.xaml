@@ -200,48 +200,62 @@
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1" Margin="0,14,0,0">
+        <Grid Grid.Row="1" Margin="0,10,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="14"/>
+                <ColumnDefinition Width="12"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="12" Background="White">
+            <Border Grid.Column="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="10" Background="White">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <TextBlock Text="Προεπιλογή βάσης" FontWeight="SemiBold" VerticalAlignment="Top" Margin="0,0,10,0"/>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.ColumnSpan="2" Margin="0,0,150,0">
+                    <TextBlock Text="Γενικές ρυθμίσεις" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                    <WrapPanel Grid.Row="1" VerticalAlignment="Center" ItemHeight="30">
+                        <TextBlock Text="Προεπιλογή βάσης:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <RadioButton Content="Φιλοθέη"
                                      GroupName="StartupDb"
-                                     Margin="0,0,16,0"
+                                     Margin="0,0,12,0"
                                      VerticalAlignment="Center"
                                      IsChecked="{Binding StartupFilotheiSelected, Mode=TwoWay}"/>
                         <RadioButton Content="Νέα Ιωνία"
+                                     Margin="0,0,12,0"
                                      GroupName="StartupDb"
                                      VerticalAlignment="Center"
                                      IsChecked="{Binding StartupNeaIoniaSelected, Mode=TwoWay}"/>
                         <Button Content="Αποθήκευση"
-                                Width="110"
+                                Width="100"
                                 Height="30"
-                                Margin="10,0,0,0"
+                                Margin="0,0,10,0"
                                 Command="{Binding SaveStartupDatabaseCommand}"/>
 
                         <Button x:Name="CheckUpdatesBtn"
                                 Content="Έλεγχος ενημερώσεων"
-                                Width="171"
-                                Height="28"
-                                Margin="10,0,0,0"
+                                Width="160"
+                                Height="30"
+                                Margin="0,0,10,0"
                                 Click="CheckUpdatesBtn_Click"/>
-                    </StackPanel>
+
+                        <Button Content="Προγράμματα"
+                                Width="120"
+                                Height="30"
+                                Margin="0,0,10,0"
+                                Click="ProgramsBtn_Click"/>
+
+                        <Button Content="Ακαδημαϊκά Έτη"
+                                Width="130"
+                                Height="30"
+                                Click="AcademicYearsBtn_Click"/>
+                    </WrapPanel>
                 </Grid>
             </Border>
 
-            <Border Grid.Column="2" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="10,8" Background="White" MinWidth="390">
+            <Border Grid.Column="2" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="10" Padding="10,8" Background="White" MinWidth="350">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
