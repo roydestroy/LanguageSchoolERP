@@ -397,7 +397,7 @@ public partial class AddPaymentViewModel : ObservableObject
             {
                 try
                 {
-                    using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
                     if (stream.Length > 0)
                         return;
                 }
@@ -418,7 +418,8 @@ public partial class AddPaymentViewModel : ObservableObject
 
         var psi = new ProcessStartInfo
         {
-            FileName = filePath,
+            FileName = "explorer.exe",
+            Arguments = $"\"{filePath}\"",
             UseShellExecute = true
         };
 
