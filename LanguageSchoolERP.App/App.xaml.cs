@@ -134,14 +134,6 @@ public partial class App : Application
         {
             appState.SetDatabaseImportEnabled(false);
             appState.SetRemoteModeEnabled(false);
-            ShowWarningWithDownload(
-                "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι απομακρυσμένες λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.\nΕγκαταστήστε το Tailscale, συνδεθείτε στον λογαριασμό σας και επανεκκινήστε την εφαρμογή.",
-                "Tailscale",
-                TailscaleDownloadUrl,
-                "Λήψη Tailscale");
-
-            Shutdown();
-            return;
         }
 
         var remoteConnectivity = tailscaleInstalled
@@ -152,14 +144,7 @@ public partial class App : Application
 
         if (tailscaleInstalled && !remoteConnectivity.IsSuccess)
         {
-            ShowWarningWithDownload(
-                "Δεν υπάρχει σύνδεση με τη remote βάση.\nΕλέγξτε ότι το Tailscale είναι συνδεδεμένο και ότι έχετε κάνει login στον σωστό λογαριασμό.",
-                "Remote βάση μη διαθέσιμη",
-                TailscaleDownloadUrl,
-                "Λήψη Tailscale");
-
-            Shutdown();
-            return;
+            appState.SetDatabaseImportEnabled(false);
         }
 
         var localAvailability = await CheckLocalDatabasesAvailabilityAsync(settingsProvider.Settings.Local.Server);

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -15,6 +17,8 @@ namespace LanguageSchoolERP.App;
 
 public partial class MainWindow : Window
 {
+    private const string TailscaleDownloadUrl = "https://tailscale.com/download";
+
     private readonly AppState _state;
     private readonly DbContextFactory _dbFactory;
     private readonly IReadOnlyList<LocalDatabaseOption> _allLocalDatabases;
@@ -68,11 +72,24 @@ public partial class MainWindow : Window
                 {
                     _state.SelectedDatabaseMode = _state.IsLocalModeEnabled ? DatabaseMode.Local : _state.SelectedDatabaseMode;
                     ModeCombo.SelectedItem = _state.SelectedDatabaseMode;
-                    MessageBox.Show(
-                        "Η remote λειτουργία δεν είναι διαθέσιμη. Ελέγξτε το Tailscale και τη σύνδεσή σας.",
-                        "Remote βάση",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+
+                    if (!IsTailscaleInstalled())
+                    {
+                        ShowWarningWithDownload(
+                            "Δεν βρέθηκε εγκατεστημένο το Tailscale.\nΟι απομακρυσμένες λειτουργίες βάσεων δεδομένων απενεργοποιήθηκαν προσωρινά.",
+                            "Tailscale",
+                            TailscaleDownloadUrl,
+                            "Λήψη Tailscale");
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Η remote λειτουργία δεν είναι διαθέσιμη. Ελέγξτε το Tailscale και τη σύνδεσή σας.",
+                            "Remote βάση",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+
                     return;
                 }
 
@@ -436,4 +453,62 @@ public partial class MainWindow : Window
     {
 
     }
+
+    private static bool IsTailscaleInstalled()
+    {
+        if (File.Exists(@"C:\Program Files\Tailscale\tailscale.exe") ||
+            File.Exists(@"C:\Program Files (x86)\Tailscale\tailscale.exe"))
+            return true;
+
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "tailscale",
+                Arguments = "version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(psi);
+            process?.WaitForExit(2000);
+            return process?.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
+    {
+        var choice = MessageBox.Show(
+            $"{message}\n\nΘέλετε να ανοίξει η σελίδα: {buttonText};",
+            caption,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (choice != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = downloadUrl,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            MessageBox.Show(
+                "Δεν ήταν δυνατό να ανοίξει ο browser. Αντιγράψτε το link χειροκίνητα από το μήνυμα.",
+                caption,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
 }
