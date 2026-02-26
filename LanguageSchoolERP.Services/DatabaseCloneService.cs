@@ -49,6 +49,10 @@ public sealed class DatabaseCloneService : IDatabaseCloneService
         }
         finally
         {
+            // Dropping/restoring a database can force-kill active sessions for that DB.
+            // Clear pooled SQL connections so the UI does not reuse killed sessions
+            // ("session is in the kill state") on the next screen refresh.
+            SqlConnection.ClearAllPools();
             TryDeleteTempBackup(backupPath);
         }
     }
