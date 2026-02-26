@@ -34,7 +34,22 @@
                     <RadioButton Content="Απομακρυσμένη DB"
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"
-                                 IsChecked="{Binding IsRemoteImportSelected, Mode=TwoWay}"/>
+                                 IsEnabled="{Binding IsRemoteImportEnabled}">
+                        <RadioButton.Style>
+                            <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="ToolTip" Value="Εισαγωγή από remote διαθέσιμη όταν υπάρχει σύνδεση Tailscale."/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRemoteImportEnabled}" Value="False">
+                                        <Setter Property="Foreground" Value="OrangeRed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </RadioButton.Style>
+                        <RadioButton.IsChecked>
+                            <Binding Path="IsRemoteImportSelected" Mode="TwoWay"/>
+                        </RadioButton.IsChecked>
+                    </RadioButton>
                     <RadioButton Content="Αρχείο .bak"
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"

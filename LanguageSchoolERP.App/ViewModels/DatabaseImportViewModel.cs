@@ -142,10 +142,17 @@ public partial class DatabaseImportViewModel : ObservableObject
                 GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
                 WipeDatabaseCommand.NotifyCanExecuteChanged();
             }
+
+            if (e.PropertyName == nameof(AppState.IsDatabaseImportEnabled))
+            {
+                OnPropertyChanged(nameof(IsRemoteImportEnabled));
+            }
         };
 
         RefreshBackupStatus();
     }
+
+    public bool IsRemoteImportEnabled => _appState.IsDatabaseImportEnabled;
 
     public bool CanShowEmptyDatabaseActions => !_appState.HasAnyLocalDatabase;
     public bool CanShowWipeDatabaseActions => _appState.HasAnyLocalDatabase;

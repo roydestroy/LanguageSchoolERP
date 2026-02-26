@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Globalization;
 using System.Windows.Controls;
+using System.Windows.Media;
 using LanguageSchoolERP.Services;
 using Microsoft.Extensions.DependencyInjection;
 using LanguageSchoolERP.App.Views;
@@ -190,30 +191,23 @@ public partial class MainWindow : Window
         ModeGrid.Visibility = hasAnyMode ? Visibility.Visible : Visibility.Collapsed;
 
         ModeCombo.IsEnabled = hasAnyMode;
+        ModeCombo.Foreground = _state.IsRemoteModeEnabled ? Brushes.Black : Brushes.OrangeRed;
+        ModeCombo.ToolTip = _state.IsRemoteModeEnabled
+            ? null
+            : "Η επιλογή Remote δεν είναι διαθέσιμη χωρίς Tailscale σύνδεση.";
         DbCombo.IsEnabled = _state.IsRemoteModeEnabled;
         LocalDbCombo.IsEnabled = _state.IsLocalModeEnabled;
     }
 
     private void RefreshModeOptions()
     {
-        if (_state.IsLocalModeEnabled && _state.IsRemoteModeEnabled)
-        {
-            ModeCombo.ItemsSource = new[] { DatabaseMode.Local, DatabaseMode.Remote };
-        }
-        else if (_state.IsLocalModeEnabled)
-        {
-            ModeCombo.ItemsSource = new[] { DatabaseMode.Local };
-            _state.SelectedDatabaseMode = DatabaseMode.Local;
-        }
-        else if (_state.IsRemoteModeEnabled)
-        {
-            ModeCombo.ItemsSource = new[] { DatabaseMode.Remote };
+        ModeCombo.ItemsSource = new[] { DatabaseMode.Local, DatabaseMode.Remote };
+
+        if (_state.SelectedDatabaseMode == DatabaseMode.Local && !_state.IsLocalModeEnabled && _state.IsRemoteModeEnabled)
             _state.SelectedDatabaseMode = DatabaseMode.Remote;
-        }
-        else
-        {
-            ModeCombo.ItemsSource = Array.Empty<DatabaseMode>();
-        }
+
+        if (_state.SelectedDatabaseMode == DatabaseMode.Remote && !_state.IsRemoteModeEnabled && _state.IsLocalModeEnabled)
+            _state.SelectedDatabaseMode = DatabaseMode.Local;
     }
 
     private void RefreshLocalDatabaseOptions()
@@ -414,16 +408,6 @@ public partial class MainWindow : Window
     private void NavigateToDatabaseImport()
     {
         ClearStudentsSearchIfNeeded();
-
-        if (!_state.IsDatabaseImportEnabled)
-        {
-            MessageBox.Show(
-                "Η εισαγωγή βάσης είναι απενεργοποιημένη. Εγκαταστήστε πρώτα το Tailscale.",
-                "Ρυθμίσεις βάσης",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            return;
-        }
 
         var view = App.Services.GetRequiredService<DatabaseImportView>();
         MainContent.Content = view;
