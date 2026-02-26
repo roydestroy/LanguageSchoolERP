@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace LanguageSchoolERP.Services;
 
@@ -54,10 +55,18 @@ public class AppState : INotifyPropertyChanged
 
             if (_selectedDatabaseMode == DatabaseMode.Local)
             {
+                var matchingLocal = GetMatchingLocalDatabaseForRemote();
+                if (!string.IsNullOrWhiteSpace(matchingLocal))
+                    SelectedLocalDatabaseName = matchingLocal;
+
                 SelectedDatabaseName = SelectedLocalDatabaseName;
             }
             else
             {
+                var matchingRemote = GetMatchingRemoteDatabaseForLocal();
+                if (!string.IsNullOrWhiteSpace(matchingRemote))
+                    SelectedRemoteDatabaseName = matchingRemote;
+
                 SelectedDatabaseName = SelectedRemoteDatabaseName;
             }
         }
@@ -289,6 +298,45 @@ public class AppState : INotifyPropertyChanged
         _settingsProvider.Settings.Startup.LocalDatabase = SelectedLocalDatabaseName;
         _settingsProvider.Settings.Startup.RemoteDatabase = SelectedRemoteDatabaseName;
         _settingsProvider.Save();
+    }
+
+    private string? GetMatchingRemoteDatabaseForLocal()
+    {
+        var localToken = ToDatabaseToken(SelectedLocalDatabaseName);
+        if (string.IsNullOrWhiteSpace(localToken))
+            return null;
+
+        return _settingsProvider.RemoteDatabases
+            .FirstOrDefault(remote => ToDatabaseToken(remote.Database) == localToken)
+            ?.Database;
+    }
+
+    private string? GetMatchingLocalDatabaseForRemote()
+    {
+        var remoteToken = ToDatabaseToken(SelectedRemoteDatabaseName);
+        if (string.IsNullOrWhiteSpace(remoteToken))
+            return null;
+
+        return AvailableLocalDatabases.FirstOrDefault(local => ToDatabaseToken(local) == remoteToken);
+    }
+
+    private static string ToDatabaseToken(string databaseName)
+    {
+        if (string.IsNullOrWhiteSpace(databaseName))
+            return string.Empty;
+
+        var token = databaseName
+            .Replace("SchoolERP", string.Empty, System.StringComparison.OrdinalIgnoreCase)
+            .Replace("_View", string.Empty, System.StringComparison.OrdinalIgnoreCase);
+
+        var normalized = new StringBuilder(token.Length);
+        foreach (var c in token)
+        {
+            if (char.IsLetterOrDigit(c))
+                normalized.Append(char.ToLowerInvariant(c));
+        }
+
+        return normalized.ToString();
     }
 
     public long DataVersion => _dataVersion;
