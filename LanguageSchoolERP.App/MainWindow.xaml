@@ -66,6 +66,43 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="TopBarRoundIconButtonStyle" TargetType="Button" BasedOn="{StaticResource TopBarNavigationButtonStyle}">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="MinWidth" Value="32"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="TopButtonBorder"
+                                Width="32"
+                                Height="32"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="16"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TopButtonBorder" Property="Background" Value="#3A75A8"/>
+                                <Setter TargetName="TopButtonBorder" Property="BorderBrush" Value="#A7C4DE"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="TopButtonBorder" Property="Background" Value="#27517A"/>
+                                <Setter TargetName="TopButtonBorder" Property="BorderBrush" Value="#88A9C8"/>
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Active">
+                                <Setter TargetName="TopButtonBorder" Property="Background" Value="#EAF3FC"/>
+                                <Setter TargetName="TopButtonBorder" Property="BorderBrush" Value="#BCD0E4"/>
+                                <Setter Property="Foreground" Value="#1E4E7A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <DockPanel Background="{StaticResource Brush.PageBackground}">
@@ -101,7 +138,9 @@
                     <Button x:Name="DailyPaymentsBtn" Content="Πληρωμές Ημέρας" Style="{StaticResource TopBarNavigationButtonStyle}" MinWidth="140"/>
                     <Button x:Name="ContactsExportBtn" Content="Εξαγωγή Επαφών" Style="{StaticResource TopBarNavigationButtonStyle}" MinWidth="140"/>
                     <Button x:Name="StatisticsBtn" Content="Στατιστικά" Style="{StaticResource TopBarNavigationButtonStyle}"/>
-                    <Button x:Name="SettingsBtn" Content="Ρυθμίσεις" Style="{StaticResource TopBarNavigationButtonStyle}" Margin="0"/>
+                    <Button x:Name="SettingsBtn" Style="{StaticResource TopBarRoundIconButtonStyle}" Margin="0" ToolTip="Ρυθμίσεις">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                    </Button>
                 </WrapPanel>
 
                 <StackPanel x:Name="ModeGrid" Grid.Column="5" Margin="0,0,12,0" VerticalAlignment="Center">
