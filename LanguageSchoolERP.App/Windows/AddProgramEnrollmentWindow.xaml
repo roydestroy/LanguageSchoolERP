@@ -107,9 +107,8 @@
                 <TextBlock Text="Αριθμός δόσεων (0-12)"/>
                 <ComboBox Margin="0,4,0,10"
                           ItemsSource="{StaticResource InstallmentChoices}"
-                          IsEditable="True"
-                          IsTextSearchEnabled="False"
-                          Text="{Binding InstallmentCountText, UpdateSourceTrigger=PropertyChanged}"/>
+                          IsEditable="False"
+                          SelectedItem="{Binding InstallmentCountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <TextBlock Text="Μήνας έναρξης δόσεων"/>
                 <DatePicker Margin="0,4,0,12" SelectedDate="{Binding InstallmentStartMonth}"/>
