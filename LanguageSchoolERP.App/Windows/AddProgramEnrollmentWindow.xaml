@@ -3,10 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding DialogTitle}" Height="750" Width="789"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+        ResizeMode="CanResize">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <x:Array x:Key="InstallmentChoices" Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+            <sys:String>0</sys:String>
+            <sys:String>1</sys:String>
+            <sys:String>2</sys:String>
+            <sys:String>3</sys:String>
+            <sys:String>4</sys:String>
+            <sys:String>5</sys:String>
+            <sys:String>6</sys:String>
+            <sys:String>7</sys:String>
+            <sys:String>8</sys:String>
+            <sys:String>9</sys:String>
+            <sys:String>10</sys:String>
+            <sys:String>11</sys:String>
+            <sys:String>12</sys:String>
+        </x:Array>
     </Window.Resources>
 
     <Grid Margin="16">
@@ -90,7 +105,10 @@
                 </StackPanel>
 
                 <TextBlock Text="Αριθμός δόσεων (0-12)"/>
-                <TextBox Margin="0,4,0,10" Text="{Binding InstallmentCountText}"/>
+                <ComboBox Margin="0,4,0,10"
+                          ItemsSource="{StaticResource InstallmentChoices}"
+                          IsEditable="False"
+                          SelectedItem="{Binding InstallmentCountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <TextBlock Text="Μήνας έναρξης δόσεων"/>
                 <DatePicker Margin="0,4,0,12" SelectedDate="{Binding InstallmentStartMonth}"/>
@@ -100,13 +118,18 @@
             </StackPanel>
         </ScrollViewer>
 
-        <DockPanel Grid.Row="1" Margin="0,14,0,0">
-            <TextBlock Text="{Binding ErrorMessage}" Foreground="IndianRed" VerticalAlignment="Center"/>
+        <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <TextBlock Grid.Row="0" Text="{Binding ErrorMessage}" Foreground="IndianRed" Margin="0,0,0,8"/>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Ακύρωση" Width="100" Margin="0,0,8,0" IsCancel="True"/>
                 <Button Content="{Binding SaveButtonText}" Width="140" Command="{Binding SaveCommand}"/>
             </StackPanel>
-        </DockPanel>
+        </Grid>
     </Grid>
 </Window>

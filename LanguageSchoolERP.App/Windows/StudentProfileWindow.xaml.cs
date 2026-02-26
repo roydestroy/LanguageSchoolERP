@@ -16,7 +16,7 @@ public partial class StudentProfileWindow : Window
         InitializeComponent();
         _vm = vm;
         _vm.RequestClose += HandleRequestClose;
-        Closed += (_, __) => _vm.RequestClose -= HandleRequestClose;
+        Closed += OnWindowClosed;
         Closing += OnWindowClosing;
         DataContext = vm;
         _lastSelectedTabIndex = 0;
@@ -27,6 +27,17 @@ public partial class StudentProfileWindow : Window
         Close();
     }
 
+
+    private void OnWindowClosed(object? sender, EventArgs e)
+    {
+        _vm.RequestClose -= HandleRequestClose;
+
+        var ownerWindow = Owner ?? Application.Current?.MainWindow;
+        if (ownerWindow is null)
+            return;
+
+        ownerWindow.Activate();
+    }
 
     private void OnWindowClosing(object? sender, CancelEventArgs e)
     {
