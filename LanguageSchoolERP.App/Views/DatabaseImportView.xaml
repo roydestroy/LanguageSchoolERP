@@ -34,6 +34,7 @@
                     <RadioButton Content="{Binding RemoteImportLabel}"
                                  GroupName="ImportSource"
                                  Margin="0,0,16,0"
+                                 IsEnabled="{Binding IsRemoteImportEnabled}"
                                  IsChecked="{Binding IsRemoteImportSelected, Mode=TwoWay}"/>
                     <RadioButton Content="Αρχείο .bak"
                                  GroupName="ImportSource"

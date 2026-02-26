@@ -95,6 +95,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     public ObservableCollection<string> ExcelFilePaths { get; } = [];
 
     public bool IsTailscaleInstalled => _appState.IsTailscaleInstalled;
+    public bool IsRemoteImportEnabled => _appState.IsTailscaleInstalled;
     public string RemoteImportLabel => IsTailscaleInstalled ? "Απομακρυσμένη DB" : "Απομακρυσμένη DB (Unavailable)";
 
     public bool IsExcelImportSelected
@@ -166,6 +167,7 @@ public partial class DatabaseImportViewModel : ObservableObject
             if (e.PropertyName == nameof(AppState.IsTailscaleInstalled))
             {
                 OnPropertyChanged(nameof(IsTailscaleInstalled));
+                OnPropertyChanged(nameof(IsRemoteImportEnabled));
                 OnPropertyChanged(nameof(RemoteImportLabel));
 
                 if (!_appState.IsTailscaleInstalled && SelectedImportSource == DatabaseImportSource.RemoteDatabase)
