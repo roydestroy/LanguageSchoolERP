@@ -413,13 +413,13 @@ public partial class MainWindow : Window
 
     private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
     {
-        var dialog = new Windows.DownloadPromptWindow(message, caption, buttonText)
-        {
-            Owner = Application.Current?.MainWindow
-        };
+        var result = MessageBox.Show(
+            $"{message}\n\nΘέλετε να ανοίξει η σελίδα λήψης;",
+            caption,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
 
-        var result = dialog.ShowDialog();
-        if (result != true)
+        if (result != MessageBoxResult.Yes)
             return;
 
         try
