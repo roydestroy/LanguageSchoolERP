@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="{Binding DialogTitle}" Height="668" Width="633"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+        ResizeMode="CanResize">
 	<Window.Resources>
 		<Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
 			<Setter Property="Padding" Value="2,4"/>
