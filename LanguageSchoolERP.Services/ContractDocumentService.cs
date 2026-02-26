@@ -64,9 +64,9 @@ public sealed class ContractDocumentService
                 RemoveUnusedInstallmentRows(doc, installmentCount);
 
             object outputPath = outputDocxPath;
-            doc.SaveAs2(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
+            doc.SaveAs(ref outputPath, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
                 ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing, ref missing,
-                ref missing, ref missing);
+                ref missing);
 
             return outputDocxPath;
         }
