@@ -1,88 +1,92 @@
 ﻿using System.Diagnostics;
-using System.Security.Principal;
-using LanguageSchoolERP.Services; // settings provider namespace
+
+namespace LanguageSchoolERP.Services;
 
 public static class BackupBootstrapper
 {
-    private const string TaskName = "LanguageSchoolERP Backup Upload";
+    private const string TaskName = "LanguageSchoolERP Automatic Backup";
 
     public static async Task TryBootstrapAsync()
     {
         var provider = new DatabaseAppSettingsProvider();
-        var s = provider.Settings;
+        var settings = provider.Settings;
 
-        if (!s.Backup.Enabled) return;
+        if (!settings.Backup.Enabled)
+            return;
 
-        // Needs admin once to create scheduled task + SQL login for SYSTEM + folder ACL
-        if (!IsAdministrator())
-            return; // optional: show UI message "Run once as Administrator to enable backups."
+        if (settings.Backup.AutomaticScheduledTaskEnabled)
+            EnsureScheduledTask(settings.Backup.IntervalMinutes);
+        else
+            DisableScheduledTaskIfExists();
 
-        Directory.CreateDirectory(@"C:\ERP");
-        Directory.CreateDirectory(@"C:\ERP\backup");
-
-        // Ensure SQL Server service account can write backups to C:\ERP\backup
-        // SQL Express service: NT SERVICE\MSSQL$SQLEXPRESS
-        Run("icacls", @"C:\ERP\backup /grant ""NT SERVICE\MSSQL$SQLEXPRESS"":(OI)(CI)M /T");
-
-        // Ensure NT AUTHORITY\SYSTEM is sysadmin so scheduled task can backup locally
-        EnsureSqlSystemLoginIsSysAdmin(s.Local.Server);
-
-        // Create/Update scheduled task to run every 30 minutes (guarded by time window in code)
-        EnsureScheduledTask();
         await Task.CompletedTask;
     }
 
-    private static bool IsAdministrator()
+    public static Task SetScheduledTaskEnabledAsync(bool enabled, int intervalMinutes)
     {
-        using var identity = WindowsIdentity.GetCurrent();
-        var principal = new WindowsPrincipal(identity);
-        return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        if (enabled)
+            EnsureScheduledTask(intervalMinutes);
+        else
+            DisableScheduledTaskIfExists();
+
+        return Task.CompletedTask;
     }
 
-    private static void EnsureScheduledTask()
+    private static void EnsureScheduledTask(int intervalMinutes)
     {
         var exePath = Process.GetCurrentProcess().MainModule?.FileName
                       ?? throw new InvalidOperationException("Cannot determine exe path.");
 
-        // schtasks quoting is picky:
         var tr = $"\"{exePath}\" --run-backup";
+        var safeInterval = Math.Max(1, intervalMinutes);
 
         Run("schtasks",
-            $"/Create /F /RU SYSTEM /SC MINUTE /MO 30 /TN \"{TaskName}\" /TR \"{tr}\"");
+            $"/Create /F /SC MINUTE /MO {safeInterval} /TN \"{TaskName}\" /TR \"{tr}\"");
+
+        Run("schtasks", $"/Change /TN \"{TaskName}\" /ENABLE");
     }
 
-    private static void EnsureSqlSystemLoginIsSysAdmin(string server)
+    private static void DisableScheduledTaskIfExists()
     {
-        // Use integrated security as the admin user who is running the app during bootstrap
-        // Works with .\SQLEXPRESS
-        var cs = $"Server={server};Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
-        using var conn = new Microsoft.Data.SqlClient.SqlConnection(cs);
-        conn.Open();
+        var result = RunAllowingNotFound("schtasks", $"/Change /TN \"{TaskName}\" /DISABLE");
 
-        var cmdText = @"
-IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'NT AUTHORITY\SYSTEM')
-BEGIN
-    CREATE LOGIN [NT AUTHORITY\SYSTEM] FROM WINDOWS;
-END
-EXEC sp_addsrvrolemember N'NT AUTHORITY\SYSTEM', N'sysadmin';
-";
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = cmdText;
-        cmd.ExecuteNonQuery();
+        if (result.ExitCode != 0 && !TaskNotFound(result.Output))
+            throw new InvalidOperationException($"Failed to disable scheduled task: {result.Output}");
+    }
+
+    private static bool TaskNotFound(string output)
+    {
+        return output.Contains("ERROR: The system cannot find the file specified", StringComparison.OrdinalIgnoreCase)
+               || output.Contains("cannot find", StringComparison.OrdinalIgnoreCase)
+               || output.Contains("δεν είναι δυνατός ο εντοπισμός", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void Run(string file, string args)
+    {
+        var result = RunAllowingNotFound(file, args);
+        if (result.ExitCode != 0)
+            throw new InvalidOperationException($"{file} {args} failed with exit code {result.ExitCode}. {result.Output}");
+    }
+
+    private static (int ExitCode, string Output) RunAllowingNotFound(string file, string args)
     {
         var psi = new ProcessStartInfo
         {
             FileName = file,
             Arguments = args,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
-        using var p = Process.Start(psi);
-        p!.WaitForExit();
-        if (p.ExitCode != 0)
-            throw new InvalidOperationException($"{file} {args} failed with exit code {p.ExitCode}");
+
+        using var process = Process.Start(psi)
+            ?? throw new InvalidOperationException($"Failed to start process: {file}");
+
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        return (process.ExitCode, $"{output} {error}".Trim());
     }
 }
