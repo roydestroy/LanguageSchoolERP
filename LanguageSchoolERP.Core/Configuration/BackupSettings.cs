@@ -5,6 +5,7 @@ namespace LanguageSchoolERP.Core.Configuration
 public sealed class BackupSettings
 {
     public bool Enabled { get; set; } = true;
+    public bool AutomaticScheduledTaskEnabled { get; set; } = false;
     public string LocalBackupDir { get; set; } = @"C:\ERP\backup";
 
     // Root share (no branch here)

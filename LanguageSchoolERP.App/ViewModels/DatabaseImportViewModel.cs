@@ -57,6 +57,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private string selectedBackupDatabaseName = "FilotheiSchoolERP";
     [ObservableProperty] private bool backupFilotheiSelected = true;
     [ObservableProperty] private bool backupNeaIoniaSelected;
+    [ObservableProperty] private bool automaticBackupsEnabled;
 
 
     public bool IsRemoteImportSelected
@@ -113,6 +114,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     public IAsyncRelayCommand ImportCommand { get; }
     public IAsyncRelayCommand CancelCommand { get; }
     public IRelayCommand SaveStartupDatabaseCommand { get; }
+    public IAsyncRelayCommand SaveAutomaticBackupsCommand { get; }
     public IAsyncRelayCommand BackupNowCommand { get; }
     public IAsyncRelayCommand GenerateEmptyDatabaseCommand { get; }
     public IAsyncRelayCommand WipeDatabaseCommand { get; }
@@ -131,6 +133,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         ImportCommand = new AsyncRelayCommand(ImportAsync, CanImport);
         CancelCommand = new AsyncRelayCommand(CancelAsync, () => IsBusy);
         SaveStartupDatabaseCommand = new RelayCommand(SaveStartupDatabase);
+        SaveAutomaticBackupsCommand = new AsyncRelayCommand(SaveAutomaticBackupsAsync, () => !IsBackupRunning && !IsBusy);
         BackupNowCommand = new AsyncRelayCommand(BackupNowAsync, () => !IsBackupRunning);
         GenerateEmptyDatabaseCommand = new AsyncRelayCommand(GenerateEmptyDatabaseAsync, CanGenerateEmptyDatabase);
         WipeDatabaseCommand = new AsyncRelayCommand(WipeDatabaseAsync, CanWipeDatabase);
@@ -154,6 +157,8 @@ public partial class DatabaseImportViewModel : ObservableObject
         SelectedBackupDatabaseName = string.Equals(_appState.SelectedLocalDatabaseName, "NeaIoniaSchoolERP", StringComparison.OrdinalIgnoreCase)
             ? "NeaIoniaSchoolERP"
             : "FilotheiSchoolERP";
+
+        AutomaticBackupsEnabled = _settingsProvider.Settings.Backup.AutomaticScheduledTaskEnabled;
 
         _appState.PropertyChanged += (_, e) =>
         {
@@ -194,6 +199,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         CancelCommand.NotifyCanExecuteChanged();
         GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
         WipeDatabaseCommand.NotifyCanExecuteChanged();
+        SaveAutomaticBackupsCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnIsBackupRunningChanged(bool value)
@@ -201,6 +207,7 @@ public partial class DatabaseImportViewModel : ObservableObject
         BackupNowCommand.NotifyCanExecuteChanged();
         WipeDatabaseCommand.NotifyCanExecuteChanged();
         GenerateEmptyDatabaseCommand.NotifyCanExecuteChanged();
+        SaveAutomaticBackupsCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedRemoteDatabaseOptionChanged(RemoteDatabaseOption? value)
@@ -304,6 +311,41 @@ public partial class DatabaseImportViewModel : ObservableObject
             "Ρυθμίσεις",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
+    }
+
+    private async Task SaveAutomaticBackupsAsync()
+    {
+        var previousValue = _settingsProvider.Settings.Backup.AutomaticScheduledTaskEnabled;
+
+        try
+        {
+            _settingsProvider.Settings.Backup.AutomaticScheduledTaskEnabled = AutomaticBackupsEnabled;
+            _settingsProvider.Save();
+
+            await BackupBootstrapper.SetScheduledTaskEnabledAsync(
+                AutomaticBackupsEnabled,
+                _settingsProvider.Settings.Backup.IntervalMinutes);
+
+            MessageBox.Show(
+                AutomaticBackupsEnabled
+                    ? "Ο αυτόματος προγραμματισμός backup ενεργοποιήθηκε."
+                    : "Ο αυτόματος προγραμματισμός backup απενεργοποιήθηκε.",
+                "Backups",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            _settingsProvider.Settings.Backup.AutomaticScheduledTaskEnabled = previousValue;
+            _settingsProvider.Save();
+            AutomaticBackupsEnabled = previousValue;
+
+            MessageBox.Show(
+                $"Δεν ήταν δυνατή η αποθήκευση ρύθμισης αυτόματων backup. {ex.Message}",
+                "Backups",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private static void ShowWarningWithDownload(string message, string caption, string downloadUrl, string buttonText)
