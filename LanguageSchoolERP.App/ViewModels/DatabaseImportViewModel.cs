@@ -49,7 +49,7 @@ public partial class DatabaseImportViewModel : ObservableObject
     [ObservableProperty] private int progressPercent;
     [ObservableProperty] private bool isBusy;
     [ObservableProperty] private string startupLocalDatabaseName = "FilotheiSchoolERP";
-    [ObservableProperty] private bool startupFilotheiSelected;
+    [ObservableProperty] private bool startupFilotheiSelected = true;
     [ObservableProperty] private bool startupNeaIoniaSelected;
     [ObservableProperty] private string lastBackupText = "Ποτέ";
     [ObservableProperty] private string lastBackupErrorText = string.Empty;
