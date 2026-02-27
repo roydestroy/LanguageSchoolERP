@@ -618,14 +618,13 @@ public partial class App : Application
 
         var parts = new List<int> { version.Major, version.Minor };
 
+        // Keep the third component (e.g. 1.1.0) for clearer semantic version display.
         if (version.Build >= 0)
             parts.Add(version.Build);
 
-        if (version.Revision >= 0)
+        // Only include revision when it carries information (avoid trailing .0 in 4-part versions).
+        if (version.Revision > 0)
             parts.Add(version.Revision);
-
-        while (parts.Count > 2 && parts[^1] == 0)
-            parts.RemoveAt(parts.Count - 1);
 
         return string.Join('.', parts);
     }
