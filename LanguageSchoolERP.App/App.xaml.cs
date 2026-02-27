@@ -564,12 +564,12 @@ public partial class App : Application
 
             var releaseName = !string.IsNullOrWhiteSpace(result.ReleaseName)
                 ? result.ReleaseName
-                : (result.ReleaseTag ?? result.LatestVersion?.ToString() ?? "latest");
+                : (result.ReleaseTag ?? FormatVersionForDisplay(result.LatestVersion) ?? "latest");
 
             var message =
                 $"Βρέθηκε νέα έκδοση ({releaseName}).\n" +
-                $"Τρέχουσα: {result.CurrentVersion}\n" +
-                $"Διαθέσιμη: {result.LatestVersion}\n\n" +
+                $"Τρέχουσα: {FormatVersionForDisplay(result.CurrentVersion) ?? "-"}\n" +
+                $"Διαθέσιμη: {FormatVersionForDisplay(result.LatestVersion) ?? "-"}\n\n" +
                 "Θέλετε να γίνει λήψη και εγκατάσταση τώρα;";
 
             var choice = MessageBox.Show(owner,
@@ -609,6 +609,25 @@ public partial class App : Application
                     MessageBoxImage.Error);
             }
         }
+    }
+
+    private static string? FormatVersionForDisplay(Version? version)
+    {
+        if (version is null)
+            return null;
+
+        var parts = new List<int> { version.Major, version.Minor };
+
+        if (version.Build >= 0)
+            parts.Add(version.Build);
+
+        if (version.Revision >= 0)
+            parts.Add(version.Revision);
+
+        while (parts.Count > 2 && parts[^1] == 0)
+            parts.RemoveAt(parts.Count - 1);
+
+        return string.Join('.', parts);
     }
 
     private static async Task<bool> DownloadAndRunUpdaterAsync(UpdateCheckResult result, Window owner)
