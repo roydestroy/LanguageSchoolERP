@@ -4,7 +4,12 @@ namespace LanguageSchoolERP.Services;
 
 public static class BackupBootstrapper
 {
-    private const string TaskName = "LanguageSchoolERP Automatic Backup";
+    private const string UserTaskName = "\\LanguageSchoolERP\\AutomaticBackup";
+    private static readonly string[] LegacyTaskNames =
+    [
+        "LanguageSchoolERP Automatic Backup",
+        "LanguageSchoolERP Backup Upload"
+    ];
 
     public static async Task TryBootstrapAsync()
     {
@@ -40,18 +45,35 @@ public static class BackupBootstrapper
         var tr = $"\"{exePath}\" --run-backup";
         var safeInterval = Math.Max(1, intervalMinutes);
 
-        Run("schtasks",
-            $"/Create /F /SC MINUTE /MO {safeInterval} /TN \"{TaskName}\" /TR \"{tr}\"");
+        RunOrThrow("schtasks",
+            $"/Create /F /SC MINUTE /MO {safeInterval} /TN \"{UserTaskName}\" /TR \"{tr}\"");
 
-        Run("schtasks", $"/Change /TN \"{TaskName}\" /ENABLE");
+        RunOrThrow("schtasks", $"/Change /TN \"{UserTaskName}\" /ENABLE");
     }
 
     private static void DisableScheduledTaskIfExists()
     {
-        var result = RunAllowingNotFound("schtasks", $"/Change /TN \"{TaskName}\" /DISABLE");
+        // Try disabling the user-owned task (created by this version of the app).
+        TryDisableTask(UserTaskName, throwOnUnexpected: true, ignoreAccessDenied: true);
 
-        if (result.ExitCode != 0 && !TaskNotFound(result.Output))
-            throw new InvalidOperationException($"Failed to disable scheduled task: {result.Output}");
+        // Best-effort: also try to disable legacy task names that might exist from older versions.
+        // Legacy tasks may be SYSTEM/admin-owned, so access denied should not break normal-user UX.
+        foreach (var legacyName in LegacyTaskNames)
+            TryDisableTask(legacyName, throwOnUnexpected: false, ignoreAccessDenied: true);
+    }
+
+    private static void TryDisableTask(string taskName, bool throwOnUnexpected, bool ignoreAccessDenied)
+    {
+        var result = Run("schtasks", $"/Change /TN \"{taskName}\" /DISABLE");
+
+        if (result.ExitCode == 0 || TaskNotFound(result.Output))
+            return;
+
+        if (ignoreAccessDenied && AccessDenied(result.Output))
+            return;
+
+        if (throwOnUnexpected)
+            throw new InvalidOperationException($"Failed to disable scheduled task '{taskName}': {result.Output}");
     }
 
     private static bool TaskNotFound(string output)
@@ -61,14 +83,20 @@ public static class BackupBootstrapper
                || output.Contains("δεν είναι δυνατός ο εντοπισμός", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static void Run(string file, string args)
+    private static bool AccessDenied(string output)
     {
-        var result = RunAllowingNotFound(file, args);
+        return output.Contains("Access is denied", StringComparison.OrdinalIgnoreCase)
+               || output.Contains("Πρόσβαση", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void RunOrThrow(string file, string args)
+    {
+        var result = Run(file, args);
         if (result.ExitCode != 0)
             throw new InvalidOperationException($"{file} {args} failed with exit code {result.ExitCode}. {result.Output}");
     }
 
-    private static (int ExitCode, string Output) RunAllowingNotFound(string file, string args)
+    private static (int ExitCode, string Output) Run(string file, string args)
     {
         var psi = new ProcessStartInfo
         {
